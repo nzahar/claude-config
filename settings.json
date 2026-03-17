@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout -b *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr:*)",
+      "Bash(git branch:*)"
+    ],
+    "defaultMode": "default"
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||i.tool_input?.new_path||'';if(/\\.(ts|tsx|js|jsx)$/.test(p)){const{execSync}=require('child_process');try{const hits=execSync('grep -n \"console\\\\.log\" '+JSON.stringify(p)+' 2>/dev/null').toString().trim();if(hits){console.error('[Hook] console.log найден в '+p+':');hits.split('\\n').forEach(l=>console.error('  '+l));}}catch(e){}}console.log(d);})\""
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||'';const fs=require('fs');if(/src[\\\\/].*\\.(ts|js)$/.test(p)&&!/\\.(test|spec)\\.(ts|js)$/.test(p)){const testPath=p.replace(/\\.(ts|js)$/,'.test.$1');if(!fs.existsSync(testPath)){console.error('[Hook] Тест не найден для: '+p);console.error('[Hook] Ожидается: '+testPath);console.error('[Hook] Рассмотри TDD подход — напиши тест первым');}}console.log(d);})\""
+          }
+        ]
+      }
+    ]
+  },
+  "effortLevel": "medium"
+}
