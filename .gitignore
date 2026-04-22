@@ -4,6 +4,9 @@ backups/
 cache/
 sessions/
 todos/
+tasks/
+debug/
+mcp-needs-auth-cache.json
 session-env/
 shell-snapshots/
 paste-cache/

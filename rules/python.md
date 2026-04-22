@@ -71,3 +71,14 @@ def public_functions():
 ### Dataclasses
 
 `@dataclass(frozen=True)` с дефолтами. Inline-комментарии для неочевидных параметров.
+
+### Conda Environment
+
+Перед запуском Python через Bash — определи окружение из конфига проекта:
+
+1. Есть `environment.yml` → взять имя из поля `name:`
+2. Нет файла → проверить `CLAUDE.md` / `README.md` / спросить пользователя
+
+Использовать полный путь к бинарнику: `/Users/zakharnedashkovskiy/miniforge3/envs/<name>/bin/python`
+
+Никогда не использовать `python`, `python3`, `conda run` — только прямой путь к нужному окружению.

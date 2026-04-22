@@ -8,10 +8,13 @@
       "Bash(gh pr create *)",
       "Bash(gh pr list *)",
       "Bash(gh pr:*)",
-      "Bash(git branch:*)"
+      "Bash(git branch:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh issue view:*)"
     ],
     "defaultMode": "default"
   },
+  "model": "opus",
   "hooks": {
     "PostToolUse": [
       {
@@ -34,5 +37,18 @@
       }
     ]
   },
-  "effortLevel": "medium"
+  "enabledPlugins": {
+    "security-guidance@claude-plugins-official": true,
+    "claude-mem@thedotmack": true
+  },
+  "extraKnownMarketplaces": {
+    "thedotmack": {
+      "source": {
+        "source": "github",
+        "repo": "thedotmack/claude-mem"
+      }
+    }
+  },
+  "effortLevel": "xhigh",
+  "autoUpdaterChannel": "stable"
 }
