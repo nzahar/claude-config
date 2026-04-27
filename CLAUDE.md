@@ -25,6 +25,36 @@ If the verification is expensive (long test suite, slow build) and you already r
 
 If the verification reveals failure — report the failure, do not paper over it with another attempt disguised as a claim.
 
+## Tool Hygiene
+
+**Никогда не используй `sed`, `cat`, `head`, `tail`, `awk`, `echo` через Bash для работы с файлами.** В моей конфигурации каждый такой вызов провоцирует permission prompt, что замедляет работу и раздражает.
+
+- Чтение файлов (включая фрагменты) — `Read` с параметрами `offset`/`limit`. НЕ `sed -n 'N,Mp'`, `head -N`, `tail -N`, `cat`.
+- Изменение файлов — `Edit`/`Write`. НЕ `sed -i`, НЕ `echo > file`, НЕ `cat <<EOF > file`.
+- Вывод текста пользователю — прямой текст в ответе. НЕ `echo`/`printf` через Bash.
+
+Bash оставь для того, что `Read`/`Edit`/`Write` не умеют:
+- Запуск процессов (`python`, `npm`, `docker`, `uvicorn`, тесты)
+- Git (`git status`, `git diff`, `git log`, `git commit`)
+- Поиск по дереву (`grep -rn`, `find`) — но не для чтения найденных файлов, только для поиска
+- Листинг директорий (`ls`) когда структура неизвестна
+
+Правило простое: если есть специализированный tool — используй его. Bash — последнее средство.
+
+## Long-running sub-agents — всегда в background
+
+**Любой sub-agent, который может работать дольше ~30 секунд — запускай с `run_in_background: true`.** Это правило, а не совет.
+
+- **Обязательно в background**: `code-reviewer`, `test-writer`, `document-agent`, `Explore` (thorough), `Plan`, `debugger`, `general-purpose` для многошаговых задач. Pre-merge триада (reviewer + test-writer + document-agent) — **всегда** три параллельных background-агента в одном сообщении.
+- **Можно в foreground**: короткие целевые запросы (Explore quick, targeted grep через general-purpose) где результат нужен для следующего шага *немедленно*.
+
+Почему это базовое правило:
+1. Агент работает в изолированном контексте — он ничего не ждёт от main-сессии.
+2. Foreground-агент блокирует main-сессию целиком на 5-15 минут. Пользователь не может перебить без cancel'а всего вызова. Контекст расходуется на ожидание.
+3. Background освобождает main-сессию для параллельной работы + runtime присылает уведомление о завершении. Не нужно sleep/poll.
+
+Если не уверен — в background. Цена ошибки в обратную сторону (запустил в background задачу, которая нужна немедленно) минимальна: просто ждёшь notification. Цена foreground на долгой задаче — потерянные минуты времени пользователя.
+
 ## Task Workflow
 
 See [rules/workflow.md](rules/workflow.md).

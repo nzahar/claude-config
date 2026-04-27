@@ -21,3 +21,5 @@ ide/
 plans/
 plugins/
 downloads/
+settings.local.json
+security_warnings_state_*.json
