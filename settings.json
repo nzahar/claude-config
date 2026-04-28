@@ -39,16 +39,12 @@
   },
   "enabledPlugins": {
     "security-guidance@claude-plugins-official": true,
-    "claude-mem@thedotmack": true
+    "context7@claude-plugins-official": true
   },
-  "extraKnownMarketplaces": {
-    "thedotmack": {
-      "source": {
-        "source": "github",
-        "repo": "thedotmack/claude-mem"
-      }
-    }
-  },
+  "extraKnownMarketplaces": {},
   "effortLevel": "xhigh",
+  "theme": "dark-daltonized",
+  "remoteControlAtStartup": true,
+  "agentPushNotifEnabled": true,
   "autoUpdaterChannel": "stable"
 }
