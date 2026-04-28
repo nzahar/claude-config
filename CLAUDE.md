@@ -6,6 +6,19 @@
 - Код, коммиты, PR, комментарии в коде — всегда на английском
 - Будь кратким. Не повторяй то, что я уже вижу в диффе
 
+## Project State Awareness
+
+**At the start of every session in a project, read `docs/STATE.md` if it exists.** This file is maintained by `document-agent` and contains the current trajectory of work: active branch, what's in progress, what's blocked, what's next. Reading it once at session start gives you the orientation a returning collaborator would have.
+
+Rules:
+
+- **Read it before answering the user's first message.** Not lazily on demand — at session start, alongside (or right after) any other project files you check.
+- **Read the `## Current` section.** The `## History` section is for deep context on past trajectory; consult it only if the user asks about prior decisions or you need to understand how the project got here.
+- **If the file does not exist, do nothing.** Do not ask the user to create it, do not offer to create it. Some projects don't have one yet, that's fine.
+- **STATE.md can be stale.** If the user's first message contradicts STATE.md ("let's work on Y" while STATE.md says "in progress: X"), trust the user — the file may not have been updated since the last work session. Note the discrepancy briefly if relevant ("STATE.md says X is in progress — pausing that, switching to Y") but don't argue with the user about it.
+- **Never edit STATE.md from the main session.** It is owned by `document-agent` (Phase 3). Editing it from the main session causes conflicts. If you think STATE.md should be updated, suggest invoking `document-agent` with `--state-only`.
+- **Do not surface STATE.md content unprompted.** Use it for your own orientation. The user does not need a recap of their own project unless they ask for one.
+
 ## Verification Before Claims
 
 **No completion claim without fresh verification evidence in the current message.**
@@ -46,7 +59,7 @@ Bash оставь для того, что `Read`/`Edit`/`Write` не умеют:
 **Любой sub-agent, который может работать дольше ~30 секунд — запускай с `run_in_background: true`.** Это правило, а не совет.
 
 - **Обязательно в background**: `code-reviewer`, `test-writer`, `document-agent`, `Explore` (thorough), `Plan`, `debugger`, `general-purpose` для многошаговых задач. Pre-merge триада (reviewer + test-writer + document-agent) — **всегда** три параллельных background-агента в одном сообщении.
-- **Можно в foreground**: короткие целевые запросы (Explore quick, targeted grep через general-purpose) где результат нужен для следующего шага *немедленно*.
+- **Можно в foreground**: короткие целевые запросы (Explore quick, targeted grep через general-purpose) где результат нужен для следующего шага *немедленно*. `plan-reviewer` обычно тоже короткий — на усмотрение, но если план большой, запускай в background.
 
 Почему это базовое правило:
 1. Агент работает в изолированном контексте — он ничего не ждёт от main-сессии.
@@ -64,6 +77,21 @@ See [rules/workflow.md](rules/workflow.md).
 Sub-agents are a core part of how work gets done here, not a fallback. Use them fully. Each agent runs in an isolated fresh context — they do not bloat the main session; they offload work from it. The main session stays focused on the task at hand; specialized work happens in agents and returns as a summary.
 
 The unit of review is the **branch** (PR), not the individual commit. Reviewing a half-finished feature or writing tests on code that will change in the next commit produces noise, not signal.
+
+### Plan review (plan-reviewer)
+
+**Trigger — after the user approves the plan, before any code is written.** This is step 4 of `workflow.md`. Mandatory for any non-trivial task that produced a plan file at `docs/plans/<branch-slug>.md`.
+
+The agent reads the plan and returns blockers and warnings across six dimensions: requirement coverage, task completeness, dependency correctness, schema/infrastructure drift, ADR/CODEMAPS compliance, and verification plan.
+
+**No loop with the agent.** One report. Show findings to the user, the user decides what to fix. The user is in the conversation context — they will resolve faster than a Claude-Claude loop, and without burning extra tokens.
+
+**Do NOT invoke** for:
+- Small tasks where the "plan" is one sentence (no plan file exists)
+- Mid-implementation invocations (the agent reviews plans, not code in progress)
+- Replanning after blockers (just edit the plan and re-run plan-reviewer if you want a sanity check)
+
+**What to pass:** nothing special. The agent finds the plan from the current branch automatically. Pass an explicit path only if the plan was saved somewhere non-standard.
 
 ### Pre-merge triad (test-writer + code-reviewer + document-agent)
 
@@ -90,13 +118,19 @@ No file conflicts between them. Parallel execution cuts the triad from ~10–15 
 
 - `code-reviewer` report (APPROVED or BLOCKED + findings)
 - New test files from `test-writer` as unstaged changes in the working tree
-- Updated docs/ADRs from `document-agent` as unstaged changes
+- Updated docs/ADRs from `document-agent` as unstaged changes (including refreshed `docs/STATE.md` if structural changes happened)
 
 The user decides how to commit the tests and docs (separate `test:` / `docs:` commits, amend, or discard). Agents produce work; the user decides what to ship.
 
 ### Post-merge `document-agent`
 
 If the triad was skipped before merge and the branch introduced structural changes (routes, DB schema, models, dependencies, architectural decisions), run `document-agent` after the merge to sync docs. This is the fallback, not the primary path — prefer running `document-agent` in the pre-merge triad when possible.
+
+### End-of-session `document-agent --state-only`
+
+If a session ends without a merge but progress was made (decisions pending, branch active, blockers identified), invoke `document-agent` with `--state-only` to refresh `docs/STATE.md` only — skipping the full codemap pass. This keeps the next session oriented without the cost of full Phase 1-2.
+
+Trigger: the user signals end of session ("я заканчиваю на сегодня", "stopping for the day", "wrapping up") AND the session produced state worth recording (started/paused work, found blockers, made non-trivial decisions). Skip if the session was purely exploratory or made no real progress.
 
 ### `debugger` — situational, not lifecycle
 
