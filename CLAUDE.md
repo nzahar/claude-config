@@ -19,6 +19,8 @@ Rules:
 - **Never edit STATE.md from the main session.** It is owned by `document-agent` (Phase 3). Editing it from the main session causes conflicts. If you think STATE.md should be updated, suggest invoking `document-agent` with `--state-only`.
 - **Do not surface STATE.md content unprompted.** Use it for your own orientation. The user does not need a recap of their own project unless they ask for one.
 
+Аналогично — при работе вне workflow.md (debugging-сессии, ad-hoc вопросы, refactoring без формального плана) читай `docs/CODEMAPS/<area>.md` и релевантные ADR из `docs/ADR/`, если работа касается архитектурных решений или зафиксированных инвариантов. Для тривиальных правок (typo, форматирование, локальный bugfix) это не нужно.
+
 ## Verification Before Claims
 
 **No completion claim without fresh verification evidence in the current message.**
