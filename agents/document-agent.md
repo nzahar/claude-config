@@ -142,6 +142,8 @@ Wrap in `<!-- MEANING LAYER -->` ... `<!-- /MEANING LAYER -->`. Add footer: `_Me
 
 # PHASE 3: State Update
 
+**State ownership rule.** If project's `CLAUDE.md` declares `state_owner: experiment-doc-agent` — skip Phase 3 entirely; STATE.md is owned by another agent. If `state_owner: split` — own only `docs/STATE.md` (engineering trajectory); do not touch `docs/RESEARCH-STATE.md` (that's `experiment-doc-agent`'s file). If `state_owner` not declared and project structure is unambiguous (active `src/`, no `notebooks/`) — proceed normally. If ambiguous — stop and ask.
+
 `docs/STATE.md` is a single living document with two sections: `## Current` (overwritten on each update) and `## History` (append-only, newest entries on top). It captures the project's *trajectory in time*, complementing the *code structure* described by codemaps and ADRs.
 
 The goal is that any future Claude session — or you, returning after a break — can read the top of STATE.md and know exactly where the work stands.

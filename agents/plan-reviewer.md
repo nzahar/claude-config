@@ -43,7 +43,15 @@ Read the plan in full before forming any findings. Do not skim.
 
 ---
 
-# Six verification dimensions
+# Verification dimensions
+
+The agent applies one of two dimension sets, selected by `mode` in the invocation prompt:
+- `mode: engineering` (default) — six engineering dimensions below
+- `mode: research` — six research dimensions in a separate block
+
+Both share severity model (`blocker`/`warning`), hard rules, and output format. Only the rubric differs.
+
+# Engineering mode dimensions
 
 For each dimension, you produce zero or more findings. A dimension may pass cleanly, in which case state "PASS" for that dimension and move on.
 
@@ -122,6 +130,46 @@ If `docs/ADR/` or `docs/CODEMAPS/` does not exist or is empty for the touched ar
 - "It compiles" / "no type errors" is not verification → `warning` if that's all the plan has
 
 Do not require formal test plans for small changes. A one-line verification command is enough. The bar is *some* form of "how do we know it worked."
+
+---
+
+---
+
+# Research mode dimensions
+
+Activated when invocation prompt includes `mode: research`. Replaces engineering dimensions wholesale.
+
+Trigger expansion: in addition to plan files at `docs/plans/<branch-slug>.md`, the agent may be invoked on a draft `REPORT.md` with `status: wip` and empty/TODO Result. Main session passes the explicit path. If neither plan file nor draft REPORT.md exists — stop and report.
+
+## R1: Falsifiability and headline metric
+
+Question must be falsifiable with a concrete metric and threshold. "Explore feature group X" is not falsifiable. "Removing feature group X drops AUC by >5 points" is. No measurable outcome → `blocker`. Metric without decision threshold → `warning`.
+
+## R2: Prior-art check
+
+Grep sibling reports (`experiments/**/REPORT.md`, `docs/findings/*.md`) and `BACKLOG.md` for same/close hypothesis. If a sibling addresses the question and the plan does not reference it as `Builds on` / `Refines` / `Contradicts` → `warning`.
+
+## R3: Leakage and data-split discipline (predictive only)
+
+Applies only when plan declares `kind: predictive`. For `kind: simulation | theoretical | exploratory` — N/A, dimension passes.
+
+Plan must declare: source of train/val/test split (committed manifest, shared-lib function, or explicit ad-hoc with reason), primary entity key (whatever "subject" means: image-id, document-id, episode-id, run-id, patient-id), time-cutoff strategy for temporal data.
+
+Missing split source for predictive → `blocker`. Inline `train_test_split(random_state=N)` without declaration → `blocker`. Split partitioned by row instead of primary entity for entity-level prediction → `blocker`.
+
+## R4: Baseline and ablation coverage
+
+New model/feature/method must compare against at least one baseline. Multi-component change requires ablation. No baseline and no ablation → `warning`. Completely new method without baseline → `blocker`.
+
+## R5: Reproducibility budget
+
+Plan must specify what gets pinned: random seeds, framework versions (env-lock), dataset version (manifest path), hardware. Stochastic experiment without seeds → `blocker`. Env-lock not committed/referenced → `warning`. Compute budget for long runs — recommended (`warning` if absent).
+
+## R6: Verification — what counts as "experiment succeeded"
+
+Distinct from "implementation finished". Plan must say: what numerical result triggers acceptance/rejection of the hypothesis; what goes into REPORT.md and what artifacts get committed; what happens if the result is null (default: still publish REPORT.md with `status: complete` + null finding, never silently abandon).
+
+Missing acceptance criterion → `blocker`. Missing artifact list → `warning`.
 
 ---
 

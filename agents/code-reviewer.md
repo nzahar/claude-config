@@ -24,6 +24,10 @@ Focus the review on **what changed**, not on the full content of touched files. 
 
 ### 2. Check each change
 
+The base checks below apply in both modes. If invocation prompt includes `mode: research`, additionally apply the **Research checks** block at the end of this section. Universal CRITICAL (credentials, SQL injection, path traversal) applies unconditionally — research code is still code.
+
+Silenced in `mode: research`: the React/JS/TS-specific block (unless the diff actually touches a frontend). All other Universal CRITICAL/HIGH, Semantic, Python-specific, Go-specific, ADR compliance, Best Practices apply in both modes.
+
 #### Universal (any language) — CRITICAL
 - Hardcoded credentials, API keys, tokens, passwords
 - SQL injection vulnerabilities
@@ -75,6 +79,16 @@ Focus the review on **what changed**, not on the full content of touched files. 
 #### Best Practices — MEDIUM
 - Missing tests for new code
 - Dead code (unused imports, unreachable branches)
+
+#### Research checks (only with `mode: research`)
+
+- **Data leakage** — HIGH. Split source declared (manifest path or shared-lib function), not inline `train_test_split`. Split partitioned by primary entity key, not by row, for entity-level prediction. N/A for non-predictive experiments.
+- **Stochastic determinism** — CRITICAL if missing on result-producing run. Every stochastic call (model init, sampling, augmentation, shuffling, batch ordering) has explicit `seed` / `random_state`. `np.random.seed` / `torch.manual_seed` / `random.seed` set at script entry. Dynamic seeds (`int(time.time())`, `os.urandom`) on committed-result run → CRITICAL.
+- **No SaaS exfiltration** — HIGH. No imports of `wandb`, `comet_ml`, `neptune`, `mlflow.tracking` with non-localhost URI, `huggingface_hub.upload_*` without explicit user opt-in. List configurable in project-level `CLAUDE.md`; default-deny.
+- **No absolute paths** — HIGH. Paths through config / env vars / project-root anchor. Hardcoded `/Users/...`, `/home/...`, absolute Windows paths in committed code → HIGH.
+- **Pipeline idempotency** — HIGH for production-touching, MEDIUM for one-off. Data-loading/transforming scripts safe to re-run. Look for `INSERT` without dedup-key check, file write without explicit `--overwrite`, side effects without "already done" guard.
+- **Env reproducibility** — MEDIUM. Dependency changes update committed env-lock (`environment.yml` / `requirements.lock` / `pixi.lock` / `uv.lock`). Floating versions on ML/numerical libs.
+- **Provenance** — MEDIUM. Result-producing scripts log enough to recover later (commit hash, dataset manifest, seeds, timestamp). Missing in long-running scripts.
 
 ### 3. Cross-check against project documentation
 

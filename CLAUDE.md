@@ -8,7 +8,7 @@
 
 ## Project State Awareness
 
-**At the start of every session in a project, read `docs/STATE.md` if it exists.** This file is maintained by `document-agent` and contains the current trajectory of work: active branch, what's in progress, what's blocked, what's next. Reading it once at session start gives you the orientation a returning collaborator would have.
+**At the start of every session in a project, read `docs/STATE.md` if it exists.** This file is maintained by the project's documentation agent (`document-agent` for engineering projects, `experiment-doc-agent` for research projects; project-level `CLAUDE.md` may declare `state_owner` explicitly). It contains the current trajectory of work: active branch, what's in progress, what's blocked, what's next. Reading it once at session start gives you the orientation a returning collaborator would have.
 
 Rules:
 
@@ -16,7 +16,7 @@ Rules:
 - **Read the `## Current` section.** The `## History` section is for deep context on past trajectory; consult it only if the user asks about prior decisions or you need to understand how the project got here.
 - **If the file does not exist, do nothing.** Do not ask the user to create it, do not offer to create it. Some projects don't have one yet, that's fine.
 - **STATE.md can be stale.** If the user's first message contradicts STATE.md ("let's work on Y" while STATE.md says "in progress: X"), trust the user — the file may not have been updated since the last work session. Note the discrepancy briefly if relevant ("STATE.md says X is in progress — pausing that, switching to Y") but don't argue with the user about it.
-- **Never edit STATE.md from the main session.** It is owned by `document-agent` (Phase 3). Editing it from the main session causes conflicts. If you think STATE.md should be updated, suggest invoking `document-agent` with `--state-only`.
+- **Never edit STATE.md from the main session.** It is owned by the project's documentation agent (`document-agent` Phase 3 for engineering, `experiment-doc-agent` Phase 4 for research; project-level `CLAUDE.md` may declare `state_owner` explicitly). Editing it from the main session causes conflicts. If you think STATE.md should be updated, suggest invoking the appropriate documentation agent with `--state-only`.
 - **Do not surface STATE.md content unprompted.** Use it for your own orientation. The user does not need a recap of their own project unless they ask for one.
 
 Аналогично — при работе вне workflow.md (debugging-сессии, ad-hoc вопросы, refactoring без формального плана) читай `docs/CODEMAPS/<area>.md` и релевантные ADR из `docs/ADR/`, если работа касается архитектурных решений или зафиксированных инвариантов. Для тривиальных правок (typo, форматирование, локальный bugfix) это не нужно.
@@ -80,6 +80,24 @@ Sub-agents are a core part of how work gets done here, not a fallback. Use them 
 
 The unit of review is the **branch** (PR), not the individual commit. Reviewing a half-finished feature or writing tests on code that will change in the next commit produces noise, not signal.
 
+### Agent modes — engineering vs research
+
+`plan-reviewer` and `code-reviewer` support a `mode: engineering | research` parameter passed in the invocation prompt. Default — `engineering`. The difference is the rubric/dimensions applied; workflow, severity model, isolation, output format, and verdict (`APPROVED`/`BLOCKED`) are identical across modes.
+
+**How mode is selected:**
+
+1. Project-level `CLAUDE.md` may declare `default_agent_mode: research | engineering` as the single source of truth. Main session reads this and passes it.
+2. If not declared: main session infers from structure (active `notebooks/<...>/*.ipynb` without active `src/` → research; otherwise engineering). State the inference briefly to the user before invoking.
+3. Specific branches may override (engineering project, research-style branch on training scripts; or vice versa) — main session passes the override explicitly.
+
+**Hard rule:** an agent that supports modes, invoked in a project with `default_agent_mode: research` declared, without an explicit `mode:` and with no engineering override — must return an error and ask main session to clarify. No silent fallback.
+
+Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`) have no modes. `experiment-doc-agent` is research-only by design.
+
+### Project-level `state_owner` field
+
+Project's `CLAUDE.md` may declare `state_owner: document-agent | experiment-doc-agent | split` to disambiguate STATE.md ownership. Default: `document-agent` for engineering (`src/` present, no `notebooks/`), `experiment-doc-agent` for research-only (`notebooks/` only). `split` is for hybrid projects (both active) and uses two files: `docs/STATE.md` owned by `document-agent`, `docs/RESEARCH-STATE.md` owned by `experiment-doc-agent`. Never two owners on one file.
+
 ### Plan review (plan-reviewer)
 
 **Trigger — after the user approves the plan, before any code is written.** This is step 4 of `workflow.md`. Mandatory for any non-trivial task that produced a plan file at `docs/plans/<branch-slug>.md`.
@@ -120,7 +138,7 @@ No file conflicts between them. Parallel execution cuts the triad from ~10–15 
 
 - `code-reviewer` report (APPROVED or BLOCKED + findings)
 - New test files from `test-writer` as unstaged changes in the working tree
-- Updated docs/ADRs from `document-agent` as unstaged changes (including refreshed `docs/STATE.md` if structural changes happened)
+- Updated docs/ADRs from the project's documentation agent (`document-agent` for engineering, `experiment-doc-agent` for research) as unstaged changes (including refreshed `docs/STATE.md` if structural changes happened)
 
 The user decides how to commit the tests and docs (separate `test:` / `docs:` commits, amend, or discard). Agents produce work; the user decides what to ship.
 
@@ -128,9 +146,9 @@ The user decides how to commit the tests and docs (separate `test:` / `docs:` co
 
 If the triad was skipped before merge and the branch introduced structural changes (routes, DB schema, models, dependencies, architectural decisions), run `document-agent` after the merge to sync docs. This is the fallback, not the primary path — prefer running `document-agent` in the pre-merge triad when possible.
 
-### End-of-session `document-agent --state-only`
+### End-of-session documentation agent `--state-only`
 
-If a session ends without a merge but progress was made (decisions pending, branch active, blockers identified), invoke `document-agent` with `--state-only` to refresh `docs/STATE.md` only — skipping the full codemap pass. This keeps the next session oriented without the cost of full Phase 1-2.
+If a session ends without a merge but progress was made (decisions pending, branch active, blockers identified), invoke the project's documentation agent with `--state-only` to refresh `docs/STATE.md` only — skipping the full codemap/index pass. For engineering projects this is `document-agent`; for research projects, `experiment-doc-agent`. Choice is governed by the project's `state_owner`.
 
 Trigger: the user signals end of session ("я заканчиваю на сегодня", "stopping for the day", "wrapping up") AND the session produced state worth recording (started/paused work, found blockers, made non-trivial decisions). Skip if the session was purely exploratory or made no real progress.
 
