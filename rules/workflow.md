@@ -13,3 +13,19 @@ For any non-trivial task, follow this sequence strictly:
 For small tasks where a full plan would be overkill: state the approach in one sentence and confirm before coding. Steps 2 and 4 do not apply — there is no plan file to review. Step 4.5 still applies if the small task substantially touches a research notebook.
 
 Never jump straight to code.
+
+## Discipline within long design sessions
+
+Long design sessions (multi-iteration plan-review, ADR drafting, multi-question spec discussions) accumulate conflicting drafts in conversation context. Past a certain length, attention spreads thin and rejected alternatives "resurface" as if current — cognitive degradation that the model cannot reliably self-detect. The rules below counter this with mostly objective triggers (file edits, explicit user phrases, session events) plus a few interpretive ones — distinguishing a confirming "ok" from a conversational "ok", or judging whether a question is design-substantive, still requires reading context. When uncertain, bias toward the action: writing to the plan or re-grounding is cheap, losing a decision is not. Each rule fires independently — there is no "design mode" switch.
+
+| # | Trigger | Action |
+|---|---|---|
+| 1. **Sub-plan = source of truth** | User confirms a design decision (`ok`, `согласен`, `accepted`, equivalent) on something that belongs in the plan, **and a plan file exists for the current branch** | **Immediately** Edit `docs/plans/<branch-slug>.md` to record the decision, before continuing the conversation. Do not "remember and continue" — written plan is durable, conversation is transient. For small tasks without a plan file (per the small-task exception above) this rule does not fire — do not create a plan file just to satisfy it |
+| 2. **Re-grounding at session start** | Start of any session in a git repo | Extends the existing "Project State Awareness" rule in `CLAUDE.md` (which keeps the trivial-edits exception): in addition to `docs/STATE.md`, also read the current branch's plan file (if any) at session start. ADR/CODEMAPS reading still happens when scope is known — not pre-emptively before the user has spoken — same as the existing rule |
+| 3. **Discard alternatives in plan** | Editing a plan file, writing a decision section | Plan: **only the current decision**, zero rejected alternatives. ADR: brief mention of rejected approach (risk + revisit trigger), not a parallel implementation. If a rejected option is load-bearing enough to need long-form description — that goes into a future superseding ADR at the moment of revisit, not as preemptive bloat in the current ADR |
+| 4. **No branching across two substantive design questions** | User asks Q2 of design-substantive level (requires reasoning + plan record) while Q1 of the same level is unanswered | Close Q1 first by recording in plan, then move to Q2. **Short factual / clarification / yes-no questions batch as usual** — this rule is about parallel design-state, not about being terse |
+| 5. **`/compact` ban during design work** | Context bloat **AND** the current session has done plan / ADR / spec edits or active design discussion with the user | Suggest `/clear` + cold-start from the plan file. **Never** `/compact` — compaction silently loses decision nuance; plan file is durable and re-readable |
+
+**Session boundaries at phase transitions.** When the plan file marks a phase as done and the next phase is structurally different (design → implementation, implementation → synthesis, design → ADR write-up), suggest the user start a fresh session. Cold-start from STATE.md + plan file is more reliable than dragging accumulated design context into a different mode of work.
+
+These rules apply project-agnostically to any non-trivial task following the spec → plan → review → code workflow above. They do not depend on project type (research vs engineering) or domain.
