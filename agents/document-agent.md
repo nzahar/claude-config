@@ -161,7 +161,6 @@ _Last updated: YYYY-MM-DD HH:MM_
 
 ## Current
 
-**Active branch:** <branch> (or "main" if no active feature branch)
 **In progress:** <one-line description of what's being built right now, or "none">
 **Recently shipped:** <last 1-3 merged things, with PR/commit references>
 **Blocked / waiting on:** <items waiting on user, external API, decision — or "nothing">
@@ -195,8 +194,7 @@ Take the existing `## Current` section, prepend it to `## History` with its `_La
 ### 3. Write fresh Current
 Look at the actual state of the work, not at what STATE.md said before:
 
-- **Active branch**: run `git branch --show-current`. If on `main`, say "main".
-- **In progress**: read the most recent unmerged commits on the active branch, or `docs/plans/<branch-slug>.md` if it exists. Describe in one line what's actually being built. If nothing is in progress, say "none".
+- **In progress**: read the most recent unmerged commits on the active branch (use `git branch --show-current` + `git log` to see what's there), or `docs/plans/<branch-slug>.md` if it exists. Describe in one line what's actually being built. If nothing is in progress, say "none".
 - **Recently shipped**: look at the last 1-3 merged PRs or squash commits on `main` (use `git log main --merges -3` or `git log main --oneline -5`). Reference them by title, not by hash.
 - **Blocked / waiting on**: this you usually cannot derive automatically — leave the previous value if it's still relevant, or set to "nothing" if previous blockers were obviously resolved (e.g., the branch they blocked is now merged). When in doubt, ask the user once at the end.
 - **Next up**: read `docs/plans/` and `ROADMAP.md` (if exists). State the next intended chunk of work in one line.
@@ -213,6 +211,7 @@ Set `_Last updated: YYYY-MM-DD HH:MM_` at the top of the file to current local t
 ## Phase 3 rules
 
 - **No severity vocabulary in this agent.** STATE.md is descriptive, not graded. Drift comments use `<!-- DRIFT: ... -->` markers, not severity. Do not import `CRITICAL`/`HIGH` from `code-reviewer` or `blocker`/`warning` from `plan-reviewer` — each agent's severity model is local to its domain.
+- **STATE.md is trajectory, not git deployment.** Do not record `Active branch:` or any other field that the model can derive from `git` in <1s (`git branch --show-current`, `git log`, `git status`). Decaying git references in STATE.md become lies the moment a branch is merged and deleted; the file is then misleading until the next agent run, which may not happen for days. Trajectory fields (In progress, Recently shipped, Blocked, Next up) describe *what's being done*, independent of git deployment, and decay slowly.
 - **Brevity is mandatory.** The whole point is that someone can read Current in 30 seconds. If Current grows past one screen, you are doing it wrong — promote stable items to ADRs or codemaps, drop noise.
 - **Do not duplicate what's in codemaps or ADRs.** STATE is about *now*, not about *what the code does*. "Authentication uses OAuth2" belongs in CODEMAPS or an ADR, not here. "Auth endpoint refactor in progress on `feature/auth-refactor`" belongs here.
 - **History is sacred.** Never edit a History entry. If something in history was wrong, that's a record of what we believed at the time. Add a correction to the next Current update if it matters.

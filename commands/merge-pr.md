@@ -25,12 +25,3 @@ git remote get-url origin | grep -qE '127\.0\.0\.1|localhost|local_proxy' && ech
 6. Удали локальную feature-ветку если осталась.
    - **Local:** `git branch -d <branch> 2>/dev/null` (тихо, без ошибки если нет).
    - **Cloud:** пропусти — runtime пересоздаёт сессию с новой `claude/<slug>-<hash>`, локальная feature-ветка не нужна.
-7. Если в репо есть `docs/STATE.md` — впиши в самое начало секции `## Current` строку-маркер о только что сделанном мерже. **Без вызова `document-agent`** — это дешёвый append, не полная Phase 3. Используй `Edit` tool, не shell. Формат строки:
-
-   ```
-   > ✅ **Merged <YYYY-MM-DD>:** `<short-hash>` — <commit-subject> (PR #<N>)
-   ```
-
-   Где `<short-hash>` берётся из `git log -1 --format=%h` (на main, после `git pull`), `<commit-subject>` из `git log -1 --format=%s`, `<N>` — номер PR из аргумента команды. Маркер вставляется **сразу под** заголовком `## Current`, перед остальным контентом секции. Если уже есть предыдущий маркер от прошлого мержа — сдвинь его вниз (оставь, document-agent при следующем `--state-only` подметёт). Если STATE.md нет — пропусти этот шаг тихо.
-
-   Цель: STATE.md, закоммиченный в pre-merge триаде, описывает «pre-merge in flight»; после мержа эта строчка-маркер делает Current честным до следующего полноценного state-refresh, без агентного вызова.

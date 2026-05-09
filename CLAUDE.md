@@ -187,9 +187,9 @@ Agents can be invoked mid-branch if the user asks, or before a large internal re
 
 ### Atomicity of commands
 
-Commands (`/commit-push`, `/merge-pr`, others) are atomic — they do exactly what their name says and nothing more. They do NOT invoke review, test, or documentation agents. All quality gates are explicit steps that the user or the main session runs before calling the command. This keeps commands predictable and keeps the user in control of when review happens.
+Commands (`/commit-push`, `/merge-pr`, others) are atomic — they do exactly what their name says and nothing more. They do NOT invoke review, test, or documentation agents, and they do NOT edit documentation files (no STATE.md markers, no codemap fixups, no log entries). All quality gates and documentation refresh are explicit steps that the user or main session runs before/after calling the command. This keeps commands predictable and keeps the user in control of when review and docs happen.
 
-**Documented exception:** `/merge-pr` appends a one-line marker to `docs/STATE.md` after a successful merge (using the `Edit` tool, not by invoking `document-agent`). This is a cheap, mechanical append — not a documentation refresh — and exists so that STATE.md stays honest between full `--state-only` agent runs. It does not violate the "no agents" rule.
+Post-merge STATE.md may be slightly stale until the next `document-agent --state-only` run — `In progress:` will still describe the just-shipped work. This is acceptable: the new session reads `git log main -3` and sees the squash-merge subject matching the `In progress:` description, which makes the staleness obvious and correctable in seconds. No command machinery needed.
 
 ## Git & Workflow
 

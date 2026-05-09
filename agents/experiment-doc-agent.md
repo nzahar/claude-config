@@ -108,7 +108,6 @@ Single living document: `## Current` (overwritten) and `## History` (append-only
 #### Current section template
 
 ```
-**Active branch:** <branch>  (omit line if `main`)
 **Active experiment:** <domain>/<NN_slug> — <one-line>, or "none"
 **Recently completed:** <last 1-3 with status: complete>
 **Recently abandoned:** <last 1-3 with status: abandoned + reason verbatim>
@@ -124,7 +123,6 @@ Single living document: `## Current` (overwritten) and `## History` (append-only
 1. Read existing STATE.md (or RESEARCH-STATE.md if `state_owner: split`). Absent → create from template, skip step 2.
 2. Demote current `## Current` to top of `## History` with its `_Last updated:_` timestamp as entry header. Verbatim — historical record.
 3. Write fresh Current from actual project state, not from prior STATE.md:
-   - **Active branch:** `git branch --show-current`. If `main` → omit line.
    - **Active experiment:** most recent REPORT.md with `status: wip` (sort by `last_reviewed` desc). None → "none".
    - **Recently completed/abandoned:** scan REPORT.md frontmatter, sort by `last_reviewed`, take 1-3 of each status.
    - **Open cross-experiment questions:** from Phase 5 output, top 3-5 by frequency or recency.
@@ -134,6 +132,7 @@ Single living document: `## Current` (overwritten) and `## History` (append-only
 
 #### Phase 4 rules
 
+- **STATE.md is research trajectory, not git deployment.** Do not record `Active branch:` or any other field the model can derive from `git` in <1s. Decaying git references become lies the moment a branch is merged or deleted. Trajectory fields (Active experiment, Recently completed, Recently abandoned, Open questions, Next up) describe *what's being researched*, independent of git deployment, and decay slowly.
 - Run only on `--state-only` invocation or as final phase of full pass. Not on every drift-update — STATE.md churn destroys history value.
 - Brevity mandatory. Current readable in 30 seconds. Past one screen → promote items, drop noise.
 - Do not duplicate domain indexes. STATE.md highlights only what's *active or recent*.
