@@ -1,13 +1,30 @@
-Найди PR с номером $ARGUMENTS через gh cli.
+Найди PR с номером $ARGUMENTS и смержи его.
 
-1. Проверь статус PR: `gh pr view $ARGUMENTS --json state,mergeable,statusCheckRollup`
-   - Если PR не MERGEABLE (конфликты) — останови и покажи причину
-   - Если checks failed — предупреди и спроси продолжать ли
-2. Смержи: `gh pr merge $ARGUMENTS --squash --delete-branch`
-3. Переключись на main: `git checkout main`
-4. Подтяни изменения: `git pull`
-5. Почисти remote refs: `git fetch --prune`
-6. Удали локальную ветку если осталась: `git branch -d <branch> 2>/dev/null` (тихо, без ошибки если нет)
+**Mode detection.** В начале определи режим по URL `origin`:
+
+```bash
+git remote get-url origin | grep -qE '127\.0\.0\.1|local_proxy' && echo cloud || echo local
+```
+
+Если `cloud` — мерж и проверки идут через GitHub MCP, локальный `git push --delete` запрещён прокси. Если `local` — `gh` cli работает напрямую. Шаги, общие для обоих режимов, идут без префикса; различающиеся помечены **Local:** / **Cloud:**. Имена `owner` и `repo` для MCP-вызовов извлеки из `git remote get-url origin` (последние два сегмента пути без `.git`); если URL — прокси и не парсится, попроси у меня.
+
+1. Проверь статус PR.
+   - **Local:** `gh pr view $ARGUMENTS --json state,mergeable,statusCheckRollup`.
+   - **Cloud:** `mcp__github__pull_request_read` (через ToolSearch посмотри схему — обычно поле `method` принимает значения вроде `get` / `get_status` / `get_files`; нужны и общий статус PR, и состояние checks). Если в одном вызове и того и другого нет — сделай два.
+   - В обоих режимах: если PR не MERGEABLE (конфликты) — останови и покажи причину; если checks failed — предупреди и спроси продолжать ли.
+2. Смержи squash + delete branch.
+   - **Local:** `gh pr merge $ARGUMENTS --squash --delete-branch`.
+   - **Cloud:** `mcp__github__merge_pull_request` с `mergeMethod: "squash"`, `deleteBranch: true`, `pullNumber: $ARGUMENTS`, `owner`, `repo`.
+3. Переключись на main.
+   - **Local:** `git checkout main`.
+   - **Cloud:** `git fetch origin main && (git checkout main 2>/dev/null || git switch -c main origin/main)`. Локальной ветки `main` в свежей сессии может не быть — отсюда fallback через `switch -c`.
+4. Подтяни изменения: `git pull origin main` (read-only через прокси, в облаке тоже разрешён).
+5. Почисти remote refs.
+   - **Local:** `git fetch --prune`.
+   - **Cloud:** пропусти — удалением remote-ветки уже занялся MCP-merge с `deleteBranch: true`, локальный `git push --delete` запрещён прокси.
+6. Удали локальную feature-ветку если осталась.
+   - **Local:** `git branch -d <branch> 2>/dev/null` (тихо, без ошибки если нет).
+   - **Cloud:** пропусти — runtime пересоздаёт сессию с новой `claude/<slug>-<hash>`, локальная feature-ветка не нужна.
 7. Если в репо есть `docs/STATE.md` — впиши в самое начало секции `## Current` строку-маркер о только что сделанном мерже. **Без вызова `document-agent`** — это дешёвый append, не полная Phase 3. Используй `Edit` tool, не shell. Формат строки:
 
    ```
