@@ -1,3 +1,9 @@
+---
+name: STEP File Unicode / Cyrillic Decoding
+description: ISO 10303-21 STEP files encode non-ASCII as \X2\<UTF-16BE hex>\X0\ — decode by splitting the hex into 4-char chunks per code point
+type: feedback
+---
+
 # STEP File Unicode / Cyrillic Decoding
 
 **Extracted:** 2026-04-13

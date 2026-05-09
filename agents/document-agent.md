@@ -49,8 +49,10 @@ For each codemap area, compute the diff between current code and the structural 
 At the top of each codemap, maintain:
 ```
 **Last Updated:** YYYY-MM-DD
-**Structure Hash:** <md5 of sorted file paths + exported symbol signatures>
+**Structure Hash:** <md5 of sorted file paths in the area>
 ```
+The hash is over **sorted file paths only**, not exported symbol signatures. Per-language symbol extraction (Python AST, Go `go list`, TS compiler API) is too brittle and varies across projects — a path-only hash is cheap, deterministic, and catches add/remove/rename, which is what triggers Phase 1 anyway. Stable hash for free; symbol-level changes get caught by Phase 2's read-source pass, not by the hash.
+
 If hash unchanged → update date only, skip the rest for this area.
 
 ### Phase 1 rules
@@ -188,6 +190,8 @@ or stabilizes into a real decision, promote it to an ADR and remove from here.>
 ### 2. Demote current to history
 Take the existing `## Current` section, prepend it to `## History` with its `_Last updated:_` timestamp as the entry header. Do not edit it — it's a historical record now.
 
+**Same-day guard.** If the existing Current's `_Last updated:_` date matches today's date (multiple invocations the same day — morning sync + afternoon sync), **overwrite Current in place without demoting**. History is for trajectory across days, not micro-snapshots. Demoting the same day twice creates History entries that are identical except for the timestamp and pollutes the record.
+
 ### 3. Write fresh Current
 Look at the actual state of the work, not at what STATE.md said before:
 
@@ -208,6 +212,7 @@ Set `_Last updated: YYYY-MM-DD HH:MM_` at the top of the file to current local t
 
 ## Phase 3 rules
 
+- **No severity vocabulary in this agent.** STATE.md is descriptive, not graded. Drift comments use `<!-- DRIFT: ... -->` markers, not severity. Do not import `CRITICAL`/`HIGH` from `code-reviewer` or `blocker`/`warning` from `plan-reviewer` — each agent's severity model is local to its domain.
 - **Brevity is mandatory.** The whole point is that someone can read Current in 30 seconds. If Current grows past one screen, you are doing it wrong — promote stable items to ADRs or codemaps, drop noise.
 - **Do not duplicate what's in codemaps or ADRs.** STATE is about *now*, not about *what the code does*. "Authentication uses OAuth2" belongs in CODEMAPS or an ADR, not here. "Auth endpoint refactor in progress on `feature/auth-refactor`" belongs here.
 - **History is sacred.** Never edit a History entry. If something in history was wrong, that's a record of what we believed at the time. Add a correction to the next Current update if it matters.

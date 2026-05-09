@@ -1,3 +1,9 @@
+---
+name: Bimodal Distribution Visualization with Log Scale and GMM
+description: Plotting bimodal distributions where clusters live at very different scales — log-transform + GMM components, restore original-unit tick labels
+type: feedback
+---
+
 # Bimodal Distribution Visualization: Log Scale + GMM
 
 **Extracted:** 2026-03-30

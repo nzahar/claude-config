@@ -29,6 +29,15 @@ If you are about to say that tests pass, lint passes, the fix works, the migrati
 
 Evidence from earlier in the session does not count. Output from a previous attempt does not count. "Should work" does not count. Type-check passing is not a substitute for tests passing. Building is not a substitute for running. Running is not a substitute for checking exit code.
 
+If you catch yourself about to write any of these phrases — stop and verify first:
+- "should work" / "должно работать"
+- "скорее всего работает" / "probably works"
+- "теперь должно" / "now it should"
+- "по идее" / "in theory"
+- "fix should be sufficient" / "фикс должен закрыть"
+
+These phrases are signals that you are about to claim completion without evidence. Run the verification, paste the output, *then* claim.
+
 This applies equally to:
 - Implementation work ("I fixed the bug" → run the failing scenario, show it passes)
 - Tests ("tests pass" → run them now, show the count)
@@ -58,10 +67,12 @@ Bash оставь для того, что `Read`/`Edit`/`Write` не умеют:
 
 ## Long-running sub-agents — всегда в background
 
-**Любой sub-agent, который может работать дольше ~30 секунд — запускай с `run_in_background: true`.** Это правило, а не совет.
+**Правило по списку агентов, не по таймеру.** Решение foreground/background принимай по конкретному агенту, а не по эвристике "сколько секунд".
 
-- **Обязательно в background**: `code-reviewer`, `test-writer`, `document-agent`, `Explore` (thorough), `Plan`, `debugger`, `general-purpose` для многошаговых задач. Pre-merge триада (reviewer + test-writer + document-agent) — **всегда** три параллельных background-агента в одном сообщении.
+- **Обязательно в background**: `code-reviewer`, `test-writer`, `document-agent`, `experiment-doc-agent`, `Explore` (thorough), `Plan`, `debugger`, `general-purpose` для многошаговых задач. Pre-merge триада (reviewer + test-writer + document-agent) — **всегда** три параллельных background-агента в одном сообщении.
 - **Можно в foreground**: короткие целевые запросы (Explore quick, targeted grep через general-purpose) где результат нужен для следующего шага *немедленно*. `plan-reviewer` обычно тоже короткий — на усмотрение, но если план большой, запускай в background.
+
+Rule of thumb для агентов вне списка: если ожидаемая работа дольше ~30 секунд — в background.
 
 Почему это базовое правило:
 1. Агент работает в изолированном контексте — он ничего не ждёт от main-сессии.
@@ -113,7 +124,7 @@ The agent reads the plan and returns blockers and warnings across six dimensions
 
 **What to pass:** nothing special. The agent finds the plan from the current branch automatically. Pass an explicit path only if the plan was saved somewhere non-standard.
 
-### Pre-merge triad (test-writer + code-reviewer + document-agent)
+### Pre-merge triad (test-writer + code-reviewer + document-agent OR experiment-doc-agent)
 
 **Trigger — signal from the user**, not auto-detection. Claude Code cannot distinguish "branch still being worked on" from "branch ready to merge" — they are the same git state. The triad runs when the user signals readiness:
 
@@ -125,7 +136,7 @@ The triad:
 
 1. **`test-writer`** — generate and verify tests for new/changed public surfaces on this branch
 2. **`code-reviewer`** — security, quality, ADR compliance, regression check against follow-up issues
-3. **`document-agent`** — if the branch introduced architectural decisions, new routes/schemas, dependency changes, or otherwise affects documented areas
+3. **`document-agent`** (engineering projects) or **`experiment-doc-agent`** (research projects) — if the branch introduced architectural decisions, new routes/schemas, dependency changes, new/modified experiments/notebooks, or otherwise affects documented areas. Choice governed by project-level `state_owner` (see "Project-level `state_owner` field" above)
 
 **Run them in parallel, not sequentially.** They operate on read-only or disjoint write targets:
 - `code-reviewer` is read-only (no Write/Edit tools)
@@ -178,6 +189,8 @@ Agents can be invoked mid-branch if the user asks, or before a large internal re
 
 Commands (`/commit-push`, `/merge-pr`, others) are atomic — they do exactly what their name says and nothing more. They do NOT invoke review, test, or documentation agents. All quality gates are explicit steps that the user or the main session runs before calling the command. This keeps commands predictable and keeps the user in control of when review happens.
 
+**Documented exception:** `/merge-pr` appends a one-line marker to `docs/STATE.md` after a successful merge (using the `Edit` tool, not by invoking `document-agent`). This is a cheap, mechanical append — not a documentation refresh — and exists so that STATE.md stays honest between full `--state-only` agent runs. It does not violate the "no agents" rule.
+
 ## Git & Workflow
 
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`
@@ -196,3 +209,7 @@ Commands (`/commit-push`, `/merge-pr`, others) are atomic — they do exactly wh
 - **Alembic** для миграций (Python), `golang-migrate` (Go)
 - **pandas** для data processing
 - **Docker Compose** для инфраструктуры
+
+## Library Documentation
+
+Для вопросов про библиотеки/фреймворки/SDK/CLI (синтаксис API, конфигурация, миграции версий, library-specific дебаг) предпочитай **context7 MCP** (`mcp__plugin_context7_context7__resolve-library-id` → `query-docs`) над тренировочными данными и WebSearch. Тренировочный cutoff может не отражать свежие изменения; context7 ходит в актуальные доки. Не использовать для рефакторинга, общих программных концепций или дебага бизнес-логики.

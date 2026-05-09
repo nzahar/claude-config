@@ -1,3 +1,9 @@
+---
+name: SQLAlchemy Async with PostgreSQL Partitioned Tables
+description: Define partitioned tables on a separate MetaData and create via raw SQL in init_db — Base.metadata.create_all cannot generate PARTITION BY RANGE
+type: feedback
+---
+
 # SQLAlchemy Async + PostgreSQL Partitioned Tables
 
 **Extracted:** 2026-03-16

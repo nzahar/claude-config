@@ -5,14 +5,11 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git push *)",
-      "Bash(gh pr create *)",
-      "Bash(gh pr list *)",
       "Bash(gh pr:*)",
       "Bash(git branch:*)",
       "Bash(gh issue list:*)",
       "Bash(gh issue view:*)"
-    ],
-    "defaultMode": "default"
+    ]
   },
   "model": "opus",
   "hooks": {
@@ -22,7 +19,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||i.tool_input?.new_path||'';if(/\\.(ts|tsx|js|jsx)$/.test(p)){const{execSync}=require('child_process');try{const hits=execSync('grep -n \"console\\\\.log\" '+JSON.stringify(p)+' 2>/dev/null').toString().trim();if(hits){console.error('[Hook] console.log найден в '+p+':');hits.split('\\n').forEach(l=>console.error('  '+l));}}catch(e){}}console.log(d);})\""
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||i.tool_input?.new_path||'';if(/\\.(ts|tsx|js|jsx)$/.test(p)&&!/\\.(test|spec)\\./.test(p)&&!/node_modules/.test(p)){const cp=require('child_process');try{const hits=cp.execFileSync('grep',['-n','console\\\\.log',p],{stdio:['ignore','pipe','ignore']}).toString().trim();if(hits){console.error('[Hook] console.log найден в '+p+':');hits.split('\\n').forEach(l=>console.error('  '+l));}}catch(e){}}console.log(d);})\""
           }
         ]
       },
@@ -31,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||'';const fs=require('fs');if(/src[\\\\/].*\\.(ts|js)$/.test(p)&&!/\\.(test|spec)\\.(ts|js)$/.test(p)){const testPath=p.replace(/\\.(ts|js)$/,'.test.$1');if(!fs.existsSync(testPath)){console.error('[Hook] Тест не найден для: '+p);console.error('[Hook] Ожидается: '+testPath);console.error('[Hook] Рассмотри TDD подход — напиши тест первым');}}console.log(d);})\""
+            "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{const i=JSON.parse(d);const p=i.tool_input?.file_path||'';const fs=require('fs');if(/src[\\\\/].*\\.(ts|tsx|js|jsx)$/.test(p)&&!/\\.(test|spec)\\.(ts|tsx|js|jsx)$/.test(p)&&!/(^|[\\\\/])(index|types?|config|constants)\\.(ts|tsx|js|jsx)$/.test(p)&&!/\\.d\\.ts$/.test(p)){const testPath=p.replace(/\\.(ts|tsx|js|jsx)$/,'.test.$1');if(!fs.existsSync(testPath)){console.error('[Hook] Тест не найден для: '+p);console.error('[Hook] Ожидается: '+testPath);console.error('[Hook] Рассмотри TDD подход — напиши тест первым');}}console.log(d);})\""
           }
         ]
       }
@@ -41,10 +38,10 @@
     "security-guidance@claude-plugins-official": true,
     "context7@claude-plugins-official": true
   },
-  "extraKnownMarketplaces": {},
   "effortLevel": "xhigh",
   "theme": "dark-daltonized",
   "remoteControlAtStartup": true,
   "agentPushNotifEnabled": true,
-  "autoUpdaterChannel": "stable"
+  "autoUpdaterChannel": "stable",
+  "language": "Russian"
 }

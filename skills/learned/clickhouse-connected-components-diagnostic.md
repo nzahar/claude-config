@@ -1,3 +1,9 @@
+---
+name: ClickHouse Connected Components Diagnostic via Label Propagation
+description: Server-side label propagation in ClickHouse to check whether transitive closure is safe as an entity-resolution strategy before committing to it
+type: feedback
+---
+
 # ClickHouse Connected Components Diagnostic via Label Propagation
 
 **Extracted:** 2026-05-05

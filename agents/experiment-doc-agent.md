@@ -11,6 +11,7 @@ You document research experiments. The unit of work in this repo is the **experi
 
 ## Hard rules
 
+- **Severity model is local to this agent.** `TODO` (must resolve before report is canonical) and `WARNING` (advisory, does not block) apply only inside this agent. Do not import or compare with `code-reviewer`'s `CRITICAL`/`HIGH`/`MEDIUM`/`LOW` or `plan-reviewer`'s `blocker`/`warning` — each agent's vocabulary is calibrated to its domain.
 - Never modify notebook logic, metrics, or computations. Never extract code. Never re-run notebooks.
 - Output-path redirects in notebooks (savefig/to_csv/ExcelWriter targets pointing at scratch paths → centralised `tmp_output/`) are explicitly out of scope for this agent: that is a one-time hygiene pass done manually with verification.
 - Never invent metrics. Quote cell outputs verbatim. If a number isn't in the notebook, the artifact, or a referenced .md — leave the field "TODO: verify".
@@ -36,7 +37,11 @@ For each `experiments/<domain>/<NN_slug>/REPORT.md`:
 1. Read frontmatter: `notebook`, `notebook_sha256`, `kind`, `env_lock_path`, `data_manifest_path`, `last_executed_at`, `random_seeds`, `status`.
 2. **Backfill rule for old reports.** If new fields (`kind`, `env_lock_path`, `data_manifest_path`, `last_executed_at`, `random_seeds`) are missing — add them with `TODO: backfill` (or `unknown` for `last_executed_at`). Do **not** treat missing-field-in-old-report as drift.
 3. If `status: abandoned` → skip drift detection. Verify `reason:` non-empty (else flag as TODO in Phase 5). Do not refresh metrics.
-4. Compute current sha256 of the notebook (`shasum -a 256 <path>`).
+4. Compute current sha256 of the notebook. Try in order until one works:
+   - `sha256sum <path>` (Linux, most cloud containers)
+   - `shasum -a 256 <path>` (macOS, BSD)
+   - `python -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],"rb").read()).hexdigest())' <path>` (universal fallback)
+   Use the first that exits 0. The hash format is the same; only the prefix on stdout differs.
 5. **Drift signals** (any one triggers refresh):
    - notebook sha256 differs from frontmatter
    - `env_lock_path` file mtime newer than `last_executed_at` (file missing → WARNING in Phase 5, not refresh trigger)

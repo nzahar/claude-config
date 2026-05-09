@@ -1,3 +1,9 @@
+---
+name: Nginx Config for Production SPA with API Proxy
+description: Production nginx for SPA + backend — body size limit, SPA fallback for direct URLs, forwarded headers, and API path stripping
+type: feedback
+---
+
 # Nginx Config for Production SPA with API Proxy
 
 **Extracted:** 2026-03-17

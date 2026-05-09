@@ -1,3 +1,9 @@
+---
+name: FastAPI Async Background Tasks Don't Block the Event Loop
+description: Async FastAPI BackgroundTasks calling sync CPU-heavy code (pandas, openpyxl, file I/O) blocks the entire server — wrap with asyncio.to_thread()
+type: feedback
+---
+
 # FastAPI Async Background Tasks — Don't Block the Event Loop
 
 **Extracted:** 2026-03-16

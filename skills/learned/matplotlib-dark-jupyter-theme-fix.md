@@ -1,3 +1,9 @@
+---
+name: Matplotlib Dark Jupyter Theme Override Fix
+description: Fix invisible matplotlib text and black legend boxes in dark Jupyter themes — set rcParams before plotting, not per-call colors
+type: feedback
+---
+
 # Matplotlib Dark Jupyter Theme Override Fix
 
 **Extracted:** 2026-03-27

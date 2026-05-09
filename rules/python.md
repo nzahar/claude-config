@@ -72,13 +72,19 @@ def public_functions():
 
 `@dataclass(frozen=True)` с дефолтами. Inline-комментарии для неочевидных параметров.
 
-### Conda Environment
+### Python Environment
 
-Перед запуском Python через Bash — определи окружение из конфига проекта:
+Перед запуском Python через Bash — определи путь к нужному интерпретатору. Никогда не использовать `python`, `python3`, `conda run` напрямую — это даёт системный или случайный env. Всегда абсолютный путь к интерпретатору проектного env.
 
-1. Есть `environment.yml` → взять имя из поля `name:`
-2. Нет файла → проверить `CLAUDE.md` / `README.md` / спросить пользователя
+**Порядок поиска:**
 
-Использовать полный путь к бинарнику: `/Users/zakharnedashkovskiy/miniforge3/envs/<name>/bin/python`
+1. **Conda env по `environment.yml`.** Если в проекте есть `environment.yml`:
+   - Имя env: `name:` из YAML.
+   - Путь: получить через `conda env list | awk '$1=="<name>"{print $NF}'`. Это надёжнее, чем угадывать инсталляционный префикс conda — он различается между машинами (`~/miniforge3`, `~/miniconda3`, `~/anaconda3`, `/opt/conda` в облаке).
+   - Бинарник: `<env-path>/bin/python`.
+   - **Если `conda` не установлен (cloud-runner без conda) или `conda env list` падает / возвращает пустой результат** — сразу провались на шаг 2, не пытайся повторно. Сообщение об ошибке не блокирует chain.
+2. **Venv проекта.** Если есть `.venv/` или `venv/` в корне — использовать `<root>/.venv/bin/python` или `<root>/venv/bin/python`.
+3. **Активный env как fallback.** Если активирован какой-то env (есть `$CONDA_PREFIX` или `$VIRTUAL_ENV`) — использовать `$CONDA_PREFIX/bin/python` / `$VIRTUAL_ENV/bin/python`.
+4. **Иначе** — спросить пользователя или прочитать `CLAUDE.md`/`README.md` проекта на предмет инструкций.
 
-Никогда не использовать `python`, `python3`, `conda run` — только прямой путь к нужному окружению.
+Это работает и локально (macOS/miniforge), и в облачном Claude Code, и на Linux-серверах.

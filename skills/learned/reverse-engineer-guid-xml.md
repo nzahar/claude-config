@@ -1,3 +1,9 @@
+---
+name: Reverse-Engineering GUID-Based XML Formats
+description: Build a GUID→meaning dictionary for proprietary XML (CAD/CAM/PLM) by grepping Class GUIDs and correlating with sibling Value attributes
+type: feedback
+---
+
 # Reverse-Engineering GUID-Based XML Formats
 
 **Extracted:** 2026-04-13

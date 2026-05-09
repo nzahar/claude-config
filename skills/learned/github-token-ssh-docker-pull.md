@@ -1,3 +1,9 @@
+---
+name: GITHUB_TOKEN for Server-Side Docker Pull in SSH Deploy Steps
+description: Pass ${{ secrets.GITHUB_TOKEN }} directly into SSH script string in GitHub Actions to authenticate GHCR image pulls without a separate PAT
+type: feedback
+---
+
 # GITHUB_TOKEN for Server-Side Docker Pull in SSH Deploy Steps
 
 **Extracted:** 2026-03-17
