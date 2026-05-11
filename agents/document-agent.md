@@ -161,10 +161,9 @@ _Last updated: YYYY-MM-DD HH:MM_
 
 ## Current
 
-**In progress:** <one-line description of what's being built right now, or "none">
-**Recently shipped:** <last 1-3 merged things, with PR/commit references>
+**Last shipped:** <PR # + title + 1-line value description of the most recent merged PR, or "none">
 **Blocked / waiting on:** <items waiting on user, external API, decision — or "nothing">
-**Next up:** <what's planned to start after current work, if known>
+**Next up:** <what's planned to start, using `by user: …` prefix when waiting on a user command>
 
 ### Notes
 <free-form observations that don't fit categories — gotchas discovered, partial decisions
@@ -180,6 +179,27 @@ or stabilizes into a real decision, promote it to an ADR and remove from here.>
 <and so on, oldest entries at the bottom>
 ```
 
+### Example — engineering Current
+
+````markdown
+## Current
+
+**Last shipped:** 2026-05-09 — feat(auth): rate-limit refactor (PR #142). Replaces in-memory counter with Redis sliding window; multi-instance deployments now share quota correctly.
+
+**Blocked / waiting on:**
+- ADR-0019 (event-schema versioning) — awaiting team review
+- by user: confirm migration window for `users.email` non-null constraint
+
+**Next up:**
+- by user: review docs/plans/billing-webhooks.md before implementation starts
+- complete docs/plans/api-pagination.md (cursor-based pagination across list endpoints)
+
+### Notes
+- pgx → asyncpg migration uncovered a connection-pool sizing gotcha — see Gotchas in CODEMAPS/db.md.
+````
+
+Every field is invariant under merge: PR # + title (stable URLs / immutable artifacts), planned work in plan files, blockers attributed to user / external review — not to branch state.
+
 ## Workflow
 
 ### 1. Read existing STATE.md
@@ -192,12 +212,12 @@ Take the existing `## Current` section, prepend it to `## History` with its `_La
 **Same-day guard.** If the existing Current's `_Last updated:_` date matches today's date (multiple invocations the same day — morning sync + afternoon sync), **overwrite Current in place without demoting**. History is for trajectory across days, not micro-snapshots. Demoting the same day twice creates History entries that are identical except for the timestamp and pollutes the record.
 
 ### 3. Write fresh Current
-Look at the actual state of the work, not at what STATE.md said before:
 
-- **In progress**: read the most recent unmerged commits on the active branch (use `git branch --show-current` + `git log` to see what's there), or `docs/plans/<branch-slug>.md` if it exists. Describe in one line what's actually being built. If nothing is in progress, say "none".
-- **Recently shipped**: look at the last 1-3 merged PRs or squash commits on `main` (use `git log main --merges -3` or `git log main --oneline -5`). Reference them by title, not by hash.
-- **Blocked / waiting on**: this you usually cannot derive automatically — leave the previous value if it's still relevant, or set to "nothing" if previous blockers were obviously resolved (e.g., the branch they blocked is now merged). When in doubt, ask the user once at the end.
-- **Next up**: read `docs/plans/` and `ROADMAP.md` (if exists). State the next intended chunk of work in one line.
+Look at the actual state of the work, not at what STATE.md said before. **Every field in Current must remain valid after a squash-merge of the current feature branch** — the "invariant under merge" principle. Test each value you write: "would this still be true after `git merge`?" If not, decompose or drop. Sources per field:
+
+- **Last shipped**: title and PR number of the most recent merged PR. Use `git log main --merges -3 --pretty=format:"%s"` for merge subjects, or `gh pr list --state merged --limit 3` if available. Reference by **title + PR # only** — never commit hash, never branch name (both decay). Add one short line describing the value shipped (what changed for users / for the system), not how it was implemented. "none" if no merges yet.
+- **Blocked / waiting on**: usually cannot be derived automatically — leave the previous value if still relevant, or set to "nothing" if previous blockers were obviously resolved (e.g., the branch they blocked is now merged). When in doubt, ask the user once at the end.
+- **Next up**: read `docs/plans/` and `ROADMAP.md` (if exists). State the next intended chunk of work in one line. Use `by user: …` prefix when the next action requires a user command (review, decision, manual step). For an in-flight branch not yet merged, reference its plan file at `docs/plans/<branch-slug>.md` — "complete plan X", never "branch Y is in progress".
 
 ### 4. Update Notes section
 - Re-read existing Notes. Drop notes that are clearly obsolete (refer to merged work, resolved questions).
@@ -211,7 +231,8 @@ Set `_Last updated: YYYY-MM-DD HH:MM_` at the top of the file to current local t
 ## Phase 3 rules
 
 - **No severity vocabulary in this agent.** STATE.md is descriptive, not graded. Drift comments use `<!-- DRIFT: ... -->` markers, not severity. Do not import `CRITICAL`/`HIGH` from `code-reviewer` or `blocker`/`warning` from `plan-reviewer` — each agent's severity model is local to its domain.
-- **STATE.md is trajectory, not git deployment.** Do not record `Active branch:` or any other field that the model can derive from `git` in <1s (`git branch --show-current`, `git log`, `git status`). Decaying git references in STATE.md become lies the moment a branch is merged and deleted; the file is then misleading until the next agent run, which may not happen for days. Trajectory fields (In progress, Recently shipped, Blocked, Next up) describe *what's being done*, independent of git deployment, and decay slowly.
+- **STATE.md is trajectory, not git deployment — invariant under merge.** Every Current field must remain valid after `git merge` of the current feature branch. Forbidden because they decay at merge: `Active branch:`, `In progress: <X> (uncommitted)`, `🛠️ Working tree (<branch>): …`, `Awaiting commit + push`, `Pre-merge triad in progress`, and commit hashes (`abc1234`). PR numbers (`#42`) are stable URLs, allowed. Trajectory fields (Last shipped, Blocked, Next up) describe *what's been done and what's planned*, independent of git deployment, and remain valid through merge. "What's being built right now" lives in `docs/plans/<branch-slug>.md` (the plan file), not in STATE.md.
+- **Phase 3 cadence.** Phase 3 runs only as the final phase of a full pass or on explicit `--state-only` invocation. Routine Phase 1-2 updates do not auto-trigger Phase 3 — STATE.md churn destroys history value.
 - **Brevity is mandatory.** The whole point is that someone can read Current in 30 seconds. If Current grows past one screen, you are doing it wrong — promote stable items to ADRs or codemaps, drop noise.
 - **Do not duplicate what's in codemaps or ADRs.** STATE is about *now*, not about *what the code does*. "Authentication uses OAuth2" belongs in CODEMAPS or an ADR, not here. "Auth endpoint refactor in progress on `feature/auth-refactor`" belongs here.
 - **History is sacred.** Never edit a History entry. If something in history was wrong, that's a record of what we believed at the time. Add a correction to the next Current update if it matters.
@@ -222,11 +243,14 @@ Set `_Last updated: YYYY-MM-DD HH:MM_` at the top of the file to current local t
 
 ## When to Run
 
-**ALWAYS:** After merging a feature branch, after dependency changes, after route or schema changes, after major architectural changes, at the end of a long session even if no merge happened (Phase 3 alone is fine in that case — pass `--state-only` in the prompt and skip Phases 1-2).
+**Phase 1-2 (structural + meaning):** triggered by code events — after dependency changes, after route or schema changes, after major architectural changes. Skip for cosmetic-only / comment-only / formatting changes.
 
-**SKIP entirely:** Cosmetic-only changes, comment-only edits, formatting changes.
+**Phase 3 (state):** triggered by *session boundaries*, not by code events. The whole point of STATE.md is that the **next** session orients cheaply — so run it when a session ends, not when code merges. Specifically:
+- End of a work session even if no merge happened — pass `--state-only` and skip Phases 1-2.
+- After merge **only if** open questions / next up materially shifted as a result. Routine merges with no plan-state shift do not require a refresh.
+- Before a long break (vacation, context switch to another project).
 
-**SKIP Phase 1-2, run Phase 3 only:** End-of-session checkpoints where you want the next Claude session to pick up cleanly, but no code structure changed since last full run.
+Skip Phase 3 if the session was purely exploratory and produced no decisions, no blockers, and no plan changes — nothing has happened that needs to be picked up.
 
 ---
 

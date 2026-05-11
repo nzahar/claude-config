@@ -8,14 +8,14 @@
 
 ## Project State Awareness
 
-**At the start of every session in a project, read `docs/STATE.md` if it exists.** This file is maintained by the project's documentation agent (`document-agent` for engineering projects, `experiment-doc-agent` for research projects; project-level `CLAUDE.md` may declare `state_owner` explicitly). It contains the current trajectory of work: active branch, what's in progress, what's blocked, what's next. Reading it once at session start gives you the orientation a returning collaborator would have.
+**At the start of every session in a project, read `docs/STATE.md` if it exists.** This file is maintained by the project's documentation agent (`document-agent` for engineering projects, `experiment-doc-agent` for research projects; project-level `CLAUDE.md` may declare `state_owner` explicitly). It contains the current trajectory of work: what was last shipped, what's blocked, what's planned next — described in terms invariant under merge (PR titles, file-derived statuses), not in terms of branch / working-tree state. Reading it once at session start gives you the orientation a returning collaborator would have.
 
 Rules:
 
 - **Read it before answering the user's first message.** Not lazily on demand — at session start, alongside (or right after) any other project files you check.
 - **Read the `## Current` section.** The `## History` section is for deep context on past trajectory; consult it only if the user asks about prior decisions or you need to understand how the project got here.
 - **If the file does not exist, do nothing.** Do not ask the user to create it, do not offer to create it. Some projects don't have one yet, that's fine.
-- **STATE.md can be stale.** If the user's first message contradicts STATE.md ("let's work on Y" while STATE.md says "in progress: X"), trust the user — the file may not have been updated since the last work session. Note the discrepancy briefly if relevant ("STATE.md says X is in progress — pausing that, switching to Y") but don't argue with the user about it.
+- **STATE.md can be stale.** If the user's first message contradicts what STATE.md treats as currently active or planned (e.g. user opens with "let's work on Y" while STATE.md's `Next up:` says Z) — trust the user. STATE.md describes the project's snapshot at the last documentation pass; it does not bind the user's plans for this session. Note the discrepancy briefly if relevant, do not argue.
 - **Never edit STATE.md from the main session.** It is owned by the project's documentation agent (`document-agent` Phase 3 for engineering, `experiment-doc-agent` Phase 4 for research; project-level `CLAUDE.md` may declare `state_owner` explicitly). Editing it from the main session causes conflicts. If you think STATE.md should be updated, suggest invoking the appropriate documentation agent with `--state-only`.
 - **Do not surface STATE.md content unprompted.** Use it for your own orientation. The user does not need a recap of their own project unless they ask for one.
 
@@ -189,7 +189,7 @@ Agents can be invoked mid-branch if the user asks, or before a large internal re
 
 Commands (`/commit-push`, `/merge-pr`, others) are atomic — they do exactly what their name says and nothing more. They do NOT invoke review, test, or documentation agents, and they do NOT edit documentation files (no STATE.md markers, no codemap fixups, no log entries). All quality gates and documentation refresh are explicit steps that the user or main session runs before/after calling the command. This keeps commands predictable and keeps the user in control of when review and docs happen.
 
-Post-merge STATE.md may be slightly stale until the next `document-agent --state-only` run — `In progress:` will still describe the just-shipped work. This is acceptable: the new session reads `git log main -3` and sees the squash-merge subject matching the `In progress:` description, which makes the staleness obvious and correctable in seconds. No command machinery needed.
+Post-merge STATE.md remains valid: `## Current` is a post-merge snapshot describing last shipped work, open questions, and next up — not in-progress git state. Optional `--state-only` refresh after merge is needed only if open questions or next up materially shifted from the merge. Routine merges do not require state refresh.
 
 ## Git & Workflow
 

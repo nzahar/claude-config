@@ -105,35 +105,85 @@ Reason quotes frontmatter `reason:` verbatim. Listed for visibility — future c
 
 Single living document: `## Current` (overwritten) and `## History` (append-only, newest on top).
 
-#### Current section template
+#### File structure template
 
 ```
+# STATE — <project-name>
+
+_Last updated: YYYY-MM-DD HH:MM_
+
+## Current
+
+**Last shipped:** <YYYY-MM-DD — title (PR #N) + 1-line research value, or "none">
 **Active experiment:** <domain>/<NN_slug> — <one-line>, or "none"
 **Recently completed:** <last 1-3 with status: complete>
 **Recently abandoned:** <last 1-3 with status: abandoned + reason verbatim>
 **Open cross-experiment questions:** <top 3-5 from Phase 5 across domains>
-**Next up:** <from BACKLOG.md ## Open and domain READMEs>
+**Next up:** <from BACKLOG.md ## Open and domain READMEs, `by user: …` prefix where applicable>
 
 ### Notes
 <short observations not fitting categories — promote to docs/findings/ if a note grows>
+
+## History
+
+### YYYY-MM-DD HH:MM
+<previous Current section, verbatim, demoted here on the next update.>
+
+### YYYY-MM-DD HH:MM
+<and so on, oldest entries at the bottom>
 ```
+
+Header (`# STATE — <name>` + `_Last updated: YYYY-MM-DD HH:MM_`) is identical to the engineering `document-agent` format. In `state_owner: split` mode the file is `docs/RESEARCH-STATE.md`, but the header style is the same.
+
+#### Example — research Current
+
+````markdown
+## Current
+
+**Last shipped:** 2026-05-11 — feat(c61): exp 22 — postop training impact on screening-naive (PR #6). H1 falsified: Δ TP=−3 in screening-naive cohort, "no harm" property holds.
+
+**Active experiment:** none (no REPORT.md with status: wip).
+
+**Recently completed:**
+- prostate_c61/22_postop_impact_on_screening_naive — head-to-head full vs aggressive cohort
+- prostate_c61/21_paper_artifacts_aggressive_additional — Fig. 4/8 + feature importance
+- prostate_c61/20_paper_artifacts_aggressive_cohort — Table 2 / Fig. 5 / Fig. 9
+
+**Open cross-experiment questions:**
+- argument_full_cohort_paper.md transfer claim invalidated by exp 22 — paper-side revision (by user)
+- BACKLOG #5 (row-level split, AutoGluon version pinning)
+
+**Next up:**
+- by user: revise argument_full_cohort_paper.md
+- BACKLOG #2 (non-C61 domain reports)
+````
+
+Every field is invariant under merge: derived from REPORT.md frontmatter (Active / Recently completed / Recently abandoned) or PR titles (Last shipped) — never from git branch name, working tree, or commit hash.
 
 #### Workflow
 
 1. Read existing STATE.md (or RESEARCH-STATE.md if `state_owner: split`). Absent → create from template, skip step 2.
 2. Demote current `## Current` to top of `## History` with its `_Last updated:_` timestamp as entry header. Verbatim — historical record.
-3. Write fresh Current from actual project state, not from prior STATE.md:
-   - **Active experiment:** most recent REPORT.md with `status: wip` (sort by `last_reviewed` desc). None → "none".
-   - **Recently completed/abandoned:** scan REPORT.md frontmatter, sort by `last_reviewed`, take 1-3 of each status.
-   - **Open cross-experiment questions:** from Phase 5 output, top 3-5 by frequency or recency.
-   - **Next up:** `BACKLOG.md ## Open` + domain READMEs for planned-but-not-started.
+
+   **Same-day guard.** If the existing Current's `_Last updated:_` date matches today's date (multiple invocations same day — morning sync + afternoon sync), **overwrite Current in place without demoting**. History is for trajectory across days, not micro-snapshots. Demoting same day twice creates History entries identical except for timestamp and pollutes the record.
+3. Write fresh Current from actual project state, not from prior STATE.md.
+
+   **Every field must remain valid after a squash-merge** of the current feature branch — the "invariant under merge" principle. Test each value: "would this still be true after `git merge`?" Active experiment is derived from REPORT.md `status: wip` (a file fact), **not** from `git branch --show-current` or working-tree state. Recently completed/abandoned are derived from REPORT.md frontmatter (file facts), not from in-flight commits. Sources per field:
+
+   - **Last shipped:** title and PR number of the most recent merged PR that shipped a research artifact (a finalized report, exported figures/tables, paper-bound result). Use `git log main --merges -3 --pretty=format:"%s"` for merge subjects, or `gh pr list --state merged --limit 3` if available. Reference by **title + PR # only** — never commit hash, never branch name. Add one short line of research value (e.g. "H1 falsified", "Fig. 5/9 finalized", "Table 2 produced"). "none" if no merges yet.
+   - **Active experiment:** most recent REPORT.md with `status: wip` (scan `experiments/*/*/REPORT.md` frontmatter, sort by `last_reviewed` desc). **Derived from REPORT.md frontmatter — not from git branch or working tree.** "none" if no `wip` reports.
+   - **Recently completed:** scan REPORT.md frontmatter for `status: complete`, sort by `last_reviewed` desc, take 1-3. Reference by `<domain>/<NN_slug>` + one-line takeaway from `## Result`.
+   - **Recently abandoned:** scan REPORT.md frontmatter for `status: abandoned`, sort by `last_reviewed` desc, take 1-3. Quote `reason:` verbatim.
+   - **Open cross-experiment questions:** from Phase 5 output, top 3-5 by frequency or recency. Read `experiments/*/README.md ## Cross-experiment open questions`.
+   - **Next up:** read `BACKLOG.md ## Open` and domain READMEs (`experiments/*/README.md`) for planned-but-not-started. Use `by user: …` prefix when the next action requires a user command (decision, paper draft, manual step).
 4. Update Notes: drop obsolete, keep relevant, promote grown notes to `docs/findings/<slug>.md`.
 5. Update `_Last updated:_` timestamp.
 
 #### Phase 4 rules
 
-- **STATE.md is research trajectory, not git deployment.** Do not record `Active branch:` or any other field the model can derive from `git` in <1s. Decaying git references become lies the moment a branch is merged or deleted. Trajectory fields (Active experiment, Recently completed, Recently abandoned, Open questions, Next up) describe *what's being researched*, independent of git deployment, and decay slowly.
-- Run only on `--state-only` invocation or as final phase of full pass. Not on every drift-update — STATE.md churn destroys history value.
+- **STATE.md is research trajectory, not git deployment — invariant under merge.** Every Current field must remain valid after `git merge` of the current feature branch. Forbidden because they decay at merge: `Active branch:`, `In progress: <X> (uncommitted)`, `🛠️ Working tree (<branch>): …`, `Awaiting commit + push`, `Pre-merge triad in progress`, and commit hashes (`abc1234`). PR numbers (`#42`) are stable URLs, allowed. Trajectory fields (Last shipped, Active experiment, Recently completed/abandoned, Open questions, Next up) describe *what's being researched*, independent of git deployment, and remain valid through merge.
+- **No severity vocabulary in Phase 4.** STATE.md is descriptive, not graded. The local `TODO`/`WARNING` vocabulary from Phases 1-3 belongs in REPORT.md and the domain README, not in STATE.md. Do not import `CRITICAL`/`HIGH` from `code-reviewer` or `blocker`/`warning` from `plan-reviewer` — each agent's severity vocabulary is calibrated to its domain.
+- **Phase 4 cadence.** Run only on `--state-only` invocation or as final phase of full pass. Not on every drift-update — STATE.md churn destroys history value.
 - Brevity mandatory. Current readable in 30 seconds. Past one screen → promote items, drop noise.
 - Do not duplicate domain indexes. STATE.md highlights only what's *active or recent*.
 - History is sacred. Never edit a History entry.
@@ -146,9 +196,17 @@ Collect every "TODO: verify" entry, every TODO flagged during Phases 1-2 (missin
 
 ## When to run
 
+**Phase 1-3 (drift + reports + index):**
 - Explicit user request ("обнови отчёты по C61", "experiment-doc-agent на 14_low_psa_tp_analysis").
 - After a notebook is added or modified — drift detection in Phase 1 will trigger a refresh.
 - Before a paper / presentation milestone.
+
+**Phase 4 (state):** triggered by *session boundaries*, not by notebook events. The whole point of STATE.md is that the **next** session orients cheaply — so run it when a session ends. Specifically:
+- End of a research session even if no notebook was finalized — pass `--state-only` and skip Phases 1-3.
+- After a significant experiment status change (`complete` / `abandoned`) **only if** cross-experiment questions or next-up materially shifted as a result. Routine drift-updates do not auto-trigger Phase 4.
+- Before a paper / presentation milestone (final state snapshot).
+
+Skip Phase 4 if the session was purely exploratory and produced no status changes, no decisions, and no new blockers.
 
 ## Non-goals
 
