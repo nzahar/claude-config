@@ -32,7 +32,18 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"$CLAUDE_CODE_REMOTE\" = \"true\" ] && git -C ~/.claude-config pull --ff-only --quiet 2>/dev/null || true"
+          }
+        ]
+      }
     ]
+
   },
   "enabledPlugins": {
     "security-guidance@claude-plugins-official": true,
