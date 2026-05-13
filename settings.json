@@ -43,16 +43,20 @@
         ]
       }
     ]
-
   },
   "enabledPlugins": {
     "security-guidance@claude-plugins-official": true,
     "context7@claude-plugins-official": true
   },
+  "language": "Russian",
   "effortLevel": "xhigh",
   "theme": "dark-daltonized",
   "remoteControlAtStartup": true,
   "agentPushNotifEnabled": true,
   "autoUpdaterChannel": "stable",
-  "language": "Russian"
+  "voiceEnabled": true,
+  "voice": {
+    "enabled": true,
+    "mode": "hold"
+  }
 }
