@@ -172,12 +172,15 @@ or stabilizes into a real decision, promote it to an ADR and remove from here.>
 
 ## History
 
-### YYYY-MM-DD HH:MM
-<previous Current section, verbatim, demoted here on the next update.>
+### YYYY-MM-DD HH:MM — <one-line summary of what changed in that snapshot>
+- **Last shipped:** <PR # + title only>
+- <2-3 bullets for material decisions/blockers of that snapshot, each carrying an inline ref to ADR/PR/commit/plan>
 
-### YYYY-MM-DD HH:MM
+### YYYY-MM-DD HH:MM — <…>
 <and so on, oldest entries at the bottom>
 ```
+
+**Compressed History shape.** Each History entry is **at most ~10 lines**. It is *not* a verbatim copy of the previous Current — it is a compressed record produced by step 2 of the workflow. Drop Notes blocks, drop Read-order TOCs, drop Active-phase paraphrases of plans, drop Recently-shipped DDL pastes. Keep only the header, one `Last shipped:` line, and 2-3 bullets that carry inline pointers (PR/ADR/commit/plan/file path) — those pointers are how a future reader recovers detail.
 
 ### Example — engineering Current
 
@@ -206,8 +209,15 @@ Every field is invariant under merge: PR # + title (stable URLs / immutable arti
 - If file does not exist → create from the template above. Skip step 2.
 - If file exists → read full file. Note current values.
 
-### 2. Demote current to history
-Take the existing `## Current` section, prepend it to `## History` with its `_Last updated:_` timestamp as the entry header. Do not edit it — it's a historical record now.
+### 2. Demote current to history (compressed)
+**Do NOT paste the existing `## Current` section verbatim into History.** Produce a compressed entry (≤ 10 lines) by extracting:
+- A header line: `### <existing Last-updated timestamp> — <one-line summary of the snapshot — what was shipped or what shifted>`.
+- One `**Last shipped:** <PR # + title>` line (no value description suffix).
+- 2-3 bullets that name a material decision, a blocker, or a next-up of that snapshot. Each bullet must carry an inline reference: `(see ADR-NNNN)`, `(PR #N)`, `(commit abc1234)`, `(plan docs/plans/<slug>.md §X)`, or `<file>:<symbol>`. Bullets without such references are dropped — if the content was load-bearing it should already live in an ADR or codemap, and the inline reference is enough to find it.
+
+**Dropped during demotion** (do not carry into History): full Notes block, Read-order TOC, Recently-shipped DDL pastes, paraphrase of plan-file content, narrative explanation of decisions. The original detail lives in ADRs / plan files / git history, reachable via the inline references above.
+
+Prepend the compressed entry to `## History` (newest on top). Do not edit existing History entries — they were produced by past compression and are immutable.
 
 **Same-day guard.** If the existing Current's `_Last updated:_` date matches today's date (multiple invocations the same day — morning sync + afternoon sync), **overwrite Current in place without demoting**. History is for trajectory across days, not micro-snapshots. Demoting the same day twice creates History entries that are identical except for the timestamp and pollutes the record.
 
@@ -219,13 +229,26 @@ Look at the actual state of the work, not at what STATE.md said before. **Every 
 - **Blocked / waiting on**: usually cannot be derived automatically — leave the previous value if still relevant, or set to "nothing" if previous blockers were obviously resolved (e.g., the branch they blocked is now merged). When in doubt, ask the user once at the end.
 - **Next up**: read `docs/plans/` and `ROADMAP.md` (if exists). State the next intended chunk of work in one line. Use `by user: …` prefix when the next action requires a user command (review, decision, manual step). For an in-flight branch not yet merged, reference its plan file at `docs/plans/<branch-slug>.md` — "complete plan X", never "branch Y is in progress".
 
+**References, not copies, in Notes.** If a Notes bullet duplicates content available in an ADR, plan file, codemap, or git history — replace with `(see ADR-NNNN §X)` / `(see plan §Y)` / `<file>:<symbol>` instead of pasting content inline. Test for each bullet: "if I delete this, is anything lost that isn't recoverable from ADR/plan/codemap/git?" If no — drop. The exceptions worth keeping inline are snapshot operational facts that aren't recorded elsewhere (live system state, observed counts, environment-specific gotchas).
+
+**No Read-order block.** Do not write a "Read order for cold-start" list in Current or in any History entry. If a project genuinely needs a stable onboarding pointer list, it lives in `docs/ONBOARDING.md`, not inside STATE.md.
+
 ### 4. Update Notes section
 - Re-read existing Notes. Drop notes that are clearly obsolete (refer to merged work, resolved questions).
 - Keep notes that are still relevant.
 - Add new notes only for things that genuinely don't fit elsewhere — gotchas, observations, partial decisions.
 - If a note has grown past a few lines or stabilized → promote it to a proper ADR (Phase 2 territory) and remove from Notes.
 
-### 5. Update timestamp
+### 5. Evaluate hard cap
+After the file has settled into its final shape this run (whether step 2 demoted-and-compressed or the same-day guard overwrote Current in place), count lines:
+- If `## History` section exceeds **400 lines** OR total `docs/STATE.md` exceeds **600 lines** — move the oldest History entries one by one to `docs/STATE-ARCHIVE.md` until the file is back under both caps. Moving an entry to the archive is not "editing" it — the entry's body is preserved verbatim; only its location changes. The "History is sacred" rule below forbids editing the content of a History entry, not relocating it.
+- Insert moved entries **immediately after the archive's title line**, before any existing first archived entry (newest archived first; the title stays at line 1).
+- If `docs/STATE-ARCHIVE.md` does not exist, create it with a single-line title `# STATE archive — <project>` above the entries.
+- This step always targets `docs/STATE-ARCHIVE.md` regardless of `state_owner` — `document-agent` owns the engineering side, which is `docs/STATE.md` (full ownership) or the engineering half of a `split` project. In split mode, `experiment-doc-agent`'s mirror step writes to a different file (`docs/RESEARCH-STATE-ARCHIVE.md`) to avoid collision.
+- If a project already has `docs/STATE-HISTORY-<year>.md` files from the prior archive rule, leave them in place — new archival writes go to `docs/STATE-ARCHIVE.md` and the two coexist.
+- The cap trigger is **size**, not age — young projects with fast rhythm hit it before "6 months old" would.
+
+### 6. Update timestamp
 Set `_Last updated: YYYY-MM-DD HH:MM_` at the top of the file to current local time.
 
 ## Phase 3 rules
@@ -233,10 +256,13 @@ Set `_Last updated: YYYY-MM-DD HH:MM_` at the top of the file to current local t
 - **No severity vocabulary in this agent.** STATE.md is descriptive, not graded. Drift comments use `<!-- DRIFT: ... -->` markers, not severity. Do not import `CRITICAL`/`HIGH` from `code-reviewer` or `blocker`/`warning` from `plan-reviewer` — each agent's severity model is local to its domain.
 - **STATE.md is trajectory, not git deployment — invariant under merge.** Every Current field must remain valid after `git merge` of the current feature branch. Forbidden because they decay at merge: `Active branch:`, `In progress: <X> (uncommitted)`, `🛠️ Working tree (<branch>): …`, `Awaiting commit + push`, `Pre-merge triad in progress`, and commit hashes (`abc1234`). PR numbers (`#42`) are stable URLs, allowed. Trajectory fields (Last shipped, Blocked, Next up) describe *what's been done and what's planned*, independent of git deployment, and remain valid through merge. "What's being built right now" lives in `docs/plans/<branch-slug>.md` (the plan file), not in STATE.md.
 - **Phase 3 cadence.** Phase 3 runs only as the final phase of a full pass or on explicit `--state-only` invocation. Routine Phase 1-2 updates do not auto-trigger Phase 3 — STATE.md churn destroys history value.
-- **Brevity is mandatory.** The whole point is that someone can read Current in 30 seconds. If Current grows past one screen, you are doing it wrong — promote stable items to ADRs or codemaps, drop noise.
-- **Do not duplicate what's in codemaps or ADRs.** STATE is about *now*, not about *what the code does*. "Authentication uses OAuth2" belongs in CODEMAPS or an ADR, not here. "Auth endpoint refactor in progress on `feature/auth-refactor`" belongs here.
-- **History is sacred.** Never edit a History entry. If something in history was wrong, that's a record of what we believed at the time. Add a correction to the next Current update if it matters.
-- **Do not let History grow unbounded.** Once History exceeds ~20 entries, archive entries older than 6 months to `docs/STATE-HISTORY-<year>.md` and reference it from STATE.md. Keep STATE.md itself readable.
+- **Hard limit on Current size.** Current ≤ **30 lines total**, including the Notes subsection. If it doesn't fit, the overflow content belongs in an ADR or codemap (or as a fresh `docs/ONBOARDING.md` if it's read-order), not in STATE.md. Treat "doesn't fit" as a signal that Notes is paraphrasing something that should live elsewhere — promote it, don't shrink the font.
+- **Do not duplicate what's in codemaps, ADRs, plan files, or git.** STATE is about *now*, not about *what the code does* or *why it was decided*. Three concrete duplication patterns to actively avoid:
+  - **ADR/plan rationale pasted inline.** If a Notes bullet explains *why* something is the way it is, that belongs in an ADR — reference it with `(see ADR-NNNN §X)`, do not paraphrase.
+  - **Recently-shipped DDL or code blocks.** If a bullet contains `CREATE TABLE`, full SQL, or a multi-line code fence, it belongs in the codemap of the relevant area or in `git show <commit>` — reference the commit/PR, do not paste.
+  - **Read-order TOC.** A list of "1. read this file, 2. read that ADR, 3. read this plan" inside a STATE entry is duplication of pointers that already exist in ADR/README, plan headers, and codemap indexes. Drop it. If a stable onboarding sequence is genuinely needed, that's `docs/ONBOARDING.md`.
+- **History is sacred (already-written entries).** Never edit a compressed History entry once it has been written by a past Phase 3 pass — even if you now think it captured the wrong things, it was an accurate record of what was emphasized at the time. Corrections go in the next Current update.
+- **Hard cap on size, not age.** If `## History` exceeds 400 lines OR total `docs/STATE.md` exceeds 600 lines, archive the oldest entries to `docs/STATE-ARCHIVE.md` (single file, no year suffix). This is the size-based replacement for the prior age-based rule, which never fired on young projects. Existing `STATE-HISTORY-<year>.md` files coexist; new writes go to `STATE-ARCHIVE.md`. Per-entry compression in step 2 keeps individual entries small, so the cap rarely fires.
 - **Ask the user at most once at the end.** If you cannot derive Blocked/Next-up from code and git, batch the question for the end of Phase 3 — do not block mid-update.
 
 ---

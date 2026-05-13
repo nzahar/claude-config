@@ -126,14 +126,17 @@ _Last updated: YYYY-MM-DD HH:MM_
 
 ## History
 
-### YYYY-MM-DD HH:MM
-<previous Current section, verbatim, demoted here on the next update.>
+### YYYY-MM-DD HH:MM — <one-line summary of what shifted in that snapshot>
+- **Last shipped:** <PR # + title only>
+- <2-3 bullets for material decisions/blockers/status changes of that snapshot, each carrying an inline ref: `experiments/<domain>/<slug>/REPORT.md`, `(PR #N)`, `(commit abc1234)`, `findings/<slug>.md`, `BACKLOG #N`>
 
-### YYYY-MM-DD HH:MM
+### YYYY-MM-DD HH:MM — <…>
 <and so on, oldest entries at the bottom>
 ```
 
 Header (`# STATE — <name>` + `_Last updated: YYYY-MM-DD HH:MM_`) is identical to the engineering `document-agent` format. In `state_owner: split` mode the file is `docs/RESEARCH-STATE.md`, but the header style is the same.
+
+**Compressed History shape.** Each History entry is **at most ~10 lines**. It is *not* a verbatim copy of the previous Current — it is a compressed record produced by step 2 of the workflow. Drop the full Notes block, drop Read-order TOCs, drop per-experiment narrative recaps. Keep only the header, one `Last shipped:` line, and 2-3 bullets that carry inline pointers — `experiments/<domain>/<slug>/REPORT.md`, `findings/<slug>.md`, `status: <state>`, PR/commit/BACKLOG refs — those are how a future reader recovers detail.
 
 #### Example — research Current
 
@@ -163,7 +166,14 @@ Every field is invariant under merge: derived from REPORT.md frontmatter (Active
 #### Workflow
 
 1. Read existing STATE.md (or RESEARCH-STATE.md if `state_owner: split`). Absent → create from template, skip step 2.
-2. Demote current `## Current` to top of `## History` with its `_Last updated:_` timestamp as entry header. Verbatim — historical record.
+2. **Demote current to history (compressed).** Do NOT paste the existing `## Current` section verbatim. Produce a compressed entry (≤ 10 lines):
+   - Header: `### <existing Last-updated timestamp> — <one-line summary of what shifted — a status change, a finding, a shipped artifact>`.
+   - One `**Last shipped:** <PR # + title>` line (no value description suffix).
+   - 2-3 bullets naming a material status change, a finding, or a blocker of that snapshot. Each bullet must carry an inline reference: `experiments/<domain>/<slug>/REPORT.md`, `findings/<slug>.md`, `status: <state>`, `(see ADR-NNNN)`, `(PR #N)`, `(commit abc1234)`, `BACKLOG #N`. Bullets without such references are dropped — the content's source-of-truth is REPORT.md or findings/, the inline reference is enough to find it.
+
+   **Dropped during demotion:** full Notes block, Read-order TOCs, full per-experiment narrative recaps from Recently completed/abandoned. Status + slug + ref is enough — the recap lives in the REPORT.md the ref points at.
+
+   Prepend the compressed entry to `## History` (newest on top). Do not edit existing History entries.
 
    **Same-day guard.** If the existing Current's `_Last updated:_` date matches today's date (multiple invocations same day — morning sync + afternoon sync), **overwrite Current in place without demoting**. History is for trajectory across days, not micro-snapshots. Demoting same day twice creates History entries identical except for timestamp and pollutes the record.
 3. Write fresh Current from actual project state, not from prior STATE.md.
@@ -176,18 +186,32 @@ Every field is invariant under merge: derived from REPORT.md frontmatter (Active
    - **Recently abandoned:** scan REPORT.md frontmatter for `status: abandoned`, sort by `last_reviewed` desc, take 1-3. Quote `reason:` verbatim.
    - **Open cross-experiment questions:** from Phase 5 output, top 3-5 by frequency or recency. Read `experiments/*/README.md ## Cross-experiment open questions`.
    - **Next up:** read `BACKLOG.md ## Open` and domain READMEs (`experiments/*/README.md`) for planned-but-not-started. Use `by user: …` prefix when the next action requires a user command (decision, paper draft, manual step).
+
+   **References, not copies, in Notes.** Replace inline paraphrase with `experiments/<domain>/<slug>/REPORT.md §X`, `findings/<slug>.md`, `BACKLOG #N`, `(see ADR-NNNN)`. Test for each bullet: "if I delete this, is anything lost that isn't recoverable from REPORT.md / findings/ / BACKLOG / ADR / git?" If no — drop. Exceptions worth keeping inline are snapshot operational facts that aren't recorded elsewhere (live environment state, observed counts, run-specific gotchas).
+
+   **No Read-order block.** Do not write a "Read order for cold-start" list in Current or in any History entry. If a stable onboarding sequence is needed, it lives in `docs/ONBOARDING.md`.
 4. Update Notes: drop obsolete, keep relevant, promote grown notes to `docs/findings/<slug>.md`.
-5. Update `_Last updated:_` timestamp.
+5. **Evaluate hard cap.** After the file has settled into its final shape this run (whether step 2 demoted-and-compressed or the same-day guard overwrote Current in place), count lines:
+   - **Archive target depends on `state_owner`.** If `state_owner: experiment-doc-agent` (or absent / research-only) — archive target is `docs/STATE-ARCHIVE.md`. If `state_owner: split` — archive target is `docs/RESEARCH-STATE-ARCHIVE.md` (the research-side archive; the engineering half is owned by `document-agent` and archives to `docs/STATE-ARCHIVE.md`). The split-mode separation prevents engineering and research entries from being interleaved under one title.
+   - If `## History` exceeds **400 lines** OR the managed STATE file (STATE.md or RESEARCH-STATE.md depending on split mode) exceeds **600 lines** — move oldest History entries to the archive target until back under both caps. A move is a relocation, not an edit — the entry body is preserved verbatim.
+   - Insert moved entries **immediately after the archive's title line**, before any existing first archived entry (newest archived first; the title stays at line 1).
+   - If the archive does not exist, create it with a single-line title `# STATE archive — <project>` (or `# RESEARCH STATE archive — <project>` for the split-mode research archive) above the entries.
+   - Existing `STATE-HISTORY-<year>.md` files from the prior rule coexist; new writes go to the new archive target.
+   - Cap trigger is **size**, not age — compression in step 2 keeps individual entries small, so the cap rarely fires.
+6. Update `_Last updated:_` timestamp.
 
 #### Phase 4 rules
 
 - **STATE.md is research trajectory, not git deployment — invariant under merge.** Every Current field must remain valid after `git merge` of the current feature branch. Forbidden because they decay at merge: `Active branch:`, `In progress: <X> (uncommitted)`, `🛠️ Working tree (<branch>): …`, `Awaiting commit + push`, `Pre-merge triad in progress`, and commit hashes (`abc1234`). PR numbers (`#42`) are stable URLs, allowed. Trajectory fields (Last shipped, Active experiment, Recently completed/abandoned, Open questions, Next up) describe *what's being researched*, independent of git deployment, and remain valid through merge.
 - **No severity vocabulary in Phase 4.** STATE.md is descriptive, not graded. The local `TODO`/`WARNING` vocabulary from Phases 1-3 belongs in REPORT.md and the domain README, not in STATE.md. Do not import `CRITICAL`/`HIGH` from `code-reviewer` or `blocker`/`warning` from `plan-reviewer` — each agent's severity vocabulary is calibrated to its domain.
 - **Phase 4 cadence.** Run only on `--state-only` invocation or as final phase of full pass. Not on every drift-update — STATE.md churn destroys history value.
-- Brevity mandatory. Current readable in 30 seconds. Past one screen → promote items, drop noise.
-- Do not duplicate domain indexes. STATE.md highlights only what's *active or recent*.
-- History is sacred. Never edit a History entry.
-- Archive when History exceeds ~20 entries to `docs/STATE-HISTORY-<year>.md`.
+- **Hard limit on Current size.** Current ≤ **30 lines total**, including Notes. Past 30 lines is a signal that Notes is paraphrasing something that should live in REPORT.md, findings/, BACKLOG, or an ADR — promote it, don't shrink the font.
+- **Do not duplicate REPORT.md, findings/, BACKLOG, codemaps, or git.** STATE.md highlights only what's *active or recent*. Three duplication patterns to actively avoid:
+  - **Per-experiment narrative recap pasted inline.** Status + slug + ref to REPORT.md is enough — recap and result detail live in the REPORT.md itself.
+  - **Code/figure/table blocks.** Belong in REPORT.md or in `experiments/<domain>/<slug>/outputs/`, not pasted into STATE.md.
+  - **Read-order TOC.** Drop. Stable onboarding sequence is `docs/ONBOARDING.md` if genuinely needed.
+- **History is sacred (already-written entries).** Never edit a compressed History entry once a past Phase 4 pass produced it — even if you'd emphasize different things now, it was an accurate snapshot at the time. Corrections go in the next Current update.
+- **Hard cap on size, not age.** If `## History` exceeds 400 lines OR the managed STATE file (`STATE.md` in research-only mode, `RESEARCH-STATE.md` in `state_owner: split` mode) exceeds 600 lines, archive oldest entries — target depends on `state_owner` per step 5 above (research-only / absent → `docs/STATE-ARCHIVE.md`; `split` → `docs/RESEARCH-STATE-ARCHIVE.md`). Size-based replacement for the prior age-based rule. Existing `STATE-HISTORY-<year>.md` files coexist; new writes go to the new archive target. Per-entry compression in step 2 keeps individual entries small, so the cap rarely fires.
 - Ask user at most once at end if Active/Next-up not derivable.
 
 ### Phase 5 — Open questions
