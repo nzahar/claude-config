@@ -144,7 +144,7 @@ Wrap in `<!-- MEANING LAYER -->` ... `<!-- /MEANING LAYER -->`. Add footer: `_Me
 
 # PHASE 3: State Update
 
-**Before proceeding, read [`rules/state-contract.md`](../rules/state-contract.md).** This phase's cross-cutting rules (compression shape, same-day guard, invariant-under-merge, hex constraint, Next up formatting, hard cap, anti-duplication, history-sacred, cadence, etc.) live there. The text below covers only what is specific to `document-agent`.
+**Before proceeding, read [`lib/state-contract.md`](../lib/state-contract.md).** This phase's cross-cutting rules (compression shape, same-day guard, invariant-under-merge, hex constraint, Next up formatting, hard cap, anti-duplication, history-sacred, cadence, etc.) live there. The text below covers only what is specific to `document-agent`.
 
 `docs/STATE.md` captures the project's *trajectory in time*, complementing the *code structure* described by codemaps and ADRs. Any future Claude session can read the top of STATE.md and know exactly where the work stands.
 
@@ -189,24 +189,24 @@ not yet promoted to ADRs. If a note grows past a few lines or stabilizes, promot
 
 ## Sources per field
 
-- **Last shipped** — most recent merged PR. Use `git log main --merges -3 --pretty=format:"%s"` for merge subjects, or `gh pr list --state merged --limit 3` if available. Engineering value description names what changed for users / for the system (not how it was implemented). Formatting (hex constraint, strip-hash, open-PR rule) — see [`rules/state-contract.md`](../rules/state-contract.md) "Last shipped formatting".
+- **Last shipped** — most recent merged PR. Use `git log main --merges -3 --pretty=format:"%s"` for merge subjects, or `gh pr list --state merged --limit 3` if available. Engineering value description names what changed for users / for the system (not how it was implemented). Formatting (hex constraint, strip-hash, open-PR rule) — see [`lib/state-contract.md`](../lib/state-contract.md) "Last shipped formatting".
 
-- **Blocked / waiting on** — usually cannot be derived automatically. Leave the previous value if still relevant, or set to "nothing" if previous blockers were obviously resolved (e.g., the branch they blocked is now merged). When in doubt, ask the user once at the end. Pre-merge gates excluded — see [`rules/state-contract.md`](../rules/state-contract.md) "Pre-merge gates are never project state".
+- **Blocked / waiting on** — usually cannot be derived automatically. Leave the previous value if still relevant, or set to "nothing" if previous blockers were obviously resolved (e.g., the branch they blocked is now merged). When in doubt, ask the user once at the end. Pre-merge gates excluded — see [`lib/state-contract.md`](../lib/state-contract.md) "Pre-merge gates are never project state".
 
-- **Next up** — read `docs/plans/` and `ROADMAP.md` (if exists). State the next *intended chunk of work* in one line — the work that follows merge, not the mechanics. Git-mechanics / branch-names / `by user:` rules — see [`rules/state-contract.md`](../rules/state-contract.md) "Next up formatting".
+- **Next up** — read `docs/plans/` and `ROADMAP.md` (if exists). State the next *intended chunk of work* in one line — the work that follows merge, not the mechanics. Git-mechanics / branch-names / `by user:` rules — see [`lib/state-contract.md`](../lib/state-contract.md) "Next up formatting".
 
 ## Workflow
 
 1. **Read existing STATE.md.** If file does not exist → create from the template above. Skip step 2.
-2. **Demote current to history (compressed)** — per [`rules/state-contract.md`](../rules/state-contract.md) "Compressed History shape" and "Same-day guard".
-3. **Write fresh Current** from actual state of the work (not from prior STATE.md). Apply field sources above and the invariant-under-merge rule from [`rules/state-contract.md`](../rules/state-contract.md).
+2. **Demote current to history (compressed)** — per [`lib/state-contract.md`](../lib/state-contract.md) "Compressed History shape" and "Same-day guard".
+3. **Write fresh Current** from actual state of the work (not from prior STATE.md). Apply field sources above and the invariant-under-merge rule from [`lib/state-contract.md`](../lib/state-contract.md).
 4. **Update Notes** — re-read existing, drop obsolete, keep relevant, promote grown notes to a proper ADR (Phase 2 territory) and remove from Notes.
-5. **Evaluate hard cap** — per [`rules/state-contract.md`](../rules/state-contract.md) "Hard cap on size". Engineering archive target is `docs/STATE-ARCHIVE.md` (same target in `state_owner: split` mode for the engineering half).
+5. **Evaluate hard cap** — per [`lib/state-contract.md`](../lib/state-contract.md) "Hard cap on size". Engineering archive target is `docs/STATE-ARCHIVE.md` (same target in `state_owner: split` mode for the engineering half).
 6. **Update timestamp** — set `_Last updated: YYYY-MM-DD HH:MM_` at the top of the file to current local time.
 
 ## Phase 3 specifics
 
-Cross-cutting STATE.md rules live in [`rules/state-contract.md`](../rules/state-contract.md). The item below is local to `document-agent`:
+Cross-cutting STATE.md rules live in [`lib/state-contract.md`](../lib/state-contract.md). The item below is local to `document-agent`:
 
 - **Same-day guard interacts with Phase 1–2.** If the same-day guard fires (Current overwritten in place, no demote), Phase 1–2 may still have run and updated codemaps; that is fine. Phase 3's same-day guard governs the STATE.md transition only.
 
