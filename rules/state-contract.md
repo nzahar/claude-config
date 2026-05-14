@@ -133,12 +133,14 @@ Treat "doesn't fit" as a signal that Notes is paraphrasing something that should
 
 STATE.md is descriptive, not graded. Drift comments use `<!-- DRIFT: ... -->` markers, not severity.
 
-Agent-local severity vocabularies belong in their own outputs, not in STATE.md:
-- `TODO` / `WARNING` from `experiment-doc-agent`'s Phases 1–3 belong in REPORT.md and the domain README
-- `CRITICAL` / `HIGH` / `MEDIUM` / `LOW` from `code-reviewer` belong in review reports
-- `blocker` / `warning` from `plan-reviewer` belong in plan-review reports
+Severity vocabularies are **agent-local** and do not transfer across agents. They live in each agent's own output, not in STATE.md:
 
-Each agent's severity model is local to its domain.
+- `CRITICAL` / `HIGH` / `MEDIUM` / `LOW` / `NEEDS VERIFICATION` — `code-reviewer`, in review reports
+- `blocker` / `warning` — `plan-reviewer`, in plan-review reports
+- `TODO` / `WARNING` — `experiment-doc-agent` Phases 1–3, in REPORT.md and the domain README
+- `debugger` has no severity vocabulary by design — findings are root-cause statements, not graded issues
+
+Each agent's vocabulary is calibrated to its domain. This block is the canonical cross-agent reference; each agent file states its own vocabulary and points back here.
 
 ## Anti-duplication
 
