@@ -117,6 +117,8 @@ The agent reads the plan and returns blockers and warnings across six dimensions
 
 **No loop with the agent.** One report. Show findings to the user, the user decides what to fix. The user is in the conversation context — they will resolve faster than a Claude-Claude loop, and without burning extra tokens.
 
+**Exception** — when the change under review is itself a framework / governance document (`rules/`, `CLAUDE.md`, `agents/`, ADRs auto-load every session; `commands/` and `skills/*` excluding `learned/` on contract changes only), iterate review→revise until clean (no blockers/warnings; nits OK). See `rules/workflow.md` "Exception to 'no loop'" for the operational test and loop hygiene.
+
 **Do NOT invoke** for:
 - Small tasks where the "plan" is one sentence (no plan file exists)
 - Mid-implementation invocations (the agent reviews plans, not code in progress)

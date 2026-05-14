@@ -8,6 +8,16 @@ For any non-trivial task, follow this sequence strictly:
 4. **Run `plan-reviewer` on the plan** — six-dimension review (requirement coverage, task completeness, dependency correctness, schema/infra drift, ADR/CODEMAPS compliance, verification plan). The agent returns blockers and warnings; show them to the user. The user (with main session help if needed) decides what to fix. Do not loop with the agent — one report, then decide. Skip this step only for small tasks (see exception below)
 5. **Implement step by step** — one logical chunk at a time, not a big-bang generation. When implementing larger features, decompose into independent vertical slices and dispatch parallel subagents
 
+**Exception to "no loop" — framework / governance changes** (applies to step 4 plan-reviewer **and** any reviewer cycle whose artifact is a framework document, including `code-reviewer` on a rules/agents diff). When the change under review is itself an edit to a framework / governance document, iterate review→revise with the reviewer until APPROVED with no blockers or warnings (nits OK to ship). A bad framework rule compounds across many future sessions; one extra background-agent pass is cheap by comparison.
+
+**Operational test for "framework-level"** (a change qualifies if a flawed version reliably propagates into future sessions whenever its trigger fires — base-prompt load, agent invocation, slash-command, etc.):
+
+- **Always in scope** (full content loaded every time the trigger fires, trigger fires frequently): `rules/`, `CLAUDE.md`, `agents/`, ADRs — base-prompt auto-load every session for `rules/` and `CLAUDE.md`; full prompt load on every agent invocation for `agents/`
+- **In scope on contract changes only** (invoke-on-demand, trigger fires rarely, many edits are prose tweaks): `commands/`, `skills/*` (excluding `learned/`) — iterate when changing **what** the artifact takes/returns or **when** it triggers (description, arguments, output shape, trigger phrasing). Skip iteration for prose tightening, added examples, rationale rewrites
+- **Excluded**: `skills/learned/*` (knowledge base, not governance), regular feature work, bugfixes, `workflow.md` §4.5 (operation-level pre-execution review — that gate stays one-shot per code path)
+
+**Loop hygiene.** If iteration extends beyond ~3 cycles, stops converging (each new cycle introduces new warnings from previous fixes — a regression loop, not progress), or context becomes heavy, suggest `/clear` + cold-start from the plan file plus the latest reviewer report. Consistent with design-discipline rule #5 (`/compact` ban during design work).
+
 **Step 4.5 — Pre-execution review.** Before running code that touches external resources, performs irreversible writes, or runs an expensive operation, run `code-reviewer` on the code first. Why pre-execution: once you have seen numbers (or stack traces) from a flawed run, confirmation bias is in — the gate must close before results exist. Also, irreversible or external runs cannot be cheaply re-done if a later review catches a problem.
 
 **Default when in doubt: review.** Cost of an unnecessary review is small; cost of an irreversible bad run is high.
