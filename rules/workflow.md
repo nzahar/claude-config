@@ -8,7 +8,46 @@ For any non-trivial task, follow this sequence strictly:
 4. **Run `plan-reviewer` on the plan** — six-dimension review (requirement coverage, task completeness, dependency correctness, schema/infra drift, ADR/CODEMAPS compliance, verification plan). The agent returns blockers and warnings; show them to the user. The user (with main session help if needed) decides what to fix. Do not loop with the agent — one report, then decide. Skip this step only for small tasks (see exception below)
 5. **Implement step by step** — one logical chunk at a time, not a big-bang generation. When implementing larger features, decompose into independent vertical slices and dispatch parallel subagents
 
-**Step 4.5 — Pre-execution notebook review (research only).** When the project declares `default_agent_mode: research` AND the implementation introduces a new experiment notebook or substantially reworks an existing one, run `code-reviewer mode: research` on the notebook **before any cell is executed**. Why pre-execution: once you have seen numbers from a flawed run, confirmation bias is already in — the gate must close before results exist. The reviewer applies its research dimensions to unexecuted code (leakage/split, baseline/ablation, seed/reproducibility, no-SaaS, no-absolute-paths, provenance). Pass the notebook path and note explicitly that this is pre-execution (outputs may be empty or stale). One report, then decide — same anti-loop rule as step 4. **Substantial rework** = new training/eval pipeline, new model, changed cohort filter or data split, new external dataset, changed feature engineering, added/removed baseline or ablation, changed seeding / `random_state` handling. **Not substantial** = plot styling, markdown edits, variable renames, re-running an unchanged notebook on identical code.
+**Step 4.5 — Pre-execution review.** Before running code that touches external resources, performs irreversible writes, or runs an expensive operation, run `code-reviewer` on the code first. Why pre-execution: once you have seen numbers (or stack traces) from a flawed run, confirmation bias is in — the gate must close before results exist. Also, irreversible or external runs cannot be cheaply re-done if a later review catches a problem.
+
+**Default when in doubt: review.** Cost of an unnecessary review is small; cost of an irreversible bad run is high.
+
+**Principle.** Review is required when the next run will (a) touch shared or external resources, (b) make a write that cannot be undone in ~5 minutes, or (c) consume an expensive budget (compute, money, rate limit, wall-clock >~5 min). The lists below are non-exhaustive examples; when an operation is not listed, fall back on the principle.
+
+**Trigger — examples of operations that require review:**
+
+- Connect to any database with production-like data (shared dev, staging, prod, or local snapshot >~10GB), including read-only queries — a bad query can stall a shared cluster or exhaust local resources. "Production-like" is judged by content (real user PII, real business records), not by source label; when unsure, treat as production-like
+- DDL or DML on any database, **except** newly-created local containers with no production data
+- Network call beyond localhost to a real external service (HTTP API, S3/GCS, MLflow, model registry, etc.) — local mocks (localstack, minio, etc.) do not count
+- Installing new dependencies into the active environment (`pip install <new>`, `conda install`, `npm install <new>`); lockfile-driven idempotent restores (`pip install -r requirements.txt` against pinned versions) are exempt
+- Training run (GPU usage, `model.fit()`, `optimizer.step()`, explicit `--epochs N`)
+- Long-running operation, >~5 min wall clock — judged before launch from intent (full-table scan, full crawl, full training)
+- Mass writes to filesystem beyond the project working directory
+
+**Skip review — examples:**
+
+- Pure-read of project-local files (parquet/csv/json under the project tree)
+- Unit tests on pure functions, lint, typecheck
+- Local in-project ETL (parquet→parquet under the project tree)
+- Exploratory iteration on a single notebook cell where the change is below the "substantial rework" bar — the gate fires on substantial rework, not on iteration
+- Personal `localhost` sandbox (your own docker, ephemeral, no production snapshot, no other consumers)
+
+**Re-running the same code.** A re-run is exempt if `code-reviewer` already APPROVED this code path on this branch and nothing relevant changed since (query, schema, parameters, dataset, dependency versions, environment variables affecting code path). The pre-merge triad will catch later drift. Verification commands after merge or post-fix that themselves match the trigger (e.g. `alembic upgrade head` against remote DB) are **not** exempt — review first, then run.
+
+**Tie-breaker for "shared" vs "personal" on localhost.** A `localhost` resource counts as shared (→ trigger) if other users / agents / CI depend on its state, or it holds a production snapshot. A truly personal ephemeral sandbox → skip.
+
+**Escape valve.** The user may explicitly override ("skip review, trivial") with three limits:
+1. Override is **not** applicable to (a) irreversible writes (DDL/DML on shared/prod, mass deletes, model artifact uploads), or (b) operations that consume a metered or paid budget (rate-limited paid API, GPU-hour billing, etc.). Only to "long-running" and "external read of free/internal resources" categories.
+2. If a plan file exists for the branch, the override **must** be recorded there as one line: `YYYY-MM-DD: review skipped for <op>, reason: <user-reason>`. Without the record, the override does not apply.
+3. For small tasks without a plan file, override applies only to the "long-running" category — external reads still require review even when small. Irreversible writes and metered-budget operations remain non-overridable.
+
+**Mode selection.** Invoke `code-reviewer mode: research` if the code under review is an experiment notebook OR a training/eval pipeline (file uses `model.fit`, `optimizer.step`, `Trainer`, `--epochs`, or similar), regardless of project-level `default_agent_mode` — artefact type overrides toward research. Research dimensions: leakage/split, baseline/ablation, seed/reproducibility, no-SaaS, no-absolute-paths, provenance. Otherwise invoke `code-reviewer` in default (engineering) mode; focus is on safety of the operation: query plan / index usage, idempotency / rollback for writes, resource consumption for long-running ops.
+
+**Substantial rework (research notebooks).** Use to judge whether a notebook change re-triggers the gate on the same branch:
+- Substantial: new training/eval pipeline, new model, changed cohort filter or data split, new external dataset, changed feature engineering, added/removed baseline or ablation, changed seeding / `random_state` handling
+- Not substantial: plot styling, markdown edits, variable renames, exploratory cell iteration
+
+One report, then decide — same anti-loop rule as step 4.
 
 For small tasks where a full plan would be overkill: state the approach in one sentence and confirm before coding. Steps 2 and 4 do not apply — there is no plan file to review. Step 4.5 still applies if the small task substantially touches a research notebook.
 
