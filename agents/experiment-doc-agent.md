@@ -51,6 +51,13 @@ For each `experiments/<domain>/<NN_slug>/REPORT.md`:
 
 Apply the same procedure to a single experiment if invoked with a specific path.
 
+#### Substantial rework classification
+
+Used to judge whether a notebook change triggers the pre-execution review gate (`rules/workflow.md` §4.5). Exploratory edits below this bar fall into §4.5's skip list; substantial edits cross the bar and require review (even on the same branch where a previous version was already reviewed):
+
+- **Substantial** (re-trigger): new training/eval pipeline, new model, changed cohort filter or data split, new external dataset, changed feature engineering, added/removed baseline or ablation, changed seeding / `random_state` handling
+- **Not substantial**: plot styling, markdown edits, variable renames, exploratory cell iteration
+
 ### Phase 2 — Fill the template
 
 For each report needing refresh:
