@@ -8,48 +8,42 @@ For any non-trivial task, follow this sequence strictly:
 4. **Run `plan-reviewer` on the plan** — six-dimension review (requirement coverage, task completeness, dependency correctness, schema/infra drift, ADR/CODEMAPS compliance, verification plan). The agent returns blockers and warnings; show them to the user. The user (with main session help if needed) decides what to fix. Do not loop with the agent — one report, then decide. Skip this step only for small tasks (see exception below)
 5. **Implement step by step** — one logical chunk at a time, not a big-bang generation. When implementing larger features, decompose into independent vertical slices and dispatch parallel subagents
 
-**Step 4.5 — Pre-execution review.** Before running code that touches external resources, performs irreversible writes, or runs an expensive operation, run `code-reviewer` on the code first. Why pre-execution: once you have seen numbers (or stack traces) from a flawed run, confirmation bias is in — the gate must close before results exist. Also, irreversible or external runs cannot be cheaply re-done if a later review catches a problem.
+**Exception to "no loop" — framework / governance changes** (applies to step 4 plan-reviewer **and** any reviewer cycle whose artifact is a framework document, including `code-reviewer` on a rules/agents diff). When the change under review is itself an edit to a framework / governance document, iterate review→revise with the reviewer until APPROVED with no blockers or warnings (nits OK to ship). A bad framework rule compounds across many future sessions; one extra background-agent pass is cheap by comparison.
+
+**Operational test for "framework-level"** (a change qualifies if a flawed version reliably propagates into future sessions whenever its trigger fires — base-prompt load, agent invocation, slash-command, etc.):
+
+- **Always in scope** (full content loaded every time the trigger fires, trigger fires frequently): `rules/`, `CLAUDE.md`, `agents/`, ADRs — base-prompt auto-load every session for `rules/` and `CLAUDE.md`; full prompt load on every agent invocation for `agents/`
+- **In scope on contract changes only** (invoke-on-demand, trigger fires rarely, many edits are prose tweaks): `commands/`, `skills/*` (excluding `learned/`) — iterate when changing **what** the artifact takes/returns or **when** it triggers (description, arguments, output shape, trigger phrasing). Skip iteration for prose tightening, added examples, rationale rewrites
+- **Excluded**: `skills/learned/*` (knowledge base, not governance), regular feature work, bugfixes, `workflow.md` §4.5 (operation-level pre-execution review — that gate stays one-shot per code path)
+
+**Loop hygiene.** If iteration extends beyond ~3 cycles, stops converging (each new cycle introduces new warnings from previous fixes — a regression loop, not progress), or context becomes heavy, suggest `/clear` + cold-start from the plan file plus the latest reviewer report. Consistent with design-discipline rule #5 (`/compact` ban during design work).
+
+**Step 4.5 — Pre-execution review.** Before running code that touches external resources, performs irreversible writes, or runs an expensive operation, run `code-reviewer` first. Why pre-execution: once you've seen numbers (or stack traces) from a flawed run, confirmation bias is in — and irreversible / external runs can't be cheaply re-done if review catches a problem later.
 
 **Default when in doubt: review.** Cost of an unnecessary review is small; cost of an irreversible bad run is high.
 
-**Principle.** Review is required when the next run will (a) touch shared or external resources, (b) make a write that cannot be undone in ~5 minutes, or (c) consume an expensive budget (compute, money, rate limit, wall-clock >~5 min). The lists below are non-exhaustive examples; when an operation is not listed, fall back on the principle.
+**Principle.** Review is required when the next run will (a) touch shared or external resources, (b) make a write that cannot be undone in ~5 minutes, or (c) consume an expensive budget (compute, money, rate limit, wall-clock >~5 min). Examples below are non-exhaustive — when an operation is not listed, fall back on the principle.
 
-**Trigger — examples of operations that require review:**
+**Triggers — examples:**
 
-- Connect to any database with production-like data (shared dev, staging, prod, or local snapshot >~10GB), including read-only queries — a bad query can stall a shared cluster or exhaust local resources. "Production-like" is judged by content (real user PII, real business records), not by source label; when unsure, treat as production-like
-- DDL or DML on any database, **except** newly-created local containers with no production data
-- Network call beyond localhost to a real external service (HTTP API, S3/GCS, MLflow, model registry, etc.) — local mocks (localstack, minio, etc.) do not count
-- Installing new dependencies into the active environment (`pip install <new>`, `conda install`, `npm install <new>`); lockfile-driven idempotent restores (`pip install -r requirements.txt` against pinned versions) are exempt
+- DB query against production-like data (shared dev, staging, prod, or local snapshot >~10GB), including read-only — a bad query can stall a shared cluster or exhaust local resources. `localhost` counts as shared if other users / agents / CI depend on its state. "Production-like" = real PII or business records, regardless of source label
+- DDL or DML on any database, except newly-created local containers with no production data
+- Network call beyond localhost to a real external service (HTTP API, S3/GCS, MLflow, model registry); local mocks (localstack, minio) do not count
+- New dependency install (`pip install <new>`, `conda install`, `npm install <new>`); lockfile-driven idempotent restores are exempt
 - Training run (GPU usage, `model.fit()`, `optimizer.step()`, explicit `--epochs N`)
-- Long-running operation, >~5 min wall clock — judged before launch from intent (full-table scan, full crawl, full training)
-- Mass writes to filesystem beyond the project working directory
+- Mass writes outside the project tree, or long-running operation (>~5 min wall clock — judged from intent: full-table scan, full crawl, full training)
 
-**Skip review — examples:**
+**Skip — examples:** pure-read of project-local files; unit tests on pure functions, lint, typecheck; local in-project ETL; personal `localhost` sandbox (your own ephemeral docker, no prod snapshot, no other consumers); exploratory iteration on a single notebook cell below the substantial-rework bar (see [`agents/experiment-doc-agent.md`](../agents/experiment-doc-agent.md) "Substantial rework classification").
 
-- Pure-read of project-local files (parquet/csv/json under the project tree)
-- Unit tests on pure functions, lint, typecheck
-- Local in-project ETL (parquet→parquet under the project tree)
-- Exploratory iteration on a single notebook cell where the change is below the "substantial rework" bar — the gate fires on substantial rework, not on iteration
-- Personal `localhost` sandbox (your own docker, ephemeral, no production snapshot, no other consumers)
+**Re-running the same code.** A re-run is exempt if `code-reviewer` already APPROVED this code path on this branch and nothing relevant changed since (query, schema, parameters, dataset, dependency versions, environment variables affecting code path). The pre-merge triad catches later drift. Verification commands that themselves match a trigger (e.g. `alembic upgrade head` against remote DB) are **not** exempt — review first, then run.
 
-**Re-running the same code.** A re-run is exempt if `code-reviewer` already APPROVED this code path on this branch and nothing relevant changed since (query, schema, parameters, dataset, dependency versions, environment variables affecting code path). The pre-merge triad will catch later drift. Verification commands after merge or post-fix that themselves match the trigger (e.g. `alembic upgrade head` against remote DB) are **not** exempt — review first, then run.
+**Escape valve.** The user may explicitly override ("skip review, trivial") only for "long-running" and "external read of free/internal resources" categories. **Not applicable to** irreversible writes (DDL/DML on shared/prod, mass deletes, artifact uploads) or metered/paid budgets (rate-limited paid API, GPU-hour billing). If a plan file exists for the branch, **the main session records the override** there immediately (before continuing) as one line: `YYYY-MM-DD: review skipped for <op>, reason: <user-reason>`. This is a model-side action triggered by the user's override phrase, not a user-side action.
 
-**Tie-breaker for "shared" vs "personal" on localhost.** A `localhost` resource counts as shared (→ trigger) if other users / agents / CI depend on its state, or it holds a production snapshot. A truly personal ephemeral sandbox → skip.
-
-**Escape valve.** The user may explicitly override ("skip review, trivial") with three limits:
-1. Override is **not** applicable to (a) irreversible writes (DDL/DML on shared/prod, mass deletes, model artifact uploads), or (b) operations that consume a metered or paid budget (rate-limited paid API, GPU-hour billing, etc.). Only to "long-running" and "external read of free/internal resources" categories.
-2. If a plan file exists for the branch, the override **must** be recorded there as one line: `YYYY-MM-DD: review skipped for <op>, reason: <user-reason>`. Without the record, the override does not apply.
-3. For small tasks without a plan file, override applies only to the "long-running" category — external reads still require review even when small. Irreversible writes and metered-budget operations remain non-overridable.
-
-**Mode selection.** Invoke `code-reviewer mode: research` if the code under review is an experiment notebook OR a training/eval pipeline (file uses `model.fit`, `optimizer.step`, `Trainer`, `--epochs`, or similar), regardless of project-level `default_agent_mode` — artefact type overrides toward research. Research dimensions: leakage/split, baseline/ablation, seed/reproducibility, no-SaaS, no-absolute-paths, provenance. Otherwise invoke `code-reviewer` in default (engineering) mode; focus is on safety of the operation: query plan / index usage, idempotency / rollback for writes, resource consumption for long-running ops.
-
-**Substantial rework (research notebooks).** Use to judge whether a notebook change re-triggers the gate on the same branch:
-- Substantial: new training/eval pipeline, new model, changed cohort filter or data split, new external dataset, changed feature engineering, added/removed baseline or ablation, changed seeding / `random_state` handling
-- Not substantial: plot styling, markdown edits, variable renames, exploratory cell iteration
+**Mode selection.** Invoke `code-reviewer mode: research` if the code is an experiment notebook or training/eval pipeline (file uses `model.fit`, `optimizer.step`, `Trainer`, `--epochs`, or similar), regardless of project-level `default_agent_mode`. Otherwise invoke in default (engineering) mode.
 
 One report, then decide — same anti-loop rule as step 4.
 
-For small tasks where a full plan would be overkill: state the approach in one sentence and confirm before coding. Steps 2 and 4 do not apply — there is no plan file to review. Step 4.5 still applies if the small task substantially touches a research notebook.
+For small tasks where a full plan would be overkill: state the approach in one sentence and confirm before coding. Steps 2 and 4 do not apply — there is no plan file to review. Step 4.5 still applies if the small task will perform any of the triggering operations above.
 
 Never jump straight to code.
 

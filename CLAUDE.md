@@ -117,6 +117,8 @@ The agent reads the plan and returns blockers and warnings across six dimensions
 
 **No loop with the agent.** One report. Show findings to the user, the user decides what to fix. The user is in the conversation context — they will resolve faster than a Claude-Claude loop, and without burning extra tokens.
 
+**Exception** — when the change under review is itself a framework / governance document (`rules/`, `CLAUDE.md`, `agents/`, ADRs auto-load every session; `commands/` and `skills/*` excluding `learned/` on contract changes only), iterate review→revise until clean (no blockers/warnings; nits OK). See `rules/workflow.md` "Exception to 'no loop'" for the operational test and loop hygiene.
+
 **Do NOT invoke** for:
 - Small tasks where the "plan" is one sentence (no plan file exists)
 - Mid-implementation invocations (the agent reviews plans, not code in progress)
@@ -125,6 +127,8 @@ The agent reads the plan and returns blockers and warnings across six dimensions
 **What to pass:** nothing special. The agent finds the plan from the current branch automatically. Pass an explicit path only if the plan was saved somewhere non-standard.
 
 ### Pre-merge triad (test-writer + code-reviewer + document-agent OR experiment-doc-agent)
+
+**Scope.** This section governs the **branch-level** review gate that runs before merging a feature branch to main. It does **not** cover the **operation-level** review gate that fires before side-effectful runs (DB query against prod-like data, training run, mass writes, new dependency installs, etc.) — that one is `rules/workflow.md` §4.5 "Pre-execution review", auto-detected by the model and orthogonal to this triad. A session can encounter both gates on the same branch: §4.5 fires per-operation during work; the triad fires once when the user signals merge readiness — including operations launched as part of preparing for merge (§4.5 still gates them before the triad runs).
 
 **Trigger — signal from the user**, not auto-detection. Claude Code cannot distinguish "branch still being worked on" from "branch ready to merge" — they are the same git state. The triad runs when the user signals readiness:
 
