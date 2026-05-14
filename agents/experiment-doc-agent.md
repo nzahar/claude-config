@@ -96,22 +96,22 @@ Reason quotes frontmatter `reason:` verbatim. Listed for visibility — future c
 
 ### Phase 4 — State
 
+**Before proceeding, read [`rules/state-contract.md`](../rules/state-contract.md).** This phase's cross-cutting rules (compression shape, same-day guard, invariant-under-merge, hex constraint, Next up formatting, hard cap, anti-duplication, history-sacred, cadence, etc.) live there. The text below covers only what is specific to `experiment-doc-agent`.
+
 `docs/STATE.md` for a research repo captures *where the research is right now*, complementing per-experiment REPORT.md (what each experiment found) and domain indexes (what has been done).
 
-**State ownership.** Read project's `CLAUDE.md` for `state_owner`:
+The rest of this phase covers `experiment-doc-agent`-specific material: state ownership, the research Current field set (extended beyond the engineering set), sources per field, and the Active-experiment derivation rule.
+
+#### State ownership
+
+Read project's `CLAUDE.md` for `state_owner`:
 - `state_owner: experiment-doc-agent` or absent (research-only project) — own `docs/STATE.md`. Run Phase 4.
 - `state_owner: split` (hybrid) — own `docs/RESEARCH-STATE.md`, do not touch `docs/STATE.md` (that's `document-agent`'s).
 - `state_owner: document-agent` — skip Phase 4 entirely.
 
-Single living document: `## Current` (overwritten) and `## History` (append-only, newest on top).
+#### Current — research fields
 
-#### File structure template
-
-```
-# STATE — <project-name>
-
-_Last updated: YYYY-MM-DD HH:MM_
-
+```markdown
 ## Current
 
 **Last shipped:** <YYYY-MM-DD — title (PR #N) + 1-line research value, or "none">
@@ -123,22 +123,9 @@ _Last updated: YYYY-MM-DD HH:MM_
 
 ### Notes
 <short observations not fitting categories — promote to docs/findings/ if a note grows>
-
-## History
-
-### YYYY-MM-DD HH:MM — <one-line summary of what shifted in that snapshot>
-- **Last shipped:** <PR # + title only>
-- <2-3 bullets for material decisions/blockers/status changes of that snapshot, each carrying an inline ref: `experiments/<domain>/<slug>/REPORT.md`, `(PR #N)`, `(commit abc1234)`, `findings/<slug>.md`, `BACKLOG #N`>
-
-### YYYY-MM-DD HH:MM — <…>
-<and so on, oldest entries at the bottom>
 ```
 
-Header (`# STATE — <name>` + `_Last updated: YYYY-MM-DD HH:MM_`) is identical to the engineering `document-agent` format. In `state_owner: split` mode the file is `docs/RESEARCH-STATE.md`, but the header style is the same.
-
-**Compressed History shape.** Each History entry is **at most ~10 lines**. It is *not* a verbatim copy of the previous Current — it is a compressed record produced by step 2 of the workflow. Drop the full Notes block, drop Read-order TOCs, drop per-experiment narrative recaps. Keep only the header, one `Last shipped:` line, and 2-3 bullets that carry inline pointers — `experiments/<domain>/<slug>/REPORT.md`, `findings/<slug>.md`, `status: <state>`, PR/commit/BACKLOG refs — those are how a future reader recovers detail.
-
-#### Example — research Current
+##### Example — research Current
 
 ````markdown
 ## Current
@@ -161,60 +148,35 @@ Header (`# STATE — <name>` + `_Last updated: YYYY-MM-DD HH:MM_`) is identical 
 - BACKLOG #2 (non-C61 domain reports)
 ````
 
-Every field is invariant under merge: derived from REPORT.md frontmatter (Active / Recently completed / Recently abandoned) or PR titles (Last shipped) — never from git branch name, working tree, or commit hash.
+#### Sources per field
+
+- **Last shipped** — most recent merged PR that shipped a research artifact (a finalized report, exported figures/tables, paper-bound result). Use `git log main --merges -3 --pretty=format:"%s"` for merge subjects, or `gh pr list --state merged --limit 3` if available. Research value description names what the research established (e.g. "H1 falsified", "Fig. 5/9 finalized", "Table 2 produced"). Formatting (hex constraint, strip-hash, open-PR rule) — see [`rules/state-contract.md`](../rules/state-contract.md) "Last shipped formatting".
+
+- **Active experiment** — **derived from REPORT.md frontmatter, not from git branch or working tree.** Scan `experiments/*/*/REPORT.md` for `status: wip`, sort by `last_reviewed` desc, take the most recent. If no `wip` reports, write **exactly `none`** — do not append parenthetical context about what just changed status, what's on the working tree, or what kind of pass is in progress. Recent status changes belong in Recently completed, not in a suffix to Active experiment.
+
+- **Recently completed** — scan REPORT.md frontmatter for `status: complete`, sort by `last_reviewed` desc, take 1–3. Reference by `<domain>/<NN_slug>` + one-line takeaway from `## Result`.
+
+- **Recently abandoned** — scan REPORT.md frontmatter for `status: abandoned`, sort by `last_reviewed` desc, take 1–3. Quote `reason:` verbatim.
+
+- **Open cross-experiment questions** — from Phase 5 output, top 3–5 by frequency or recency. Read `experiments/*/README.md ## Cross-experiment open questions`.
+
+- **Next up** — read `BACKLOG.md ## Open` and domain READMEs (`experiments/*/README.md`) for planned-but-not-started. If the working tree has uncommitted research artifacts, describe the *research* work that follows merge (coauthor distribution, paper revision, next experiment), not the commit+push. Git-mechanics / branch-names / `by user:` rules — see [`rules/state-contract.md`](../rules/state-contract.md) "Next up formatting".
 
 #### Workflow
 
-1. Read existing STATE.md (or RESEARCH-STATE.md if `state_owner: split`). Absent → create from template, skip step 2.
-2. **Demote current to history (compressed).** Do NOT paste the existing `## Current` section verbatim. Produce a compressed entry (≤ 10 lines):
-   - Header: `### <existing Last-updated timestamp> — <one-line summary of what shifted — a status change, a finding, a shipped artifact>`.
-   - One `**Last shipped:** <PR # + title>` line (no value description suffix).
-   - 2-3 bullets naming a material status change, a finding, or a blocker of that snapshot. Each bullet must carry an inline reference: `experiments/<domain>/<slug>/REPORT.md`, `findings/<slug>.md`, `status: <state>`, `(see ADR-NNNN)`, `(PR #N)`, `(commit abc1234)`, `BACKLOG #N`. Bullets without such references are dropped — the content's source-of-truth is REPORT.md or findings/, the inline reference is enough to find it.
+1. **Read existing STATE.md** (or RESEARCH-STATE.md if `state_owner: split`). Absent → create from the template above. Skip step 2.
+2. **Demote current to history (compressed)** — per [`rules/state-contract.md`](../rules/state-contract.md) "Compressed History shape" and "Same-day guard". For research, bullets reference `experiments/<domain>/<slug>/REPORT.md`, `findings/<slug>.md`, `status: <state>`, `BACKLOG #N` in addition to the engineering-shared `(see ADR-NNNN)`, `(PR #N)`, `(commit abc1234)`.
+3. **Write fresh Current** from actual project state, applying the field sources above and the invariant-under-merge rule from [`rules/state-contract.md`](../rules/state-contract.md). Active experiment / Recently completed / Recently abandoned are derived from REPORT.md frontmatter (file facts), not from in-flight commits.
+4. **Update Notes** — drop obsolete, keep relevant, promote grown notes to `docs/findings/<slug>.md`.
+5. **Evaluate hard cap** — per [`rules/state-contract.md`](../rules/state-contract.md) "Hard cap on size". Research-only / absent → archive to `docs/STATE-ARCHIVE.md`. Split mode → archive to `docs/RESEARCH-STATE-ARCHIVE.md` (the engineering half archives to `docs/STATE-ARCHIVE.md`, owned by `document-agent`).
+6. **Update timestamp** — set `_Last updated: YYYY-MM-DD HH:MM_` to current local time.
 
-   **Dropped during demotion:** full Notes block, Read-order TOCs, full per-experiment narrative recaps from Recently completed/abandoned. Status + slug + ref is enough — the recap lives in the REPORT.md the ref points at.
+#### Phase 4 specifics
 
-   Prepend the compressed entry to `## History` (newest on top). Do not edit existing History entries.
+Cross-cutting STATE.md rules live in [`rules/state-contract.md`](../rules/state-contract.md). The items below are local to `experiment-doc-agent`:
 
-   **Same-day guard.** If the existing Current's `_Last updated:_` date matches today's date (multiple invocations same day — morning sync + afternoon sync), **overwrite Current in place without demoting**. History is for trajectory across days, not micro-snapshots. Demoting same day twice creates History entries identical except for timestamp and pollutes the record.
-3. Write fresh Current from actual project state, not from prior STATE.md.
-
-   **Every field must remain valid after a squash-merge** of the current feature branch — the "invariant under merge" principle. Test each value: "would this still be true after `git merge`?" Active experiment is derived from REPORT.md `status: wip` (a file fact), **not** from `git branch --show-current` or working-tree state. Recently completed/abandoned are derived from REPORT.md frontmatter (file facts), not from in-flight commits. Sources per field:
-
-   - **Last shipped:** title and PR number of the most recent merged PR that shipped a research artifact (a finalized report, exported figures/tables, paper-bound result). Use `git log main --merges -3 --pretty=format:"%s"` for merge subjects, or `gh pr list --state merged --limit 3` if available. Reference by **title + PR # only** — never commit hash, never branch name. **Strip any commit hash from the title before quoting** — `git log --oneline` and raw `git log` output include the hash; drop it. The field value must contain **no hex strings of the form `[0-9a-f]{7,}`**. Add one short line of research value (e.g. "H1 falsified", "Fig. 5/9 finalized", "Table 2 produced"). "none" if no merges yet. **If there is an open (unmerged) PR on the current branch, do not describe it in Last shipped.** Last shipped names only merged PRs; an open PR's existence belongs in its plan file, not here.
-   - **Active experiment:** most recent REPORT.md with `status: wip` (scan `experiments/*/*/REPORT.md` frontmatter, sort by `last_reviewed` desc). **Derived from REPORT.md frontmatter — not from git branch or working tree.** If no `wip` reports, write **exactly `none`** — do not append parenthetical context about what just changed status, what's on the working tree, or what kind of pass is in progress. Recent status changes belong in Recently completed, not in a suffix to Active experiment.
-   - **Recently completed:** scan REPORT.md frontmatter for `status: complete`, sort by `last_reviewed` desc, take 1-3. Reference by `<domain>/<NN_slug>` + one-line takeaway from `## Result`.
-   - **Recently abandoned:** scan REPORT.md frontmatter for `status: abandoned`, sort by `last_reviewed` desc, take 1-3. Quote `reason:` verbatim.
-   - **Open cross-experiment questions:** from Phase 5 output, top 3-5 by frequency or recency. Read `experiments/*/README.md ## Cross-experiment open questions`.
-   - **Next up:** read `BACKLOG.md ## Open` and domain READMEs (`experiments/*/README.md`) for planned-but-not-started. **Mechanical git actions (`commit`, `push`, `open PR`, `merge`) are never Next up items** — they happen, they don't appear in STATE.md. **Branch names (`feature/...`, `fix/...`, `release/...`) are also forbidden anywhere in Next up** — branches get deleted on squash-merge. Reference the plan file path (`docs/plans/<branch-slug>.md`) if one exists; otherwise describe the work itself in one line. If the working tree has uncommitted research artifacts, describe the *research* work that follows merge (coauthor distribution, paper revision, next experiment), not the commit+push. Use `by user: …` prefix when the next action requires a user command (decision, paper draft, manual step).
-
-   **References, not copies, in Notes.** Replace inline paraphrase with `experiments/<domain>/<slug>/REPORT.md §X`, `findings/<slug>.md`, `BACKLOG #N`, `(see ADR-NNNN)`. Test for each bullet: "if I delete this, is anything lost that isn't recoverable from REPORT.md / findings/ / BACKLOG / ADR / git?" If no — drop. Exceptions worth keeping inline are snapshot operational facts that aren't recorded elsewhere (live environment state, observed counts, run-specific gotchas).
-
-   **No Read-order block.** Do not write a "Read order for cold-start" list in Current or in any History entry. If a stable onboarding sequence is needed, it lives in `docs/ONBOARDING.md`.
-4. Update Notes: drop obsolete, keep relevant, promote grown notes to `docs/findings/<slug>.md`.
-5. **Evaluate hard cap.** After the file has settled into its final shape this run (whether step 2 demoted-and-compressed or the same-day guard overwrote Current in place), count lines:
-   - **Archive target depends on `state_owner`.** If `state_owner: experiment-doc-agent` (or absent / research-only) — archive target is `docs/STATE-ARCHIVE.md`. If `state_owner: split` — archive target is `docs/RESEARCH-STATE-ARCHIVE.md` (the research-side archive; the engineering half is owned by `document-agent` and archives to `docs/STATE-ARCHIVE.md`). The split-mode separation prevents engineering and research entries from being interleaved under one title.
-   - If `## History` exceeds **400 lines** OR the managed STATE file (STATE.md or RESEARCH-STATE.md depending on split mode) exceeds **600 lines** — move oldest History entries to the archive target until back under both caps. A move is a relocation, not an edit — the entry body is preserved verbatim.
-   - Insert moved entries **immediately after the archive's title line**, before any existing first archived entry (newest archived first; the title stays at line 1).
-   - If the archive does not exist, create it with a single-line title `# STATE archive — <project>` (or `# RESEARCH STATE archive — <project>` for the split-mode research archive) above the entries.
-   - Existing `STATE-HISTORY-<year>.md` files from the prior rule coexist; new writes go to the new archive target.
-   - Cap trigger is **size**, not age — compression in step 2 keeps individual entries small, so the cap rarely fires.
-6. Update `_Last updated:_` timestamp.
-
-#### Phase 4 rules
-
-- **STATE.md is research trajectory, not git deployment — invariant under merge.** Every Current field must remain valid after `git merge` of the current feature branch. Forbidden because they decay at merge: `Active branch:`, `In progress: <X> (uncommitted)`, `🛠️ Working tree (<branch>): …`, `Awaiting commit + push`, `Pre-merge triad in progress`, and commit hashes (`abc1234`). PR numbers (`#42`) are stable URLs, allowed. Trajectory fields (Last shipped, Active experiment, Recently completed/abandoned, Open questions, Next up) describe *what's being researched*, independent of git deployment, and remain valid through merge.
-- **Hex-string constraint covers all of Current.** The `[0-9a-f]{7,}` no-hex rule from step 3 Last shipped applies to **every value in Current, including free-text Notes and Open questions** — not just Last shipped. Commit hashes in Notes (e.g. "fixed in `0082a92`") decay the same way. Exception: a hex inside a quoted command or URL that is itself a stable artifact reference (e.g. `pip install git+...@<sha>`) is allowed, but such content usually belongs in `docs/findings/` or a notebook README, not in STATE.md Notes — when in doubt, move the bullet.
-- **Pre-merge gates are never project state.** `code-reviewer` pass, `document-agent` / `experiment-doc-agent` pass, `test-writer` pass — none of these belong in Open cross-experiment questions, Next up, or Notes. They are workflow between branch and main and disappear at merge. If the user is waiting on review feedback that needs their decision, attribute to `by user: …` in Next up instead.
-- **No severity vocabulary in Phase 4.** STATE.md is descriptive, not graded. The local `TODO`/`WARNING` vocabulary from Phases 1-3 belongs in REPORT.md and the domain README, not in STATE.md. Do not import `CRITICAL`/`HIGH` from `code-reviewer` or `blocker`/`warning` from `plan-reviewer` — each agent's severity vocabulary is calibrated to its domain.
-- **Phase 4 cadence.** Run only on `--state-only` invocation or as final phase of full pass. Not on every drift-update — STATE.md churn destroys history value.
-- **Hard limit on Current size.** Current ≤ **30 lines total**, including Notes. Past 30 lines is a signal that Notes is paraphrasing something that should live in REPORT.md, findings/, BACKLOG, or an ADR — promote it, don't shrink the font.
-- **Do not duplicate REPORT.md, findings/, BACKLOG, codemaps, or git.** STATE.md highlights only what's *active or recent*. Three duplication patterns to actively avoid:
-  - **Per-experiment narrative recap pasted inline.** Status + slug + ref to REPORT.md is enough — recap and result detail live in the REPORT.md itself.
-  - **Code/figure/table blocks.** Belong in REPORT.md or in `experiments/<domain>/<slug>/outputs/`, not pasted into STATE.md.
-  - **Read-order TOC.** Drop. Stable onboarding sequence is `docs/ONBOARDING.md` if genuinely needed.
-- **History is sacred (already-written entries).** Never edit a compressed History entry once a past Phase 4 pass produced it — even if you'd emphasize different things now, it was an accurate snapshot at the time. Corrections go in the next Current update.
-- **Hard cap on size, not age.** If `## History` exceeds 400 lines OR the managed STATE file (`STATE.md` in research-only mode, `RESEARCH-STATE.md` in `state_owner: split` mode) exceeds 600 lines, archive oldest entries — target depends on `state_owner` per step 5 above (research-only / absent → `docs/STATE-ARCHIVE.md`; `split` → `docs/RESEARCH-STATE-ARCHIVE.md`). Size-based replacement for the prior age-based rule. Existing `STATE-HISTORY-<year>.md` files coexist; new writes go to the new archive target. Per-entry compression in step 2 keeps individual entries small, so the cap rarely fires.
-- Ask user at most once at end if Active/Next-up not derivable.
+- **TODO / WARNING vocabulary is local to Phases 1–3 of this agent**, not Phase 4. STATE.md remains descriptive; Phases 1–3 `TODO` and `WARNING` markers belong in REPORT.md and the domain README, not in STATE.md. See [`rules/state-contract.md`](../rules/state-contract.md) "No severity vocabulary in STATE.md".
+- **Active-experiment derivation rule.** Active experiment value comes only from REPORT.md `status: wip` (file fact). Never from `git branch --show-current`, working tree, or in-flight commits. If there are zero `wip` reports, the value is exactly `none` — no parenthetical decoration.
 
 ### Phase 5 — Open questions
 
