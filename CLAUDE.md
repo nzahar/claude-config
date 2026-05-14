@@ -87,113 +87,53 @@ See [rules/workflow.md](rules/workflow.md).
 
 ## Sub-agent Invocation Policy
 
-Sub-agents are a core part of how work gets done here, not a fallback. Use them fully. Each agent runs in an isolated fresh context — they do not bloat the main session; they offload work from it. The main session stays focused on the task at hand; specialized work happens in agents and returns as a summary.
+Sub-agents run in isolated fresh contexts — they offload work from the main session, not bloat it. The unit of review is the **branch** (PR), not the individual commit. Use them fully; full agent contracts live in `agents/*.md`.
 
-The unit of review is the **branch** (PR), not the individual commit. Reviewing a half-finished feature or writing tests on code that will change in the next commit produces noise, not signal.
+### Agent modes
 
-### Agent modes — engineering vs research
+`plan-reviewer` and `code-reviewer` take `mode: engineering | research` in the invocation prompt. Selection: project's `default_agent_mode` (if declared) → structural inference (active `notebooks/<...>/*.ipynb` without `src/` → research; else engineering) → per-branch override (pass explicitly). If a project declares `default_agent_mode: research` and the call lacks `mode:` with no engineering override, the agent errors out — no silent fallback. Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`) have no modes; `experiment-doc-agent` is research-only.
 
-`plan-reviewer` and `code-reviewer` support a `mode: engineering | research` parameter passed in the invocation prompt. Default — `engineering`. The difference is the rubric/dimensions applied; workflow, severity model, isolation, output format, and verdict (`APPROVED`/`BLOCKED`) are identical across modes.
+### Project-level `state_owner`
 
-**How mode is selected:**
+Project's `CLAUDE.md` may declare `state_owner: document-agent | experiment-doc-agent | split`. Default: `document-agent` for engineering (`src/` present, no `notebooks/`), `experiment-doc-agent` for research-only. `split` is for hybrid projects and uses two files: `docs/STATE.md` (engineering, owned by `document-agent`) + `docs/RESEARCH-STATE.md` (research, owned by `experiment-doc-agent`). Never two owners on one file.
 
-1. Project-level `CLAUDE.md` may declare `default_agent_mode: research | engineering` as the single source of truth. Main session reads this and passes it.
-2. If not declared: main session infers from structure (active `notebooks/<...>/*.ipynb` without active `src/` → research; otherwise engineering). State the inference briefly to the user before invoking.
-3. Specific branches may override (engineering project, research-style branch on training scripts; or vice versa) — main session passes the override explicitly.
+### Plan review (`plan-reviewer`)
 
-**Hard rule:** an agent that supports modes, invoked in a project with `default_agent_mode: research` declared, without an explicit `mode:` and with no engineering override — must return an error and ask main session to clarify. No silent fallback.
+Trigger — step 4 of `workflow.md`, after the user approves the plan, before any code is written. Mandatory for non-trivial tasks with a plan file at `docs/plans/<branch-slug>.md`. **No loop with the agent** — one report, the user decides what to fix. **Exception** for framework / governance changes (`rules/`, `CLAUDE.md`, `agents/`, ADRs auto-load every session; `commands/` and `skills/*` excluding `learned/` on contract changes only): iterate review→revise until clean (nits OK). See `rules/workflow.md` "Exception to \"no loop\"". The agent finds the plan automatically from the branch — pass an explicit path only if it lives elsewhere. Do not invoke for one-sentence "plans", mid-implementation, or replanning.
 
-Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`) have no modes. `experiment-doc-agent` is research-only by design.
+### Pre-merge triad (`test-writer` + `code-reviewer` + `document-agent` or `experiment-doc-agent`)
 
-### Project-level `state_owner` field
+**Scope.** Branch-level gate before merge. Does **not** cover operation-level pre-execution review (`workflow.md` §4.5, auto-detected per-operation). Both gates can fire on the same branch — §4.5 keeps gating operations launched while preparing for merge.
 
-Project's `CLAUDE.md` may declare `state_owner: document-agent | experiment-doc-agent | split` to disambiguate STATE.md ownership. Default: `document-agent` for engineering (`src/` present, no `notebooks/`), `experiment-doc-agent` for research-only (`notebooks/` only). `split` is for hybrid projects (both active) and uses two files: `docs/STATE.md` owned by `document-agent`, `docs/RESEARCH-STATE.md` owned by `experiment-doc-agent`. Never two owners on one file.
+**Trigger — signal from the user**, not auto-detection. Claude Code cannot distinguish "still working" from "ready to merge" — they are the same git state. Triggers: explicit ("ready to merge", "готовлю к мержу", "прогони проверки"), implicit (the user requests one triad agent but not the others — ask whether to run all three), or `/merge-pr` without prior checks (pause, confirm).
 
-### Plan review (plan-reviewer)
-
-**Trigger — after the user approves the plan, before any code is written.** This is step 4 of `workflow.md`. Mandatory for any non-trivial task that produced a plan file at `docs/plans/<branch-slug>.md`.
-
-The agent reads the plan and returns blockers and warnings across six dimensions: requirement coverage, task completeness, dependency correctness, schema/infrastructure drift, ADR/CODEMAPS compliance, and verification plan.
-
-**No loop with the agent.** One report. Show findings to the user, the user decides what to fix. The user is in the conversation context — they will resolve faster than a Claude-Claude loop, and without burning extra tokens.
-
-**Exception** — when the change under review is itself a framework / governance document (`rules/`, `CLAUDE.md`, `agents/`, ADRs auto-load every session; `commands/` and `skills/*` excluding `learned/` on contract changes only), iterate review→revise until clean (no blockers/warnings; nits OK). See `rules/workflow.md` "Exception to 'no loop'" for the operational test and loop hygiene.
-
-**Do NOT invoke** for:
-- Small tasks where the "plan" is one sentence (no plan file exists)
-- Mid-implementation invocations (the agent reviews plans, not code in progress)
-- Replanning after blockers (just edit the plan and re-run plan-reviewer if you want a sanity check)
-
-**What to pass:** nothing special. The agent finds the plan from the current branch automatically. Pass an explicit path only if the plan was saved somewhere non-standard.
-
-### Pre-merge triad (test-writer + code-reviewer + document-agent OR experiment-doc-agent)
-
-**Scope.** This section governs the **branch-level** review gate that runs before merging a feature branch to main. It does **not** cover the **operation-level** review gate that fires before side-effectful runs (DB query against prod-like data, training run, mass writes, new dependency installs, etc.) — that one is `rules/workflow.md` §4.5 "Pre-execution review", auto-detected by the model and orthogonal to this triad. A session can encounter both gates on the same branch: §4.5 fires per-operation during work; the triad fires once when the user signals merge readiness — including operations launched as part of preparing for merge (§4.5 still gates them before the triad runs).
-
-**Trigger — signal from the user**, not auto-detection. Claude Code cannot distinguish "branch still being worked on" from "branch ready to merge" — they are the same git state. The triad runs when the user signals readiness:
-
-- Explicit: "готовлю к мержу", "прогони проверки", "ready to merge", "run pre-merge checks"
-- Implicit: the user asks for one of the triad agents but not the others — in that case, ask whether to run all three together
-- The user calls `/merge-pr` without running checks first — pause and confirm whether to run the triad before merging
-
-The triad:
-
-1. **`test-writer`** — generate and verify tests for new/changed public surfaces on this branch
-2. **`code-reviewer`** — security, quality, ADR compliance, regression check against follow-up issues
-3. **`document-agent`** (engineering projects) or **`experiment-doc-agent`** (research projects) — if the branch introduced architectural decisions, new routes/schemas, dependency changes, new/modified experiments/notebooks, or otherwise affects documented areas. Choice governed by project-level `state_owner` (see "Project-level `state_owner` field" above)
-
-**Run them in parallel, not sequentially.** They operate on read-only or disjoint write targets:
-- `code-reviewer` is read-only (no Write/Edit tools)
-- `test-writer` writes only to test files (`*_test.go`, `test_*.py`, `*.test.tsx`) — never touches source
-- `document-agent` writes only under `docs/` — never touches source or tests
-
-No file conflicts between them. Parallel execution cuts the triad from ~10–15 minutes sequentially to ~5 minutes (bounded by the slowest agent, usually code-reviewer).
-
-**Expected output after the triad:**
-
-- `code-reviewer` report (APPROVED or BLOCKED + findings)
-- New test files from `test-writer` as unstaged changes in the working tree
-- Updated docs/ADRs from the project's documentation agent (`document-agent` for engineering, `experiment-doc-agent` for research) as unstaged changes (including refreshed `docs/STATE.md` if structural changes happened)
-
-The user decides how to commit the tests and docs (separate `test:` / `docs:` commits, amend, or discard). Agents produce work; the user decides what to ship.
+Run the three in **parallel** in one message — disjoint write targets (`code-reviewer` read-only, `test-writer` writes only test files, the documentation agent writes only under `docs/`), no conflicts. Choice between `document-agent` and `experiment-doc-agent` governed by `state_owner`. Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files unstaged, doc/ADR/STATE.md updates unstaged. The user decides how to commit.
 
 ### Post-merge `document-agent`
 
-If the triad was skipped before merge and the branch introduced structural changes (routes, DB schema, models, dependencies, architectural decisions), run `document-agent` after the merge to sync docs. This is the fallback, not the primary path — prefer running `document-agent` in the pre-merge triad when possible.
+Fallback if the triad was skipped and the branch introduced structural changes (routes, schema, models, dependencies, architectural decisions). Prefer the triad path.
 
-### End-of-session documentation agent `--state-only`
+### End-of-session `--state-only`
 
-If a session ends without a merge but progress was made (decisions pending, branch active, blockers identified), invoke the project's documentation agent with `--state-only` to refresh `docs/STATE.md` only — skipping the full codemap/index pass. For engineering projects this is `document-agent`; for research projects, `experiment-doc-agent`. Choice is governed by the project's `state_owner`.
+If a session ends without merge but produced state worth recording (decisions pending, branch active, blockers identified), and the user signals end ("я заканчиваю на сегодня", "stopping for the day", "wrapping up"), invoke the project's documentation agent (`document-agent` or `experiment-doc-agent` per `state_owner`) with `--state-only`. Skip if purely exploratory.
 
-Trigger: the user signals end of session ("я заканчиваю на сегодня", "stopping for the day", "wrapping up") AND the session produced state worth recording (started/paused work, found blockers, made non-trivial decisions). Skip if the session was purely exploratory or made no real progress.
+### `debugger` — situational
 
-### `debugger` — situational, not lifecycle
-
-Bugs do not care about branch state. Invoke `debugger` on-demand when investigation stalls. Trigger criteria:
-
-- Your first fix attempt failed. A second attempt on the same bug is the trigger — do not guess a third time, hand it off
-- You cannot state the root cause in one mechanistic sentence (file:line + mechanism + condition). If your best answer contains "probably", "maybe", "something with" — you do not have a root cause
-- Symptom surfaces in module A but the apparent cause is in module B (non-local debugging)
-- The bug is intermittent, timing-dependent, or environment-dependent (flaky tests, race conditions, works-on-my-machine)
-- The bug contradicts your model of the code ("this should not be possible")
-- Regression after a merge/dependency bump, and `git bisect` is not obvious
-- The user explicitly says the bug is hard or has already tried fixing themselves
-
-Do NOT invoke `debugger` for: compilation errors, type errors, missing imports, typos visible in the snippet, requirements disputes, or bugs where you already have a one-sentence mechanistic root cause. For those, fix directly.
+On-demand when investigation stalls: first fix failed; you can't state the root cause in one mechanistic sentence (`file:line` + mechanism + condition; "probably/maybe" = not a root cause); symptom and cause in different modules; intermittent / timing-dependent; behavior contradicts your model of the code; regression after merge/bump where `git bisect` isn't obvious; user says it's hard. Full exclusion list and root-cause discipline in `agents/debugger.md`.
 
 Calibration signals (weak alone, two or more = trigger): several back-and-forth exchanges without convergence, same file read more than three times, explanations getting longer not shorter, "let me try X" without being able to predict the outcome.
 
-What to pass to `debugger`: exact error, reproduction steps tried (with outcomes), fixes already attempted (with outcomes), relevant file paths. Do NOT pass your hypotheses — the agent is deliberately isolating from your theory.
+What to pass: exact error, reproduction steps tried (with outcomes), fixes already attempted (with outcomes), relevant file paths. Do NOT pass your hypotheses — the agent isolates from your theory deliberately.
 
 ### Mid-branch explicit invocations
 
-Agents can be invoked mid-branch if the user asks, or before a large internal refactor that benefits from a sanity check. These are manual, not policy-driven. Do not auto-invoke agents on every intermediate commit — that is the anti-pattern this policy exists to prevent.
+Allowed when the user asks, or before a large internal refactor that benefits from a sanity check. Manual, not policy-driven — do not auto-invoke on every intermediate commit.
 
 ### Atomicity of commands
 
-Commands (`/commit-push`, `/merge-pr`, others) are atomic — they do exactly what their name says and nothing more. They do NOT invoke review, test, or documentation agents, and they do NOT edit documentation files (no STATE.md markers, no codemap fixups, no log entries). All quality gates and documentation refresh are explicit steps that the user or main session runs before/after calling the command. This keeps commands predictable and keeps the user in control of when review and docs happen.
+Commands (`/commit-push`, `/merge-pr`, others) are atomic — they do exactly what their name says, no more. They do NOT invoke review/test/documentation agents and do NOT edit documentation files (no STATE.md markers, no codemap fixups, no log entries). All quality gates and doc refresh are explicit steps the user or main session runs before/after.
 
-Post-merge STATE.md remains valid: `## Current` is a post-merge snapshot describing last shipped work, open questions, and next up — not in-progress git state. Optional `--state-only` refresh after merge is needed only if open questions or next up materially shifted from the merge. Routine merges do not require state refresh.
+Post-merge STATE.md remains valid: `## Current` is a post-merge snapshot describing last shipped, open questions, and next up — not in-progress git state. Routine merges do not require state refresh.
 
 ## Git & Workflow
 

@@ -11,7 +11,7 @@ You document research experiments. The unit of work in this repo is the **experi
 
 ## Hard rules
 
-- **Severity model is local to this agent.** `TODO` (must resolve before report is canonical) and `WARNING` (advisory, does not block) apply only inside this agent. Do not import or compare with `code-reviewer`'s `CRITICAL`/`HIGH`/`MEDIUM`/`LOW` or `plan-reviewer`'s `blocker`/`warning` — each agent's vocabulary is calibrated to its domain.
+- **Severity model is local to this agent.** `TODO` (must resolve before report is canonical) and `WARNING` (advisory, does not block) apply only inside this agent. See [`rules/state-contract.md`](../rules/state-contract.md) "No severity vocabulary in STATE.md" for the cross-agent rule.
 - Never modify notebook logic, metrics, or computations. Never extract code. Never re-run notebooks.
 - Output-path redirects in notebooks (savefig/to_csv/ExcelWriter targets pointing at scratch paths → centralised `tmp_output/`) are explicitly out of scope for this agent: that is a one-time hygiene pass done manually with verification.
 - Never invent metrics. Quote cell outputs verbatim. If a number isn't in the notebook, the artifact, or a referenced .md — leave the field "TODO: verify".
