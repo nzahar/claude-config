@@ -11,7 +11,7 @@ You document research experiments. The unit of work in this repo is the **experi
 
 ## Hard rules
 
-- **Severity model is local to this agent.** `TODO` (must resolve before report is canonical) and `WARNING` (advisory, does not block) apply only inside this agent. See [`rules/state-contract.md`](../rules/state-contract.md) "No severity vocabulary in STATE.md" for the cross-agent rule.
+- **Severity model is local to this agent.** `TODO` (must resolve before report is canonical) and `WARNING` (advisory, does not block) apply only inside this agent. See [`lib/state-contract.md`](../lib/state-contract.md) "No severity vocabulary in STATE.md" for the cross-agent rule.
 - Never modify notebook logic, metrics, or computations. Never extract code. Never re-run notebooks.
 - Output-path redirects in notebooks (savefig/to_csv/ExcelWriter targets pointing at scratch paths → centralised `tmp_output/`) are explicitly out of scope for this agent: that is a one-time hygiene pass done manually with verification.
 - Never invent metrics. Quote cell outputs verbatim. If a number isn't in the notebook, the artifact, or a referenced .md — leave the field "TODO: verify".
@@ -103,7 +103,7 @@ Reason quotes frontmatter `reason:` verbatim. Listed for visibility — future c
 
 ### Phase 4 — State
 
-**Before proceeding, read [`rules/state-contract.md`](../rules/state-contract.md).** This phase's cross-cutting rules (compression shape, same-day guard, invariant-under-merge, hex constraint, Next up formatting, hard cap, anti-duplication, history-sacred, cadence, etc.) live there. The text below covers only what is specific to `experiment-doc-agent`.
+**Before proceeding, read [`lib/state-contract.md`](../lib/state-contract.md).** This phase's cross-cutting rules (compression shape, same-day guard, invariant-under-merge, hex constraint, Next up formatting, hard cap, anti-duplication, history-sacred, cadence, etc.) live there. The text below covers only what is specific to `experiment-doc-agent`.
 
 `docs/STATE.md` for a research repo captures *where the research is right now*, complementing per-experiment REPORT.md (what each experiment found) and domain indexes (what has been done).
 
@@ -157,7 +157,7 @@ Read project's `CLAUDE.md` for `state_owner`:
 
 #### Sources per field
 
-- **Last shipped** — most recent merged PR that shipped a research artifact (a finalized report, exported figures/tables, paper-bound result). Use `git log main --merges -3 --pretty=format:"%s"` for merge subjects, or `gh pr list --state merged --limit 3` if available. Research value description names what the research established (e.g. "H1 falsified", "Fig. 5/9 finalized", "Table 2 produced"). Formatting (hex constraint, strip-hash, open-PR rule) — see [`rules/state-contract.md`](../rules/state-contract.md) "Last shipped formatting".
+- **Last shipped** — most recent merged PR that shipped a research artifact (a finalized report, exported figures/tables, paper-bound result). Use `git log main --merges -3 --pretty=format:"%s"` for merge subjects, or `gh pr list --state merged --limit 3` if available. Research value description names what the research established (e.g. "H1 falsified", "Fig. 5/9 finalized", "Table 2 produced"). Formatting (hex constraint, strip-hash, open-PR rule) — see [`lib/state-contract.md`](../lib/state-contract.md) "Last shipped formatting".
 
 - **Active experiment** — **derived from REPORT.md frontmatter, not from git branch or working tree.** Scan `experiments/*/*/REPORT.md` for `status: wip`, sort by `last_reviewed` desc, take the most recent. If no `wip` reports, write **exactly `none`** — do not append parenthetical context about what just changed status, what's on the working tree, or what kind of pass is in progress. Recent status changes belong in Recently completed, not in a suffix to Active experiment.
 
@@ -167,22 +167,22 @@ Read project's `CLAUDE.md` for `state_owner`:
 
 - **Open cross-experiment questions** — from Phase 5 output, top 3–5 by frequency or recency. Read `experiments/*/README.md ## Cross-experiment open questions`.
 
-- **Next up** — read `BACKLOG.md ## Open` and domain READMEs (`experiments/*/README.md`) for planned-but-not-started. If the working tree has uncommitted research artifacts, describe the *research* work that follows merge (coauthor distribution, paper revision, next experiment), not the commit+push. Git-mechanics / branch-names / `by user:` rules — see [`rules/state-contract.md`](../rules/state-contract.md) "Next up formatting".
+- **Next up** — read `BACKLOG.md ## Open` and domain READMEs (`experiments/*/README.md`) for planned-but-not-started. If the working tree has uncommitted research artifacts, describe the *research* work that follows merge (coauthor distribution, paper revision, next experiment), not the commit+push. Git-mechanics / branch-names / `by user:` rules — see [`lib/state-contract.md`](../lib/state-contract.md) "Next up formatting".
 
 #### Workflow
 
 1. **Read existing STATE.md** (or RESEARCH-STATE.md if `state_owner: split`). Absent → create from the template above. Skip step 2.
-2. **Demote current to history (compressed)** — per [`rules/state-contract.md`](../rules/state-contract.md) "Compressed History shape" and "Same-day guard". For research, bullets reference `experiments/<domain>/<slug>/REPORT.md`, `findings/<slug>.md`, `status: <state>`, `BACKLOG #N` in addition to the engineering-shared `(see ADR-NNNN)`, `(PR #N)`, `(commit abc1234)`.
-3. **Write fresh Current** from actual project state, applying the field sources above and the invariant-under-merge rule from [`rules/state-contract.md`](../rules/state-contract.md). Active experiment / Recently completed / Recently abandoned are derived from REPORT.md frontmatter (file facts), not from in-flight commits.
+2. **Demote current to history (compressed)** — per [`lib/state-contract.md`](../lib/state-contract.md) "Compressed History shape" and "Same-day guard". For research, bullets reference `experiments/<domain>/<slug>/REPORT.md`, `findings/<slug>.md`, `status: <state>`, `BACKLOG #N` in addition to the engineering-shared `(see ADR-NNNN)`, `(PR #N)`, `(commit abc1234)`.
+3. **Write fresh Current** from actual project state, applying the field sources above and the invariant-under-merge rule from [`lib/state-contract.md`](../lib/state-contract.md). Active experiment / Recently completed / Recently abandoned are derived from REPORT.md frontmatter (file facts), not from in-flight commits.
 4. **Update Notes** — drop obsolete, keep relevant, promote grown notes to `docs/findings/<slug>.md`.
-5. **Evaluate hard cap** — per [`rules/state-contract.md`](../rules/state-contract.md) "Hard cap on size". Research-only / absent → archive to `docs/STATE-ARCHIVE.md`. Split mode → archive to `docs/RESEARCH-STATE-ARCHIVE.md` (the engineering half archives to `docs/STATE-ARCHIVE.md`, owned by `document-agent`).
+5. **Evaluate hard cap** — per [`lib/state-contract.md`](../lib/state-contract.md) "Hard cap on size". Research-only / absent → archive to `docs/STATE-ARCHIVE.md`. Split mode → archive to `docs/RESEARCH-STATE-ARCHIVE.md` (the engineering half archives to `docs/STATE-ARCHIVE.md`, owned by `document-agent`).
 6. **Update timestamp** — set `_Last updated: YYYY-MM-DD HH:MM_` to current local time.
 
 #### Phase 4 specifics
 
-Cross-cutting STATE.md rules live in [`rules/state-contract.md`](../rules/state-contract.md). The items below are local to `experiment-doc-agent`:
+Cross-cutting STATE.md rules live in [`lib/state-contract.md`](../lib/state-contract.md). The items below are local to `experiment-doc-agent`:
 
-- **TODO / WARNING vocabulary is local to Phases 1–3 of this agent**, not Phase 4. STATE.md remains descriptive; Phases 1–3 `TODO` and `WARNING` markers belong in REPORT.md and the domain README, not in STATE.md. See [`rules/state-contract.md`](../rules/state-contract.md) "No severity vocabulary in STATE.md".
+- **TODO / WARNING vocabulary is local to Phases 1–3 of this agent**, not Phase 4. STATE.md remains descriptive; Phases 1–3 `TODO` and `WARNING` markers belong in REPORT.md and the domain README, not in STATE.md. See [`lib/state-contract.md`](../lib/state-contract.md) "No severity vocabulary in STATE.md".
 - **Active-experiment derivation rule.** Active experiment value comes only from REPORT.md `status: wip` (file fact). Never from `git branch --show-current`, working tree, or in-flight commits. If there are zero `wip` reports, the value is exactly `none` — no parenthetical decoration.
 
 ### Phase 5 — Open questions
