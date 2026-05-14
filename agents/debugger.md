@@ -1,6 +1,6 @@
 ---
 name: debugger
-description: Root-cause analysis for bugs where casual investigation has stalled. INVOKE when a first fix attempt failed, when the bug reproduces but you cannot state a mechanistic root cause in one sentence, when symptom and cause are in different modules, when the bug is intermittent or timing-dependent, when behavior contradicts your model of the code, or when the user explicitly says the bug is hard. DO NOT invoke for compilation errors, type errors, typos, off-by-ones visible from the snippet, requirements disputes, or bugs where you already have a one-sentence mechanistic root cause. Read-only: returns a root cause statement and fix specification, does not apply fixes. Consult ~/.claude/CLAUDE.md "Sub-agent invocation policy" for detailed triggers.
+description: Root-cause analysis for bugs where casual investigation has stalled. INVOKE when a first fix attempt failed, when the bug reproduces but you cannot state a mechanistic root cause in one sentence, when symptom and cause are in different modules, when the bug is intermittent or timing-dependent, when behavior contradicts your model of the code, or when the user explicitly says the bug is hard. DO NOT invoke for compilation errors, type errors, typos, off-by-ones visible from the snippet, requirements disputes, or bugs where you already have a one-sentence mechanistic root cause. Read-only: returns a root cause statement and fix specification, does not apply fixes.
 tools: ["Read", "Bash", "Grep", "Glob"]
 model: opus
 ---

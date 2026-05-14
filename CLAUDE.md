@@ -99,7 +99,7 @@ Project's `CLAUDE.md` may declare `state_owner: document-agent | experiment-doc-
 
 ### Plan review (`plan-reviewer`)
 
-Trigger — step 4 of `workflow.md`, after the user approves the plan, before any code is written. Mandatory for non-trivial tasks with a plan file at `docs/plans/<branch-slug>.md`. **No loop with the agent** — one report, the user decides what to fix. **Exception** for framework / governance changes (`rules/`, `CLAUDE.md`, `agents/`, ADRs auto-load every session; `commands/` and `skills/*` excluding `learned/` on contract changes only): iterate review→revise until clean (nits OK). See `rules/workflow.md` "Exception to 'no loop'". The agent finds the plan automatically from the branch — pass an explicit path only if it lives elsewhere. Do not invoke for one-sentence "plans", mid-implementation, or replanning.
+Trigger — step 4 of `workflow.md`, after the user approves the plan, before any code is written. Mandatory for non-trivial tasks with a plan file at `docs/plans/<branch-slug>.md`. **No loop with the agent** — one report, the user decides what to fix. **Exception** for framework / governance changes (`rules/`, `CLAUDE.md`, `agents/`, ADRs auto-load every session; `commands/` and `skills/*` excluding `learned/` on contract changes only): iterate review→revise until clean (nits OK). See `rules/workflow.md` "Exception to \"no loop\"". The agent finds the plan automatically from the branch — pass an explicit path only if it lives elsewhere. Do not invoke for one-sentence "plans", mid-implementation, or replanning.
 
 ### Pre-merge triad (`test-writer` + `code-reviewer` + `document-agent` or `experiment-doc-agent`)
 
