@@ -128,6 +128,8 @@ The agent reads the plan and returns blockers and warnings across six dimensions
 
 ### Pre-merge triad (test-writer + code-reviewer + document-agent OR experiment-doc-agent)
 
+**Scope.** This section governs the **branch-level** review gate that runs before merging a feature branch to main. It does **not** cover the **operation-level** review gate that fires before side-effectful runs (DB query against prod-like data, training run, mass writes, new dependency installs, etc.) — that one is `rules/workflow.md` §4.5 "Pre-execution review", auto-detected by the model and orthogonal to this triad. A session can encounter both gates on the same branch: §4.5 fires per-operation during work; the triad fires once when the user signals merge readiness — including operations launched as part of preparing for merge (§4.5 still gates them before the triad runs).
+
 **Trigger — signal from the user**, not auto-detection. Claude Code cannot distinguish "branch still being worked on" from "branch ready to merge" — they are the same git state. The triad runs when the user signals readiness:
 
 - Explicit: "готовлю к мержу", "прогони проверки", "ready to merge", "run pre-merge checks"
