@@ -8,7 +8,11 @@
       "Bash(gh pr:*)",
       "Bash(git branch:*)",
       "Bash(gh issue list:*)",
-      "Bash(gh issue view:*)"
+      "Bash(gh issue view:*)",
+      "Read(~/.claude/lib/**)",
+      "Read(~/.claude/skills/**)",
+      "Read(~/.claude/skills/learned/**)",
+      "Read(~/.claude/commands/**)"
     ]
   },
   "model": "opus",
