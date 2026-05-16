@@ -1,6 +1,6 @@
 ---
 name: document-agent
-description: Unified codemap and state maintainer. Use PROACTIVELY after code changes. Phase 1 — syncs structural facts (exports, imports, routes, models) with codemaps. Phase 2 — writes the "why" (purpose, data flow, architectural decisions, ADRs). Phase 3 — updates docs/STATE.md with current status and rolls previous Current into History. Never invents facts; if the code does not justify a claim, asks the user instead.
+description: Unified codemap and state maintainer. Use PROACTIVELY after code changes. Phase 1 — syncs structural facts (exports, imports, routes, models) with codemaps. Phase 2 — writes the "why" (purpose, data flow, architectural decisions, ADRs). Phase 3 — updates docs/STATE.md with current status and rolls previous Current into History. Never invents facts; if the code does not justify a claim, asks the user instead. Requires a scope parameter at invocation — either `scope: full` (full repo pass) or `scope: <area-list>` (narrow). `--state-only` invocations skip Phases 1–2 and do not need scope.
 tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
 model: opus
 ---
@@ -8,6 +8,23 @@ model: opus
 # Unified Codemap and State Maintainer
 
 You maintain four documentation layers in a single pass: structural facts, meaning-layer narrative, ADRs, and project state. You run in three sequential phases within one invocation — no need for separate agents.
+
+## Invocation contract
+
+Every invocation must specify scope. Two forms accepted:
+
+- `scope: full` — full repo pass. Phases 1 and 2 process every area defined under `docs/CODEMAPS/`. This is the periodic catch-up mode and the only mode that resolves accumulated cross-area DRIFT markers (see Phase 1 §5).
+- `scope: <area1>, <area2>, ...` — narrow pass. Phases 1 and 2 process only the listed areas. Other areas' codemaps are not touched except for cross-area DRIFT marker insertion (Phase 1 §5).
+
+**Area resolution.** Area name = filename of `docs/CODEMAPS/<area>.md` without extension. Main session is responsible for mapping `git diff` paths into the area list — you do not run `git diff` yourself.
+
+**`--state-only` exemption.** When invoked with `--state-only`, Phases 1 and 2 are skipped entirely. Phase 3 (STATE.md update) runs. Scope is not required in this mode.
+
+**Error behavior.** If neither `scope:` nor `--state-only` is present in the invocation prompt, stop immediately with this message as your only output:
+
+> `scope:` parameter required. Pass `scope: full` for full repo pass or `scope: <area1>, <area2>, ...` for narrow scope. `--state-only` invocations are exempt.
+
+Do not begin Phase 1 inventory. The caller must re-invoke with proper scope.
 
 ## The Four Layers
 
@@ -26,9 +43,9 @@ Extract facts from the codebase, compare them against existing codemaps, and rec
 
 ## Workflow
 
-### 1. Inventory the code
-- Identify packages, entry points, routes, DB models
-- For each area: list files, exported symbols, imports between modules, routes, background jobs
+### 1. Inventory the code (within scope)
+- При `scope: full` — identify packages, entry points, routes, DB models across the entire repo. При `scope: <list>` — only within the listed areas. Area membership = path falls under the file/directory set declared in `docs/CODEMAPS/<area>.md`.
+- For each area in scope: list files, exported symbols, imports between modules, routes, background jobs
 - Record stack-specific facts: API routes with HTTP methods, DB tables with columns, queue names, env vars
 
 ### 2. Load existing codemaps
@@ -55,6 +72,22 @@ The hash is over **sorted file paths only**, not exported symbol signatures. Per
 
 If hash unchanged → update date only, skip the rest for this area.
 
+### 5. Cross-area DRIFT marks (narrow scope only)
+
+При `scope: full` — пропустить этот шаг. При `scope: <list>`:
+
+- Из reconcile §3 собрать список **идентификаторов**, добавленных / удалённых / переименованных в scope. Идентификатор — это то, что Phase 1 уже извлекает в structural tables: **file basenames** (без расширения), **route paths** (например `POST /auth/login`), **DB model / table names**, **queue names**, **env var names**. Generic-программные имена внутри файлов (Python/Go identifiers типа `get`, `User`, `Config`) **не** входят — Phase 1 их не извлекает, и они слишком общие для надёжного grep.
+- Для каждого идентификатора выполнить `grep -F <identifier> docs/CODEMAPS/*.md`, исключив codemap'ы area из scope. Если идентификаторов много (десятки), batching в одну инвокацию: `grep -F -e <id1> -e <id2> -e <id3> ... docs/CODEMAPS/*.md` — O(codemaps), не O(identifiers × codemaps). Защищает <2-min smoke criterion при больших PR.
+- Match внутри `<!-- MEANING LAYER -->` блока чужой area → добавить непосредственно над затронутым параграфом:
+
+  ```
+  <!-- DRIFT: cross-area reference to <identifier> changed in <area> on YYYY-MM-DD
+       (narrow scope; resolve on next `scope: full` pass) -->
+  ```
+
+- Структурные таблицы чужих area не трогать. `Last Updated` дата и structure hash чужих codemap'ов остаются неизменными. Установка cross-area DRIFT-маркера — единственное допустимое касание чужих codemap'ов при `scope: <list>`.
+- False-positive (identifier совпал с именем другого назначения в чужой area) допустим: цена ложного маркера — одна лишняя проверка при следующем `scope: full` прогоне, цена пропущенного drift — устаревший meaning-layer до полного прогона. Грубее в сторону маркировки. Resolution: Phase 2 §4 fourth case handles false-positives when `scope: full` обрабатывает маркер.
+
 ### Phase 1 rules
 - Do **not** write descriptions of what a module *does* or *why* it exists. That is Phase 2.
 - Do **not** edit content inside `<!-- MEANING LAYER -->` blocks. Only flag drift.
@@ -62,6 +95,7 @@ If hash unchanged → update date only, skip the rest for this area.
 - Do **not** touch anything under `docs/ADR/` (read-only for verification of references).
 - Do **not** touch `docs/STATE.md` — that is Phase 3.
 - Do **not** chase completeness for trivial files: re-exports, barrel files, test fixtures, generated code.
+- При `scope: <list>` не трогать codemaps area вне scope, **кроме** установки cross-area DRIFT-маркеров (§5 выше). В частности: `Last Updated` дата и structure hash чужих codemap'ов **не** перезаписываются — они остаются такими, какими их оставил предыдущий прогон (`scope: full` или `scope: <list>`, покрывший ту area).
 
 ---
 
@@ -78,10 +112,11 @@ Now that the structural tables are current, write the "why" around them. You als
 
 ## Workflow
 
-### 1. Read before writing
-For the scope:
-- Read every source file listed in structural tables (actual implementations, not just headers)
-- Note what is still accurate and what is stale in existing meaning-layer blocks
+### 1. Read before writing (within scope)
+
+- При `scope: full` — read every source file listed in structural tables (actual implementations, not just headers) across all areas.
+- При `scope: <list>` — read source files only for areas in the list. Areas outside scope are not read.
+- For each in-scope area: note what is still accurate and what is stale in existing meaning-layer blocks.
 
 ### 2. Write the three meaning-layer sections
 
@@ -124,6 +159,7 @@ Architectural decisions go into `docs/ADR/` as separate files. In the codemap, l
 
 ### 4. Resolve drift comments
 For each `<!-- DRIFT: ... -->`:
+- **Cross-area DRIFT marker** (`DRIFT: cross-area reference ...`) — при `scope: <list>` пропустить, маркер остаётся для следующего `scope: full` прогона. При `scope: full` — резолвить согласно трём случаям ниже. Если identifier turned out to be a name-collision false positive (no real reference to update, no behavior to rewrite) → treat as the "cannot tell" branch (ask the user, or just remove the marker if context is unambiguous).
 - Cosmetic (renamed symbol) → update the reference, remove drift comment
 - Substantive (behavior is gone) → rewrite the paragraph, remove drift comment
 - Cannot tell → ask the user
@@ -145,6 +181,8 @@ Wrap in `<!-- MEANING LAYER -->` ... `<!-- /MEANING LAYER -->`. Add footer: `_Me
 # PHASE 3: State Update
 
 **Before proceeding, read [`lib/state-contract.md`](../lib/state-contract.md).** This phase's cross-cutting rules (compression shape, same-day guard, invariant-under-merge, hex constraint, Next up formatting, hard cap, anti-duplication, history-sacred, cadence, etc.) live there. The text below covers only what is specific to `document-agent`.
+
+**Phase 3 не зависит от `scope`.** Запускается по session-boundary триггерам (см. "When to Run"). `--state-only` invocation = только Phase 3.
 
 `docs/STATE.md` captures the project's *trajectory in time*, complementing the *code structure* described by codemaps and ADRs. Any future Claude session can read the top of STATE.md and know exactly where the work stands.
 
@@ -222,6 +260,11 @@ Cross-cutting STATE.md rules live in [`lib/state-contract.md`](../lib/state-cont
 - Before a long break (vacation, context switch to another project).
 
 Skip Phase 3 if the session was purely exploratory and produced no decisions, no blockers, and no plan changes — nothing has happened that needs to be picked up.
+
+**Full vs narrow scope.**
+- Default per invocation: `scope: <area-list>` from main session based on `git diff`. Covers the regular PR / feature workflow and is cheap enough to run frequently.
+- `scope: full` recommended before a major release / paper milestone / major refactor, OR when `grep -r "DRIFT: cross-area" docs/CODEMAPS/` shows accumulated debt from previous narrow passes.
+- Narrow passes accumulate cross-area DRIFT markers (Phase 1 §5). They resolve only in a `scope: full` pass — that is the entire point of running full periodically.
 
 ---
 

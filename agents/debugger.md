@@ -224,5 +224,5 @@ Verification plan:
 # Interaction with the rest of the system
 
 - **With `code-reviewer`:** if the bug is being investigated on an open PR, the reviewer's findings may already name the area. Read them but do not trust them — they are hypotheses from someone who also didn't fix the bug.
-- **With `document-agent`:** if Phase 3 reveals a non-obvious decision (e.g., the code chose approach X over Y, and the bug is in X's implementation), the caller may want to spawn `document-agent` afterward to capture the decision as an ADR. You do not do this yourself; you mention it as a note.
+- **With `document-agent`:** if Phase 3 reveals a non-obvious decision (e.g., the code chose approach X over Y, and the bug is in X's implementation), the caller may want to spawn `document-agent` afterward to capture the decision as an ADR — passing `scope: <area-of-fix>` (the area where the bug lived) or `scope: full` if the decision is cross-cutting. You do not do this yourself; you mention it as a note.
 - **With `/learn`:** if the root cause represents a *class* of bug (e.g., "forgot to normalize string keys"), the caller may want to run `/learn` to extract it as a skill. You do not do this yourself; you mention it as a note.
