@@ -1,6 +1,18 @@
 Закоммить изменения, открой PR и сразу его смержи.
 
-Перед запуском убедись, что pre-merge gates (`code-reviewer` + `test-writer` + документационный агент) прошли на этой ветке. Спроси у пользователя, если не уверен — не пытайся определить это самостоятельно. Если не прошли — предложи запустить триаду, не продолжай.
+**Pre-merge gates check.** Для каждого из трёх gate'ов ответь: (а) применим ли он к диффу ветки? (б) если применим — вернул ли APPROVED на актуальное состояние (не на старый снапшот)?
+
+Критерии применимости:
+
+- **`code-reviewer`** — есть код, конфиг, framework-артефакты (`rules/`, `agents/`, `CLAUDE.md`, `commands/`, `skills/` кроме `learned/`, `docs/ADR/`, `lib/`) — включая правки существующих ADR и `lib/`-документов, а не только новые. **НЕ** применим: микро-правки документации (≲10 строк прозы — эвристика; правки, меняющие контракт или семантику, требуют review независимо от размера), опечатки, переформулировки.
+- **`test-writer`** — есть изменения в коде с тестируемой логикой. **НЕ** применим: чистая документация, конфиг без поведенческих эффектов, переименования.
+- **`document-agent` / `experiment-doc-agent`** — в репо есть `docs/CODEMAPS/`, `docs/STATE.md` или `experiments/` с REPORT.md. **НЕ** применим: репо без этих артефактов (например, сам framework `~/.claude/`).
+
+Решение:
+
+- Все применимые gate'ы вернули APPROVED → молча переходи к шагу 1.
+- Какой-то применимый gate не прошёл или прошёл на устаревший снапшот → остановись, назови пропущенное, предложи запустить, дождись явного "продолжай".
+- Ни один критерий применимости и ни один критерий неприменимости явно не подходит для конкретного gate'а → спроси пользователя про этот gate, не обобщай. (Это узкий случай — не дефолт-путь "вообще сомневаюсь".)
 
 **Mode detection.** Определи режим один раз:
 
@@ -38,7 +50,7 @@ git remote get-url origin | grep -qE '127\.0\.0\.1|localhost|local_proxy' && ech
    - Не MERGEABLE (конфликты) → останови, покажи причину. Checks failed → предупреди и спроси, продолжать ли.
 
 8. Смержи squash + delete branch.
-   - **Local:** `gh pr merge <N> --squash --delete-branch`.
+   - **Local:** `gh pr merge <N> --squash --delete-branch`. **Не добавляй `--repo`** — с явным `--repo` gh уходит в чисто-API режим и пропускает local git-операции (включая удаление local-ветки), оставляя мусор для шага 10.
    - **Cloud:** `mcp__github__merge_pull_request` (query: `select:mcp__github__merge_pull_request`). Параметры: `mergeMethod: "squash"`, `deleteBranch: true`, `pullNumber: <N>`.
 
 9. Переключись на main и подтяни.
@@ -46,7 +58,7 @@ git remote get-url origin | grep -qE '127\.0\.0\.1|localhost|local_proxy' && ech
    - **Cloud:** `git fetch origin main && (git checkout main 2>/dev/null || git switch -c main origin/main) && git pull origin main` (без `fetch --prune`: remote-ветку уже удалил MCP-merge, локальный `git push --delete` запрещён прокси).
 
 10. Удали локальную feature-ветку.
-    - **Local:** `git branch -d <branch> 2>/dev/null` (тихо, без ошибки если нет).
+    - **Local:** `git branch -d <branch> 2>/dev/null` (тихо, без ошибки если нет). Обычно `gh pr merge --delete-branch` уже удалил local на шаге 8 — этот шаг страхует случай, когда не справился.
     - **Cloud:** пропусти — runtime создаст новую сессионную ветку.
 
 **Recovery после частичного падения.**
