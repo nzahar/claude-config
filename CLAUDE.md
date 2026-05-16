@@ -107,11 +107,11 @@ Trigger — step 4 of `workflow.md`, after the user approves the plan, before an
 
 **Trigger — signal from the user**, not auto-detection. Claude Code cannot distinguish "still working" from "ready to merge" — they are the same git state. Triggers: explicit ("ready to merge", "готовлю к мержу", "прогони проверки"), implicit (the user requests one triad agent but not the others — ask whether to run all three), or `/merge-pr` without prior checks (pause, confirm).
 
-Run the three in **parallel** in one message — disjoint write targets (`code-reviewer` read-only, `test-writer` writes only test files, the documentation agent writes only under `docs/`), no conflicts. Choice between `document-agent` and `experiment-doc-agent` governed by `state_owner`. Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files unstaged, doc/ADR/STATE.md updates unstaged. The user decides how to commit.
+Run the three in **parallel** in one message — disjoint write targets (`code-reviewer` read-only, `test-writer` writes only test files, the documentation agent writes only under `docs/`), no conflicts. Choice between `document-agent` and `experiment-doc-agent` governed by `state_owner`. `document-agent` requires a `scope:` parameter in the invocation prompt — main session maps the branch's `git diff` paths to `docs/CODEMAPS/` area names and passes `scope: <area-list>`. If the branch touched many areas or you want a full repo refresh, pass `scope: full` explicitly. Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files unstaged, doc/ADR/STATE.md updates unstaged. The user decides how to commit.
 
 ### Post-merge `document-agent`
 
-Fallback if the triad was skipped and the branch introduced structural changes (routes, schema, models, dependencies, architectural decisions). Prefer the triad path.
+Fallback if the triad was skipped and the branch introduced structural changes (routes, schema, models, dependencies, architectural decisions). Prefer the triad path. Pass `scope: <area-list>` derived from the merged branch's diff, or `scope: full` for periodic catch-up.
 
 ### End-of-session `--state-only`
 
