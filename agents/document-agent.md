@@ -20,11 +20,9 @@ Every invocation must specify scope. Two forms accepted:
 
 **`--state-only` exemption.** When invoked with `--state-only`, Phases 1 and 2 are skipped entirely. Phase 3 (STATE.md update) runs. Scope is not required in this mode.
 
-**Error behavior.** If neither `scope:` nor `--state-only` is present in the invocation prompt, stop immediately with this message as your only output:
+**Error behavior.** If neither `scope:` nor `--state-only` is present in the invocation prompt, output this message and halt — **this is the only legitimate path that completes without tool calls; in every other invocation you MUST make tool calls.** Do not infer scope from context; do not proceed to Phase 1.
 
 > `scope:` parameter required. Pass `scope: full` for full repo pass or `scope: <area1>, <area2>, ...` for narrow scope. `--state-only` invocations are exempt.
-
-Do not begin Phase 1 inventory. The caller must re-invoke with proper scope.
 
 ## The Four Layers
 
@@ -44,9 +42,26 @@ Extract facts from the codebase, compare them against existing codemaps, and rec
 ## Workflow
 
 ### 1. Inventory the code (within scope)
-- При `scope: full` — identify packages, entry points, routes, DB models across the entire repo. При `scope: <list>` — only within the listed areas. Area membership = path falls under the file/directory set declared in `docs/CODEMAPS/<area>.md`.
-- For each area in scope: list files, exported symbols, imports between modules, routes, background jobs
-- Record stack-specific facts: API routes with HTTP methods, DB tables with columns, queue names, env vars
+
+**Begin with concrete tool calls — do not summarize before doing.** If you write "I have inventoried..." without a preceding tool call in this turn, stop and re-do via tools.
+
+For each in-scope area (`scope: full` → every `docs/CODEMAPS/*.md` area declaration; `scope: <list>` → only listed areas):
+
+1. **List files into a named tempfile.** Run via `Bash`:
+
+   ```bash
+   find <area-root> <other-area-paths> -type f -print | LC_ALL=C sort > /tmp/docagent-paths-<area>.txt
+   ```
+
+   - `<area-root>` / `<other-area-paths>` — the file/directory globs declared in `docs/CODEMAPS/<area>.md`. Canonical location: top of file under `## Files` heading or in frontmatter `paths:` field, whichever the codemap uses. **If neither is present** (codemap lacks an explicit path declaration), stop and ask the caller — do not infer paths from filenames or directory structure.
+   - `LC_ALL=C sort` — byte-order sort, locale-independent. Required for §4's hash determinism.
+   - Tempfile name uses the area slug; do not vary the path or naming scheme. §4 reads this file directly. **Substitute the actual area slug** — e.g. `/tmp/docagent-paths-auth.txt`, `/tmp/docagent-paths-db.txt` — not the literal `<area>`. Cleanup: after §4's `Edit` of the codemap header completes for this area, `rm /tmp/docagent-paths-<area>.txt`.
+   - **Process one area fully before starting the next.** Run §1.1 → §2 → §3 → §4 (including the `rm`) for area A, then begin §1.1 for area B. Do not list paths for multiple areas in parallel — tempfile would be clobbered before §4 hashes it, and the hash on the first area would be wrong.
+   - **Concurrent invocations out of scope.** Two parallel `document-agent` runs on the same area would collide on this tempfile. Assume single-session, sequential execution; if you need concurrent invocations later, switch to `mktemp` per-area and thread the name through.
+
+2. **Read exports / imports / routes.** For each file in `/tmp/docagent-paths-<area>.txt`: `Read` it, extract exported symbols, imports between modules, route declarations, background-job registrations.
+
+3. **Stack facts.** `Grep` for: API route patterns (`@app.route`, `app.get`, etc.), DB model declarations (`class Foo(Base)`, `models.Model`), queue names (string literals near `queue.subscribe` / `Consumer`), env var references (`os.getenv`, `process.env.X`). Record exact matches, not paraphrases.
 
 ### 2. Load existing codemaps
 Read every file in `docs/CODEMAPS/`. For each, identify:
@@ -63,14 +78,28 @@ For each codemap area, compute the diff between current code and the structural 
 - **Codemap references an ADR whose file is missing** → add `<!-- DRIFT: broken ADR reference ADR-NNNN as of YYYY-MM-DD -->` above the line.
 
 ### 4. Update the freshness hash
-At the top of each codemap, maintain:
+
+**Compute via Bash on the tempfile from §1 — do not fabricate or paraphrase the hash value.** Input is the file-by-path created in §1.1 (`/tmp/docagent-paths-<area>.txt`); hash is over its byte content. Try in order until one works:
+
+```bash
+md5sum /tmp/docagent-paths-<area>.txt | cut -d' ' -f1          # Linux
+md5 -q /tmp/docagent-paths-<area>.txt                          # macOS / BSD
+python -c 'import hashlib, sys; print(hashlib.md5(open(sys.argv[1],"rb").read()).hexdigest())' /tmp/docagent-paths-<area>.txt   # universal fallback
+```
+
+This mirrors `experiment-doc-agent`'s file-by-path hashing pattern (`agents/experiment-doc-agent.md:40-43`): a real file on disk, not stdin content, so shell-quoting and `echo`-vs-`printf` trailing-newline variance don't apply.
+
+Then `Edit` the codemap header to:
 ```
 **Last Updated:** YYYY-MM-DD
-**Structure Hash:** <md5 of sorted file paths in the area>
+**Structure Hash:** <command output verbatim>
 ```
-The hash is over **sorted file paths only**, not exported symbol signatures. Per-language symbol extraction (Python AST, Go `go list`, TS compiler API) is too brittle and varies across projects — a path-only hash is cheap, deterministic, and catches add/remove/rename, which is what triggers Phase 1 anyway. Stable hash for free; symbol-level changes get caught by Phase 2's read-source pass, not by the hash.
 
-If hash unchanged → update date only, skip the rest for this area.
+After the `Edit` succeeds for this area, `rm /tmp/docagent-paths-<area>.txt` (cleanup; §1.1 created it).
+
+The hash is over **sorted file paths only** (content of the §1 tempfile), not exported symbol signatures. Per-language symbol extraction (Python AST, Go `go list`, TS compiler API) is too brittle and varies across projects — a path-only hash is cheap, deterministic, and catches add/remove/rename, which is what triggers Phase 1 anyway. Symbol-level changes get caught by Phase 2's read-source pass, not by the hash.
+
+If new hash equals previous hash → `Edit` the date only, skip the rest for this area (still `rm` the tempfile).
 
 ### 5. Cross-area DRIFT marks (narrow scope only)
 
