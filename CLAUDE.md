@@ -107,11 +107,11 @@ Trigger — step 4 of `workflow.md`, after the user approves the plan, before an
 
 **Trigger — signal from the user**, not auto-detection. Claude Code cannot distinguish "still working" from "ready to merge" — they are the same git state. Triggers: explicit ("ready to merge", "готовлю к мержу", "прогони проверки"), implicit (the user requests one triad agent but not the others — ask whether to run all three), or `/merge-pr` without prior checks (pause, confirm).
 
-Run the three in **parallel** in one message — disjoint write targets (`code-reviewer` read-only, `test-writer` writes only test files, the documentation agent writes only under `docs/`), no conflicts. Choice between `document-agent` and `experiment-doc-agent` governed by `state_owner`. `document-agent` requires a `scope:` parameter in the invocation prompt — main session maps the branch's `git diff` paths to `docs/CODEMAPS/` area names and passes `scope: <area-list>`. If the branch touched many areas or you want a full repo refresh, pass `scope: full` explicitly. Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files unstaged, doc/ADR/STATE.md updates unstaged. The user decides how to commit.
+Run the three in **parallel** in one message — disjoint write targets (`code-reviewer` read-only, `test-writer` writes only test files, the documentation agent writes only under `docs/`), no conflicts. Choice between `document-agent` and `experiment-doc-agent` governed by `state_owner`. Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files unstaged, doc/ADR/STATE.md updates unstaged. The user decides how to commit.
 
 ### Post-merge `document-agent`
 
-Fallback if the triad was skipped and the branch introduced structural changes (routes, schema, models, dependencies, architectural decisions). Prefer the triad path. Pass `scope: <area-list>` derived from the merged branch's diff, or `scope: full` for periodic catch-up.
+Fallback if the triad was skipped and the branch introduced structural changes (routes, schema, models, dependencies, architectural decisions). Prefer the triad path.
 
 ### End-of-session `--state-only`
 
@@ -141,7 +141,7 @@ Post-merge STATE.md remains valid: `## Current` is a post-merge snapshot describ
 - Одна ветка на фичу: `feature/short-name` или `fix/short-name`
 - Squash merge в main через PR
 - Не пушь секреты. Используй `.env` + `.env.example`
-- **НИКОГДА не делай `git commit`, `git push` или `docker push` без явной просьбы пользователя.** Реализация задачи не подразумевает автоматический коммит или публикацию. Docker-образы можно собирать локально (`docker build`), но пушить в реестр — только по явной команде.
+- **НИКОГДА не делай `git commit`, `git push`, `docker push`, и не запускай команды `/ship`, `/commit-push`, `/merge-pr` (и их прямые эквиваленты `gh pr create`, `gh pr merge`, MCP-аналоги `mcp__github__create_pull_request`, `mcp__github__merge_pull_request`) без явной просьбы пользователя.** Реализация задачи не подразумевает автоматический коммит, публикацию или мерж. После имплементации (включая code-review и применение nit'ов) — **остановись и жди явной команды**. Триггерные слова, разрешающие переход к shipping-фазе: «коммить» / «закоммить» / «commit», «push» / «запушь», «/ship» / «шипай», «/commit-push», «/merge-pr <N>», «merge», «открой PR» / «open PR». Двусмысленность («сделай», «имплементируй», «продолжай») трактуется консервативно — только code-level правки, без commit/push. Docker-образы можно собирать локально (`docker build`), но пушить в реестр — только по явной команде.
 
 ## Stack Preferences
 
