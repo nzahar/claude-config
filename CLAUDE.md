@@ -116,6 +116,10 @@ For `document-agent` (engineering or split mode), main-session first decomposes 
 1. `git diff main...HEAD --name-only` — список изменённых файлов в ветке.
 2. Если `docs/CODEMAPS/` не существует или пуст — пропустить декомпозицию: запустить один `document-agent` invocation без указания scope (full pass) + `--state-only`.
 3. Для каждого file: `grep -lF "$file" docs/CODEMAPS/*.md` — какие codemap'ы упоминают этот path. Group `{codemap → [files]}`. Files без матча накапливаются в unmapped-batch.
+3.5. **Pre-decompose siblings и pre-declared.** Для каждого file в unmapped-batch:
+   - **Sibling proximity:** есть mapped file в той же директории (exact dirname, не recursive) → переместить в scope того codemap'а.
+   - **Pre-declared marker:** упомянут в codemap'е с `(planned …)` / `(implementation branch)` / `(future)` / `(deferred)` → переместить в scope того codemap'а.
+   - Приоритет sibling > pre-declared. Ties в одном tier — остаётся в unmapped-batch.
 4. В одном сообщении запустить параллельно:
    - **N узких `document-agent` invocations** — по одному на каждый матчнувшийся codemap. **Grouping invariant: один codemap фигурирует ровно в одном invocation per message.** Каждый получает explicit prompt: «Run on `docs/CODEMAPS/<area>.md` with these source files: [список]. Do not touch other codemaps».
    - **+1 unmapped fallback** (если unmapped-batch непустой) — один `document-agent` invocation: «эти N файлов не упомянуты ни в одном codemap; решай куда добавить или создавай новый».
@@ -131,6 +135,10 @@ For `experiment-doc-agent` (research or split mode), main-session декомпо
 1. `git diff main...HEAD --name-only` — список изменённых файлов в ветке.
 2. Отфильтровать paths под `notebooks/<domain>/<file>.ipynb`. Если в diff только notebook changes — применима декомпозиция. Если есть изменения в env-lock / data-manifest / любых других не-notebook путях (которые тригерят drift через mtime в Phase 1) — пропустить декомпозицию: один full-pass `experiment-doc-agent` invocation + `--state-only`.
 3. Для каждого изменённого notebook: `grep -lF "<notebook-path>" experiments/*/*/REPORT.md` — найти REPORT.md, чей `notebook:` frontmatter ссылается на этот путь. Group `{experiment → [notebooks]}`. Notebooks без матча — новые, ещё без REPORT.md; накапливать в unmapped-batch.
+3.5. **Pre-decompose siblings и pre-declared.** Для каждого notebook в unmapped-batch:
+   - **Sibling proximity:** есть mapped notebook в той же `notebooks/<domain>/` подпапке → переместить в scope того experiment'а.
+   - **Pre-declared marker:** notebook упомянут в REPORT.md как future / planned / related-experiment → переместить в scope того experiment'а.
+   - Приоритет sibling > pre-declared. Ties в одном tier — остаётся в unmapped-batch.
 4. В одном сообщении запустить параллельно:
    - **N узких `experiment-doc-agent` invocations** — по одному на каждый затронутый experiment. **Grouping invariant**: один experiment фигурирует ровно в одном invocation per message. Каждый получает explicit prompt: «Run on `experiments/<domain>/<NN_slug>/`. Source notebook: <path>. Do not touch other experiments».
    - **+1 unmapped fallback** (если unmapped-batch непустой) — один `experiment-doc-agent` invocation: «эти N notebook'ов не имеют REPORT.md; создай их по template, размещай в `experiments/<domain>/<NN_slug>/`».
