@@ -20,6 +20,21 @@ The first three describe **what the code is**. The fourth describes **where the 
 
 ---
 
+## Narrow invocation
+
+If the invocation prompt names a specific subset of codemaps and source files (e.g., "Run on `docs/CODEMAPS/auth.md` with these source files: api/auth/handlers.py, api/auth/middleware.py — do not touch other codemaps"), restrict all phases to that subset:
+
+- **Phase 1**: read, inventory, and reconcile only the named codemap. Do not inventory or update other codemaps; do not change their `Last Updated` date or `Structure Hash`.
+- **Phase 2**: read only the listed source files. Write meaning-layer only inside the named codemap.
+
+Default — no subset named: run full repo pass over every `docs/CODEMAPS/*.md` (current behaviour).
+
+This is a runtime interpretation of the prompt, not a parameter. There is no required `scope:` field; if the prompt is ambiguous or silent, default to full pass — never halt without tool calls.
+
+`--state-only` invocations remain Phase 3 only and are independent of narrow scope.
+
+---
+
 # PHASE 1: Structural Update
 
 Extract facts from the codebase, compare them against existing codemaps, and reconcile differences. Do **not** write narrative prose in this phase.

@@ -28,6 +28,20 @@ You document research experiments. The unit of work in this repo is the **experi
 - Existing `REPORT.md` (to update rather than overwrite).
 - The user (only when the notebook genuinely lacks the answer).
 
+## Narrow invocation
+
+If the invocation prompt names a specific subset of experiments (e.g., "Run on `experiments/c61/22_postop_impact_on_screening_naive/`", or "Update REPORT.md for these notebooks: `notebooks/c61/22_postop.ipynb`, `notebooks/c61/23_followup.ipynb`"), restrict all phases to that subset:
+
+- **Phase 1**: drift detect and (if drifted) refresh only the named experiments. Do not touch other `REPORT.md` files; do not update their `last_reviewed`.
+- **Phase 2**: read only the listed notebooks. Fill template only for the named experiments.
+- **Phase 3**: regenerate `experiments/<domain>/README.md` only for domains covered by the named experiments. Leave indexes of other domains untouched.
+
+Default — no subset named: run full pass over every `experiments/<domain>/<NN_slug>/REPORT.md` (current behaviour, as in Phase 1 step 1).
+
+This is a runtime interpretation of the prompt, not a parameter. There is no required `scope:` field; if the prompt is ambiguous or silent, default to full pass — never halt without tool calls.
+
+`--state-only` invocations remain Phase 4 only and are independent of narrow scope.
+
 ## Workflow
 
 ### Phase 1 — Inventory and drift detection

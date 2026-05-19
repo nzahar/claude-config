@@ -107,11 +107,50 @@ Trigger — step 4 of `workflow.md`, after the user approves the plan, before an
 
 **Trigger — signal from the user**, not auto-detection. Claude Code cannot distinguish "still working" from "ready to merge" — they are the same git state. Triggers: explicit ("ready to merge", "готовлю к мержу", "прогони проверки"), implicit (the user requests one triad agent but not the others — ask whether to run all three), or `/merge-pr` without prior checks (pause, confirm).
 
-Run the three in **parallel** in one message — disjoint write targets (`code-reviewer` read-only, `test-writer` writes only test files, the documentation agent writes only under `docs/`), no conflicts. Choice between `document-agent` and `experiment-doc-agent` governed by `state_owner`. Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files unstaged, doc/ADR/STATE.md updates unstaged. The user decides how to commit.
+Run all agents in **parallel** in one message — disjoint write targets, no conflicts.
 
-### Post-merge `document-agent`
+For `document-agent` (engineering or split mode), main-session first decomposes work by codemap:
 
-Fallback if the triad was skipped and the branch introduced structural changes (routes, schema, models, dependencies, architectural decisions). Prefer the triad path.
+**Pre-decomposition constraint.** Decomposition работает на committed changes (`git diff main...HEAD`). Если есть uncommitted modifications или untracked файлы, относящиеся к делу — закоммить перед запуском, иначе они не попадут в scope.
+
+1. `git diff main...HEAD --name-only` — список изменённых файлов в ветке.
+2. Если `docs/CODEMAPS/` не существует или пуст — пропустить декомпозицию: запустить один `document-agent` invocation без указания scope (full pass) + `--state-only`.
+3. Для каждого file: `grep -lF "$file" docs/CODEMAPS/*.md` — какие codemap'ы упоминают этот path. Group `{codemap → [files]}`. Files без матча накапливаются в unmapped-batch.
+4. В одном сообщении запустить параллельно:
+   - **N узких `document-agent` invocations** — по одному на каждый матчнувшийся codemap. **Grouping invariant: один codemap фигурирует ровно в одном invocation per message.** Каждый получает explicit prompt: «Run on `docs/CODEMAPS/<area>.md` with these source files: [список]. Do not touch other codemaps».
+   - **+1 unmapped fallback** (если unmapped-batch непустой) — один `document-agent` invocation: «эти N файлов не упомянуты ни в одном codemap; решай куда добавить или создавай новый».
+   - **+1 `document-agent --state-only`** — Phase 3, всегда, параллельно остальным.
+   - `code-reviewer` и `test-writer` — как раньше, в том же сообщении.
+
+Если `git diff` пустой или нет изменений в source files — `document-agent` invocations не запускаются (только `--state-only` если того требует session-boundary trigger).
+
+**Reverse-grep false positives — accepted bloat.** `grep -lF "$file"` матчит подстрочное вхождение filename в любой codemap, включая «see also», ADR pointer, прозу с упоминанием соседних путей. Лишний матч → лишний агент-вызов, читающий этот file. Не разрушительно: агент видит, что file не вписывается в его area, не делает правок (или делает минорные — pointer). Wall-clock bloat остаётся в рамках max() параллелизма.
+
+For `experiment-doc-agent` (research or split mode), main-session декомпозирует по experiment:
+
+1. `git diff main...HEAD --name-only` — список изменённых файлов в ветке.
+2. Отфильтровать paths под `notebooks/<domain>/<file>.ipynb`. Если в diff только notebook changes — применима декомпозиция. Если есть изменения в env-lock / data-manifest / любых других не-notebook путях (которые тригерят drift через mtime в Phase 1) — пропустить декомпозицию: один full-pass `experiment-doc-agent` invocation + `--state-only`.
+3. Для каждого изменённого notebook: `grep -lF "<notebook-path>" experiments/*/*/REPORT.md` — найти REPORT.md, чей `notebook:` frontmatter ссылается на этот путь. Group `{experiment → [notebooks]}`. Notebooks без матча — новые, ещё без REPORT.md; накапливать в unmapped-batch.
+4. В одном сообщении запустить параллельно:
+   - **N узких `experiment-doc-agent` invocations** — по одному на каждый затронутый experiment. **Grouping invariant**: один experiment фигурирует ровно в одном invocation per message. Каждый получает explicit prompt: «Run on `experiments/<domain>/<NN_slug>/`. Source notebook: <path>. Do not touch other experiments».
+   - **+1 unmapped fallback** (если unmapped-batch непустой) — один `experiment-doc-agent` invocation: «эти N notebook'ов не имеют REPORT.md; создай их по template, размещай в `experiments/<domain>/<NN_slug>/`».
+   - **+1 `experiment-doc-agent --state-only`** — Phase 4, всегда, параллельно остальным.
+
+Если `git diff` пустой или нет notebook changes — `experiment-doc-agent` invocations не запускаются (только `--state-only` если того требует session-boundary trigger).
+
+**Split mode safety.** В `state_owner: split` режиме можно запускать decomposition для document-agent и experiment-doc-agent параллельно в одном сообщении — write targets disjoint by construction (`docs/CODEMAPS/<area>.md` vs `experiments/<domain>/<NN_slug>/REPORT.md`). STATE.md и RESEARCH-STATE.md тоже disjoint.
+
+Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files unstaged, doc/ADR/STATE.md updates unstaged. The user decides how to commit.
+
+### Post-merge documentation agent
+
+Fallback if the triad was skipped and the branch introduced structural changes (routes, schema, models, dependencies, architectural decisions for engineering; new/refreshed experiments for research). Prefer the triad path.
+
+Apply the same scope-decomposition as in the triad. После squash merge HEAD уже на main, поэтому diff на изменения мерж-коммита — `git diff HEAD~1 HEAD --name-only`. Дальше:
+- для `document-agent` — reverse-grep по `docs/CODEMAPS/*.md`;
+- для `experiment-doc-agent` — reverse-grep по `experiments/*/*/REPORT.md`.
+
+N узких invocations + 1 unmapped fallback (если нужен) + 1 `--state-only`, все параллельно в одном сообщении. Если соответствующая директория (`docs/CODEMAPS/` или `experiments/`) не существует — один full-pass invocation + `--state-only`.
 
 ### End-of-session `--state-only`
 
