@@ -25,3 +25,6 @@ settings.local.json
 security_warnings_state_*.json
 *.bak
 .last-cleanup
+daemon.log
+daemon/
+jobs/
