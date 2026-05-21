@@ -1,0 +1,100 @@
+"""SQLite persistence template — id mapping + persistent UI sessions.
+
+The `users` table maps Max user_ids to your backend's user identity.
+The `*_sessions` table is for persistent UI flows that must survive restart.
+Domain data does NOT live here — keep that in your backend API.
+"""
+
+import json
+from pathlib import Path
+
+import aiosqlite
+
+from bot.config import DATABASE_PATH
+
+_CREATE_USERS_TABLE = """
+CREATE TABLE IF NOT EXISTS users (
+    max_user_id INTEGER PRIMARY KEY,
+    api_user_id TEXT NOT NULL,
+    region_name TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+"""
+
+_CREATE_SESSIONS_TABLE = """
+CREATE TABLE IF NOT EXISTS ui_sessions (
+    max_user_id INTEGER PRIMARY KEY,
+    flow_id TEXT NOT NULL,
+    state_json TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+"""
+
+
+async def init_db():
+    path = Path(DATABASE_PATH)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    async with aiosqlite.connect(str(path)) as db:
+        await db.execute(_CREATE_USERS_TABLE)
+        await db.execute(_CREATE_SESSIONS_TABLE)
+        await db.commit()
+
+
+async def get_user(max_user_id: int) -> dict | None:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute(
+            "SELECT max_user_id, api_user_id, region_name FROM users WHERE max_user_id = ?",
+            (max_user_id,),
+        )
+        row = await cursor.fetchone()
+        return dict(row) if row else None
+
+
+async def save_user(max_user_id: int, api_user_id: str, region_name: str | None = None):
+    """UPSERT — COALESCE preserves existing fields when caller passes None."""
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute(
+            """INSERT INTO users (max_user_id, api_user_id, region_name)
+               VALUES (?, ?, ?)
+               ON CONFLICT(max_user_id) DO UPDATE SET
+                   api_user_id = excluded.api_user_id,
+                   region_name = COALESCE(excluded.region_name, users.region_name)""",
+            (max_user_id, api_user_id, region_name),
+        )
+        await db.commit()
+
+
+async def save_session(max_user_id: int, flow_id: str, state: dict) -> None:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute(
+            """INSERT INTO ui_sessions (max_user_id, flow_id, state_json)
+               VALUES (?, ?, ?)
+               ON CONFLICT(max_user_id) DO UPDATE SET
+                   flow_id = excluded.flow_id,
+                   state_json = excluded.state_json,
+                   created_at = CURRENT_TIMESTAMP""",
+            (max_user_id, flow_id, json.dumps(state, ensure_ascii=False)),
+        )
+        await db.commit()
+
+
+async def get_session(max_user_id: int) -> tuple[str, dict] | None:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        cursor = await db.execute(
+            "SELECT flow_id, state_json FROM ui_sessions WHERE max_user_id = ?",
+            (max_user_id,),
+        )
+        row = await cursor.fetchone()
+        if row:
+            return row[0], json.loads(row[1])
+        return None
+
+
+async def delete_session(max_user_id: int) -> None:
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        await db.execute(
+            "DELETE FROM ui_sessions WHERE max_user_id = ?",
+            (max_user_id,),
+        )
+        await db.commit()

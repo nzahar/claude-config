@@ -1,0 +1,12 @@
+services:
+  max-bot:
+    build: .
+    container_name: max-bot
+    env_file:
+      - .env
+    volumes:
+      - bot_data:/data
+    restart: unless-stopped
+
+volumes:
+  bot_data:

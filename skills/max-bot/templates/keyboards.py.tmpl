@@ -1,0 +1,71 @@
+"""Inline keyboard builder template for Max.
+
+Key constraints:
+- Max rejects keyboards with more than ~30 rows. Reserve room for nav + back + skip.
+- `as_markup()` returns Attachment, not AttachmentButton — convert when sending via send_callback.
+- Pagination payload convention: page_{prefix}_{page}_{parent_id}; counter button uses payload "noop".
+"""
+
+import math
+
+from maxapi.utils.inline_keyboard import InlineKeyboardBuilder
+from maxapi.types.attachments.buttons.callback_button import CallbackButton
+from maxapi.types.attachments.buttons.attachment_button import AttachmentButton
+from maxapi.enums.intent import Intent
+
+ITEMS_PER_PAGE = 25  # leave room for nav/back/skip in the 30-row hard limit
+
+
+def to_attachment_button(markup) -> AttachmentButton:
+    """Convert markup from `as_markup()` into AttachmentButton for MessageForCallback."""
+    return AttachmentButton(type=markup.type, payload=markup.payload)
+
+
+def paginated_keyboard(
+    items: list[dict],
+    prefix: str,
+    page: int = 1,
+    total: int | None = None,
+    per_page: int = ITEMS_PER_PAGE,
+    parent_id: str | None = None,
+    back_callback: str | None = None,
+    skip_callback: str | None = None,
+):
+    """Generic paginated picker. `items` must have 'id' and 'name' keys."""
+    builder = InlineKeyboardBuilder()
+
+    for it in items:
+        builder.row(CallbackButton(text=it["name"], payload=f"{prefix}_{it['id']}"))
+
+    if total and per_page:
+        total_pages = math.ceil(total / per_page)
+        if total_pages > 1:
+            nav = []
+            if page > 1:
+                nav.append(CallbackButton(
+                    text="◀ Назад",
+                    payload=f"page_{prefix}_{page - 1}_{parent_id or ''}",
+                ))
+            nav.append(CallbackButton(text=f"{page}/{total_pages}", payload="noop"))
+            if page < total_pages:
+                nav.append(CallbackButton(
+                    text="Вперёд ▶",
+                    payload=f"page_{prefix}_{page + 1}_{parent_id or ''}",
+                ))
+            builder.row(*nav)
+
+    if skip_callback:
+        builder.row(CallbackButton(text="Пропустить ▶", payload=skip_callback))
+    if back_callback:
+        builder.row(CallbackButton(text="◀ Назад", payload=back_callback))
+
+    return builder.as_markup()
+
+
+def confirm_cancel_keyboard(action_id: str = ""):
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        CallbackButton(text="✅ Подтвердить", payload=f"confirm_{action_id}", intent=Intent.POSITIVE),
+        CallbackButton(text="❌ Отменить", payload=f"cancel_{action_id}", intent=Intent.NEGATIVE),
+    )
+    return builder.as_markup()
