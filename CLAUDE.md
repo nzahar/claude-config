@@ -8,7 +8,7 @@
 
 ## Project State Awareness
 
-**At the start of every session in a project, read `docs/STATE.md` if it exists.** This file is maintained by the project's documentation agent (`document-agent` for engineering projects, `experiment-doc-agent` for research projects; project-level `CLAUDE.md` may declare `state_owner` explicitly). It contains the current trajectory of work: what was last shipped, what's blocked, what's planned next — described in terms invariant under merge (PR titles, file-derived statuses), not in terms of branch / working-tree state. Reading it once at session start gives you the orientation a returning collaborator would have.
+**At the start of every session in a project, read `docs/STATE.md` if it exists.** This file is maintained by the project's documentation agent (`document-agent` for engineering projects, `experiment-doc-agent` for research projects; project-level `CLAUDE.md` may declare `state_owner` explicitly). It contains the current trajectory of work: what's blocked, what's planned next, and a history of resolved decisions and cleared blockers — described in terms invariant under merge (PR titles, file-derived statuses), not in terms of branch / working-tree state. "What was just merged" lives in `git log main --merges -1`, not in STATE.md. Reading STATE.md once at session start gives you the orientation a returning collaborator would have.
 
 Rules:
 
@@ -180,7 +180,7 @@ Allowed when the user asks, or before a large internal refactor that benefits fr
 
 Commands (`/commit-push`, `/merge-pr`, others) are atomic — they do exactly what their name says, no more. They do NOT invoke review/test/documentation agents and do NOT edit documentation files (no STATE.md markers, no codemap fixups, no log entries). All quality gates and doc refresh are explicit steps the user or main session runs before/after.
 
-Post-merge STATE.md remains valid: `## Current` is a post-merge snapshot describing last shipped, open questions, and next up — not in-progress git state. Routine merges do not require state refresh.
+Post-merge STATE.md remains valid: `## Current` is a snapshot describing what's blocked, open questions, and what's next — not in-progress git state, and not the last merge (which lives in `git log`). Routine merges do not require state refresh.
 
 ## Git & Workflow
 

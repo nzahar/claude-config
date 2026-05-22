@@ -42,6 +42,21 @@ This is a runtime interpretation of the prompt, not a parameter. There is no req
 
 `--state-only` invocations remain Phase 4 only and are independent of narrow scope.
 
+---
+
+## Invocation triggers
+
+**Phase 1-3 (drift + reports + index)** — explicit user request ("обнови отчёты по C61", "experiment-doc-agent на 14_low_psa_tp_analysis"), after a notebook is added or modified (drift detection in Phase 1 will trigger refresh), before a paper / presentation milestone.
+
+**Phase 4 (state)** — session boundaries, not notebook events. Common scenarios:
+- End of a research session even if no notebook was finalized.
+- After a significant experiment status change (`complete` / `abandoned`) **only if** cross-experiment questions or next-up materially shifted as a result.
+- Before a paper / presentation milestone (final state snapshot).
+
+Pass `--state-only` to invoke Phase 4 alone. Mechanical fire-conditions, skip-when-exploratory, and no-routine-drift-refresh rules — see [`lib/state-contract.md`](../lib/state-contract.md) "Cadence".
+
+---
+
 ## Workflow
 
 ### Phase 1 — Inventory and drift detection
@@ -135,7 +150,6 @@ Read project's `CLAUDE.md` for `state_owner`:
 ```markdown
 ## Current
 
-**Last shipped:** <YYYY-MM-DD — title (PR #N) + 1-line research value, or "none">
 **Active experiment:** <domain>/<NN_slug> — <one-line>, or "none"
 **Recently completed:** <last 1-3 with status: complete>
 **Recently abandoned:** <last 1-3 with status: abandoned + reason verbatim>
@@ -150,8 +164,6 @@ Read project's `CLAUDE.md` for `state_owner`:
 
 ````markdown
 ## Current
-
-**Last shipped:** 2026-05-11 — feat(c61): exp 22 — postop training impact on screening-naive (PR #6). H1 falsified: Δ TP=−3 in screening-naive cohort, "no harm" property holds.
 
 **Active experiment:** none (no REPORT.md with status: wip).
 
@@ -171,8 +183,6 @@ Read project's `CLAUDE.md` for `state_owner`:
 
 #### Sources per field
 
-- **Last shipped** — most recent merged PR that shipped a research artifact (a finalized report, exported figures/tables, paper-bound result). Use `git log main --merges -3 --pretty=format:"%s"` for merge subjects, or `gh pr list --state merged --limit 3` if available. Research value description names what the research established (e.g. "H1 falsified", "Fig. 5/9 finalized", "Table 2 produced"). Formatting (hex constraint, strip-hash, open-PR rule) — see [`lib/state-contract.md`](../lib/state-contract.md) "Last shipped formatting".
-
 - **Active experiment** — **derived from REPORT.md frontmatter, not from git branch or working tree.** Scan `experiments/*/*/REPORT.md` for `status: wip`, sort by `last_reviewed` desc, take the most recent. If no `wip` reports, write **exactly `none`** — do not append parenthetical context about what just changed status, what's on the working tree, or what kind of pass is in progress. Recent status changes belong in Recently completed, not in a suffix to Active experiment.
 
 - **Recently completed** — scan REPORT.md frontmatter for `status: complete`, sort by `last_reviewed` desc, take 1–3. Reference by `<domain>/<NN_slug>` + one-line takeaway from `## Result`.
@@ -186,7 +196,7 @@ Read project's `CLAUDE.md` for `state_owner`:
 #### Workflow
 
 1. **Read existing STATE.md** (or RESEARCH-STATE.md if `state_owner: split`). Absent → create from the template above. Skip step 2.
-2. **Demote current to history (compressed)** — per [`lib/state-contract.md`](../lib/state-contract.md) "Compressed History shape" and "Same-day guard". For research, bullets reference `experiments/<domain>/<slug>/REPORT.md`, `findings/<slug>.md`, `status: <state>`, `BACKLOG #N` in addition to the engineering-shared `(see ADR-NNNN)`, `(PR #N)`, `(commit abc1234)`.
+2. **Demote current to history (compressed)** — per [`lib/state-contract.md`](../lib/state-contract.md) "Compressed History shape" and "Same-day guard". For research, bullets reference `experiments/<domain>/<slug>/REPORT.md`, `findings/<slug>.md`, `status: <state>`, `BACKLOG #N` in addition to the engineering-shared `(see ADR-NNNN)`, `(PR #N)`, `(plan docs/plans/<slug>.md §X)`.
 3. **Write fresh Current** from actual project state, applying the field sources above and the invariant-under-merge rule from [`lib/state-contract.md`](../lib/state-contract.md). Active experiment / Recently completed / Recently abandoned are derived from REPORT.md frontmatter (file facts), not from in-flight commits.
 4. **Update Notes** — drop obsolete, keep relevant, promote grown notes to `docs/findings/<slug>.md`.
 5. **Evaluate hard cap** — per [`lib/state-contract.md`](../lib/state-contract.md) "Hard cap on size". Research-only / absent → archive to `docs/STATE-ARCHIVE.md`. Split mode → archive to `docs/RESEARCH-STATE-ARCHIVE.md` (the engineering half archives to `docs/STATE-ARCHIVE.md`, owned by `document-agent`).
@@ -202,20 +212,6 @@ Cross-cutting STATE.md rules live in [`lib/state-contract.md`](../lib/state-cont
 ### Phase 5 — Open questions
 
 Collect every "TODO: verify" entry, every TODO flagged during Phases 1-2 (missing kind, missing reason for abandoned, dynamic seeds, missing env_lock/data_manifest files), and every `## Caveats / open questions` bullet across the domain into a "Cross-experiment open questions" section in `experiments/<domain>/README.md`. Deduplicate.
-
-## When to run
-
-**Phase 1-3 (drift + reports + index):**
-- Explicit user request ("обнови отчёты по C61", "experiment-doc-agent на 14_low_psa_tp_analysis").
-- After a notebook is added or modified — drift detection in Phase 1 will trigger a refresh.
-- Before a paper / presentation milestone.
-
-**Phase 4 (state):** triggered by *session boundaries*, not by notebook events. The whole point of STATE.md is that the **next** session orients cheaply — so run it when a session ends. Specifically:
-- End of a research session even if no notebook was finalized — pass `--state-only` and skip Phases 1-3.
-- After a significant experiment status change (`complete` / `abandoned`) **only if** cross-experiment questions or next-up materially shifted as a result. Routine drift-updates do not auto-trigger Phase 4.
-- Before a paper / presentation milestone (final state snapshot).
-
-Skip Phase 4 if the session was purely exploratory and produced no status changes, no decisions, and no new blockers.
 
 ## Non-goals
 

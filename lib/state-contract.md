@@ -33,12 +33,13 @@ Each History entry is **at most ~10 lines**. It is *not* a verbatim copy of the 
 
 A History entry contains:
 - Header line: `### <existing Last-updated timestamp> — <one-line summary of what changed in that snapshot>`
-- One `**Last shipped:** <PR # + title only>` line — no value description suffix
-- 2–3 bullets naming material decisions / blockers / status changes of that snapshot. **Each bullet must carry an inline reference**: `(see ADR-NNNN)`, `(PR #N)`, `(commit abc1234)`, `(plan docs/plans/<slug>.md §X)`, `experiments/<domain>/<slug>/REPORT.md`, `findings/<slug>.md`, `BACKLOG #N`, `<file>:<symbol>`. Bullets without inline references are dropped — load-bearing content lives in ADRs / plans / REPORT.md / codemaps / git, the inline ref is how a future reader finds it
+- 2–3 bullets naming material decisions / blockers cleared / status transitions of that snapshot. **Each bullet must carry an inline reference**: `(see ADR-NNNN)`, `(PR #N)`, `(plan docs/plans/<slug>.md §X)`, `experiments/<domain>/<slug>/REPORT.md`, `findings/<slug>.md`, `BACKLOG #N`, `<file>:<symbol>`. Bullets without inline references are dropped — load-bearing content lives in ADRs / plans / REPORT.md / codemaps / git, the inline ref is how a future reader finds it
 
 **Dropped during demotion** (do not carry into History): full Notes block, Read-order TOCs, paraphrase of plan-file content, per-experiment narrative recaps, Recently-shipped DDL pastes, full narrative explanations. The original detail remains reachable via the inline references above.
 
 Prepend the compressed entry to `## History` (newest on top). Do not edit existing History entries — they were produced by past compression and are immutable.
+
+**Pre-existing History entries** may include a `**Last shipped:** <PR ...>` line — that line reflects an earlier version of this contract. Per `## History is sacred`, leave such entries intact: do not rewrite, do not flag as drift, do not strip the line. New entries written under this contract omit the line.
 
 ### Same-day guard
 
@@ -62,19 +63,11 @@ Trajectory fields describe *what's been done and what's planned* (or *what's bei
 
 "What's being built right now" lives in `docs/plans/<branch-slug>.md` (the plan file), not in STATE.md.
 
-## Last shipped formatting
-
-Field value = title + PR number of the most recent merged PR. **Strip any commit hash from the title before quoting** — `git log --oneline` and raw `git log` output include the hash; drop it. The field value must contain **no hex strings of the form `[0-9a-f]{7,}`**.
-
-Source of merge subjects: `git log main --merges -3 --pretty=format:"%s"`, or `gh pr list --state merged --limit 3` if available. "none" if no merges yet.
-
-Add one short line of value description (what changed for users / for the system / for research) — see the calling agent for domain-appropriate framing.
-
-**If there is an open (unmerged) PR on the current branch, do not describe it in Last shipped.** Last shipped names only merged PRs; an open PR's existence belongs in its plan file, not here.
+By construction, every Current field describes work either (a) not yet started (`Next up`), (b) actively blocked on a non-merge condition (`Blocked / waiting on`), or (c) a free-form observation (`Notes`). None of these change at merge — merge moves work *into* main, not *out of* `Next up` (which the next pass updates), and clears blockers that depended on the merge happening (which the next pass observes from updated reality). Routine merges do not require STATE.md refresh. The "what was just merged" answer lives in `git log main --merges -1 --pretty=%s`, not in STATE.md.
 
 ## Hex-string constraint covers all of Current
 
-The `[0-9a-f]{7,}` no-hex rule from Last shipped applies to **every value in Current, including free-text Notes and any agent-specific fields**. Commit hashes anywhere in Current decay the same way.
+**No hex strings of the form `[0-9a-f]{7,}` in any value in Current**, including free-text Notes and any agent-specific fields. Commit hashes anywhere in Current decay at merge boundaries — they reference work that may be rebased, reordered, or rewritten on its way to main.
 
 Exception: a hex inside a quoted command or URL that is itself a stable artifact reference (e.g. `pip install git+...@<sha>`) is allowed, but such content usually belongs in a codemap, ADR, REPORT.md, or findings/ — when in doubt, move the bullet out of STATE.md.
 
@@ -144,11 +137,12 @@ Each agent's vocabulary is calibrated to its domain. This block is the canonical
 
 ## Anti-duplication
 
-STATE.md is about *now*, not about *what the code does* or *why it was decided*. Three concrete duplication patterns to actively avoid:
+STATE.md is about *now*, not about *what the code does* or *why it was decided*. Four concrete duplication patterns to actively avoid:
 
 - **ADR / plan / REPORT.md rationale pasted inline.** If a Notes bullet explains *why* something is the way it is, that belongs in an ADR — reference it with `(see ADR-NNNN §X)`, do not paraphrase. For research, full result narratives belong in REPORT.md, not STATE.md
 - **Recently-shipped DDL, code, figure, or table blocks.** If a bullet contains `CREATE TABLE`, full SQL, a multi-line code fence, or a figure caption, it belongs in the codemap / REPORT.md / `git show <commit>` — reference the commit / PR / REPORT.md, do not paste
 - **Read-order TOC.** A list of "1. read this file, 2. read that ADR, 3. read this plan" inside STATE is duplication of pointers that already exist in ADR / README, plan headers, codemap indexes, and REPORT.md sections. Drop it — if a stable onboarding sequence is genuinely needed, that's `docs/ONBOARDING.md`
+- **Recently-shipped commit narrative inline.** If a Notes bullet paraphrases "shipped X" or "just merged Y", drop it — `git log main --merges -1 --pretty=%s` is the source. Notes captures snapshot facts not in git (live system state, environment-specific gotchas), not git-history paraphrase
 
 ## History is sacred
 
@@ -159,6 +153,8 @@ Never edit a compressed History entry once it has been written by a past pass �
 The STATE update phase (`document-agent` Phase 3, `experiment-doc-agent` Phase 4) runs only:
 - As the final phase of a full pass
 - On explicit `--state-only` invocation
+
+Skip the STATE update phase entirely if the session was purely exploratory and produced no decisions, no blockers, and no plan changes — nothing has happened that needs to be picked up.
 
 Routine drift updates or routine merges with no plan-state shift do NOT auto-trigger STATE update. STATE.md churn destroys history value.
 

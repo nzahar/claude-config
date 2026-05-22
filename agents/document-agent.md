@@ -35,6 +35,19 @@ This is a runtime interpretation of the prompt, not a parameter. There is no req
 
 ---
 
+## Invocation triggers
+
+**Phase 1-2 (structural + meaning)** — code events: after dependency changes, after route or schema changes, after major architectural changes. Skip for cosmetic-only / comment-only / formatting changes.
+
+**Phase 3 (state)** — session boundaries, not code events. Common scenarios:
+- End of a work session even if no merge happened.
+- Before a long break (vacation, context switch to another project).
+- After merge **only if** open questions or next up materially shifted as a result.
+
+Pass `--state-only` to invoke Phase 3 alone. Mechanical fire-conditions, skip-when-exploratory, and no-routine-merge-refresh rules — see [`lib/state-contract.md`](../lib/state-contract.md) "Cadence".
+
+---
+
 # PHASE 1: Structural Update
 
 Extract facts from the codebase, compare them against existing codemaps, and reconcile differences. Do **not** write narrative prose in this phase.
@@ -174,7 +187,6 @@ If project's `CLAUDE.md` declares `state_owner: experiment-doc-agent` — skip P
 ```markdown
 ## Current
 
-**Last shipped:** <PR # + title + 1-line value description of the most recent merged PR, or "none">
 **Blocked / waiting on:** <items waiting on user, external API, decision — or "nothing">
 **Next up:** <what's planned to start, using `by user: …` prefix when waiting on a user command>
 
@@ -187,8 +199,6 @@ not yet promoted to ADRs. If a note grows past a few lines or stabilizes, promot
 
 ````markdown
 ## Current
-
-**Last shipped:** 2026-05-09 — feat(auth): rate-limit refactor (PR #142). Replaces in-memory counter with Redis sliding window; multi-instance deployments now share quota correctly.
 
 **Blocked / waiting on:**
 - ADR-0019 (event-schema versioning) — awaiting team review
@@ -203,8 +213,6 @@ not yet promoted to ADRs. If a note grows past a few lines or stabilizes, promot
 ````
 
 ## Sources per field
-
-- **Last shipped** — most recent merged PR. Use `git log main --merges -3 --pretty=format:"%s"` for merge subjects, or `gh pr list --state merged --limit 3` if available. Engineering value description names what changed for users / for the system (not how it was implemented). Formatting (hex constraint, strip-hash, open-PR rule) — see [`lib/state-contract.md`](../lib/state-contract.md) "Last shipped formatting".
 
 - **Blocked / waiting on** — usually cannot be derived automatically. Leave the previous value if still relevant, or set to "nothing" if previous blockers were obviously resolved (e.g., the branch they blocked is now merged). When in doubt, ask the user once at the end. Pre-merge gates excluded — see [`lib/state-contract.md`](../lib/state-contract.md) "Pre-merge gates are never project state".
 
@@ -224,19 +232,6 @@ not yet promoted to ADRs. If a note grows past a few lines or stabilizes, promot
 Cross-cutting STATE.md rules live in [`lib/state-contract.md`](../lib/state-contract.md). The item below is local to `document-agent`:
 
 - **Same-day guard interacts with Phase 1–2.** If the same-day guard fires (Current overwritten in place, no demote), Phase 1–2 may still have run and updated codemaps; that is fine. Phase 3's same-day guard governs the STATE.md transition only.
-
----
-
-## When to Run
-
-**Phase 1-2 (structural + meaning):** triggered by code events — after dependency changes, after route or schema changes, after major architectural changes. Skip for cosmetic-only / comment-only / formatting changes.
-
-**Phase 3 (state):** triggered by *session boundaries*, not by code events. The whole point of STATE.md is that the **next** session orients cheaply — so run it when a session ends, not when code merges. Specifically:
-- End of a work session even if no merge happened — pass `--state-only` and skip Phases 1-2.
-- After merge **only if** open questions / next up materially shifted as a result. Routine merges with no plan-state shift do not require a refresh.
-- Before a long break (vacation, context switch to another project).
-
-Skip Phase 3 if the session was purely exploratory and produced no decisions, no blockers, and no plan changes — nothing has happened that needs to be picked up.
 
 ---
 
