@@ -30,7 +30,7 @@ Focus the review on **what changed**, not on the full content of touched files. 
 
 The base checks below apply in both modes. If invocation prompt includes `mode: research`, additionally apply the **Research checks** block at the end of this section. Universal CRITICAL (credentials, SQL injection, path traversal) applies unconditionally — research code is still code.
 
-Silenced in `mode: research`: the React/JS/TS-specific block (unless the diff actually touches a frontend). All other Universal CRITICAL/HIGH, Semantic, Python-specific, Go-specific, ADR compliance, Best Practices apply in both modes.
+Silenced in `mode: research`: the React/JS/TS-specific block (unless the diff actually touches a frontend). All other Universal CRITICAL/HIGH, Semantic, Python-specific, Go-specific, ADR compliance, Best Practices, and Documentation economy (when diff touches doc paths) apply in both modes.
 
 #### Universal (any language) — CRITICAL
 - Hardcoded credentials, API keys, tokens, passwords
@@ -83,6 +83,18 @@ Silenced in `mode: research`: the React/JS/TS-specific block (unless the diff ac
 #### Best Practices — MEDIUM
 - Missing tests for new code
 - Dead code (unused imports, unreachable branches)
+
+#### Documentation economy (only when diff touches `docs/plans/`, `docs/ADR/`, `docs/CODEMAPS/`, or `experiments/*/REPORT.md`)
+
+Apply detection procedures D1–D7 from `rules/workflow.md` § Documentation economy. Map findings to this agent's native severity vocabulary (`CRITICAL`/`HIGH`/`MEDIUM`/`LOW`/`NEEDS VERIFICATION`) — **do not import `plan-reviewer`'s `blocker`/`warning` vocabulary**. Severity is agent-local per `lib/state-contract.md`.
+
+- **D3, D5 → HIGH.** Same structural issues that `plan-reviewer` flags as `blocker` at plan stage; if they survived into the diff, they ship with the merge. Scope per workflow.md for each rule.
+- **D1, D2, D4, D6, D7 → MEDIUM.** Smell-level — flag and continue. Scope per workflow.md for each rule.
+- `CRITICAL`, `LOW`, `NEEDS VERIFICATION` do not apply to doc-economy findings: nothing here is runtime/security critical, nothing is below-MEDIUM, and detection is mechanical (no ambiguity to defer).
+
+Scope exclusions per workflow.md still apply: D6 does **not** apply to codemaps (`docs/CODEMAPS/*.md`) or REPORT.md — cross-refs there are primary anchoring. README, `skills/*`, and prose snippets outside the doc tree are out of scope for this category entirely.
+
+Findings from this category go into the standard report alongside other findings, grouped by severity. Pre-existing doc-economy issues belong in `## Tech debt (pre-existing)` like any other pre-existing finding.
 
 #### Research checks (only with `mode: research`)
 

@@ -208,6 +208,7 @@ Cross-cutting STATE.md rules live in [`lib/state-contract.md`](../lib/state-cont
 
 - **TODO / WARNING vocabulary is local to Phases 1–3 of this agent**, not Phase 4. STATE.md remains descriptive; Phases 1–3 `TODO` and `WARNING` markers belong in REPORT.md and the domain README, not in STATE.md. See [`lib/state-contract.md`](../lib/state-contract.md) "No severity vocabulary in STATE.md".
 - **Active-experiment derivation rule.** Active experiment value comes only from REPORT.md `status: wip` (file fact). Never from `git branch --show-current`, working tree, or in-flight commits. If there are zero `wip` reports, the value is exactly `none` — no parenthetical decoration.
+- **History dedup rule.** Same rule as `document-agent` Phase 3 — before appending a new History entry, check for existing entries with the same `### YYYY-MM-DD` date prefix. > 50% content overlap → merge into existing, do not append. Applies to `docs/STATE.md` (research-only mode) or `docs/RESEARCH-STATE.md` (split mode), whichever this agent owns.
 
 ### Phase 5 — Open questions
 
@@ -235,3 +236,17 @@ Collect every "TODO: verify" entry, every TODO flagged during Phases 1-2 (missin
 ## Output budget
 
 Be terse. A REPORT.md is read by humans and future Claude sessions trying to restore context — every section should pay its way. If a section has nothing non-obvious to say, say so in one line ("Same caveats as `01`") rather than padding.
+
+## Anti-bloat rules (symmetric with `rules/workflow.md` § Documentation economy)
+
+Per `rules/workflow.md` § Documentation economy, only the subset of D1–D7 that mechanically applies to REPORT.md / domain README / RESEARCH-STATE.md is in scope. The rest are N/A by artifact shape, not by exception:
+
+- **D1 (inline implementation > 5 lines): N/A.** REPORT.md contract is "never extract code" (Hard rules above). The artifact does not contain implementation code blocks; rule cannot fire.
+- **D2 (plan ↔ ADR-outline duplication): N/A.** REPORT.md has no ADR-outline section.
+- **D3 (multi-decision ADR): N/A.** REPORT.md is not an ADR.
+- **D4 (strawman alternatives): N/A.** REPORT.md template has no "Alternatives considered" section.
+- **D5 (open questions in approved plan): N/A.** REPORT.md has `## Caveats / open questions` as a first-class section by template — these are feature, not bug. Phase 5 deliberately aggregates them.
+- **D6 (cross-ref ratio): N/A.** REPORT.md cross-refs to notebooks, sibling REPORT.md, and BACKLOG entries are primary anchoring, not bloat. Symmetric with codemap scope exclusion in workflow.md D6.
+- **D7 (table cell length): applies.** Markdown tables in REPORT.md (e.g. metrics matrices, config snapshots) and in `experiments/<domain>/README.md` (Active/Abandoned tables) follow the ≤ 3 statements per cell rule. Cells that need more belong in the prose of `## Result` / `## Caveats`, not in the table.
+
+The existing **Output budget** section above is the prose-level rule; the points above are the table-level rule. Both stay in effect.
