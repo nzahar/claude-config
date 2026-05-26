@@ -91,6 +91,14 @@ If hash unchanged → update date only, skip the rest for this area.
 - Do **not** touch `docs/STATE.md` — that is Phase 3.
 - Do **not** chase completeness for trivial files: re-exports, barrel files, test fixtures, generated code.
 
+### Codemap structure rule (anti-bloat)
+
+Per `rules/workflow.md` § Documentation economy, codemaps maintain **only one canonical table for module symbols** — the Files table (with inline-described role and key exports). Do **not** produce a separate `Module exports` table; it duplicates the Files table.
+
+Other tables that are *different projections* of the same area remain valid and are encouraged when relevant: `HTTP routes` (method × path × handler), `DB schema` (table × column × constraint), `DI graph`, `Lifecycle`. These are not duplicates of Files; they are orthogonal views.
+
+**Legacy behavior.** Existing codemaps may have a `Module exports` table from before this rule. Routine Phase 1 passes **do not delete** it — leave legacy data alone. Migration triggers only on substantial rewrite: when Phase 1 produces one of the four bullet outcomes above (add / strikethrough / rename / drift-comment) on **≥ 50% of the Files-table rows** in one pass, migrate symbol descriptions into the Files-table descriptions and drop the standalone `Module exports` table in that same pass. The denominator is the row count of the Files-table at the start of the pass; the numerator counts rows that received at least one of the four outcomes. Fresh codemaps (new files this pass) are written without the table from the start.
+
 ---
 
 # PHASE 2: Meaning Layer + ADRs
@@ -168,6 +176,16 @@ Wrap in `<!-- MEANING LAYER -->` ... `<!-- /MEANING LAYER -->`. Add footer: `_Me
 - **Quote, do not summarize** when copying intent from code comments/JSDoc.
 - **Do not touch `docs/STATE.md`.** That is Phase 3.
 
+### ADR economy (per `rules/workflow.md` § Documentation economy)
+
+When creating ADRs in Phase 2, apply the subset of D1–D7 that fits the artifact:
+
+- **D3 applies.** One ADR = one thematically coherent cluster of decisions. If revisit-triggers for sub-decisions are independent, split into multiple ADRs at creation time rather than writing one omnibus ADR.
+- **D4 applies.** "Alternatives considered" lists only alternatives genuinely weighed. Do not pad with strawman options to look thorough.
+- **D6 applies.** Scope, threshold, and detection (cap value, exclusions, table-row carve-out) are SSOT'd in `rules/workflow.md` D6. Anchoring inside compact `## Decisions` / `## Scope` tables is exempt by that scope rule's table-row carve-out — flagged here only because ADR tables are a common location for ADR-to-ADR pointers.
+- **D7 applies.** Markdown tables inside an ADR (Scope, Decisions matrix, D-debt closures) follow the ≤ 3 statements per cell rule.
+- **D1, D2, D5 — N/A.** These rules are plan-specific (inline implementation, ADR-outline duplication inside a plan, open questions inside a plan's `## Decisions`).
+
 ---
 
 # PHASE 3: State Update
@@ -229,9 +247,11 @@ not yet promoted to ADRs. If a note grows past a few lines or stabilizes, promot
 
 ## Phase 3 specifics
 
-Cross-cutting STATE.md rules live in [`lib/state-contract.md`](../lib/state-contract.md). The item below is local to `document-agent`:
+Cross-cutting STATE.md rules live in [`lib/state-contract.md`](../lib/state-contract.md). The items below are local to `document-agent`:
 
 - **Same-day guard interacts with Phase 1–2.** If the same-day guard fires (Current overwritten in place, no demote), Phase 1–2 may still have run and updated codemaps; that is fine. Phase 3's same-day guard governs the STATE.md transition only.
+
+- **History dedup rule.** Before appending a new History entry, check for existing entries with the same date prefix (`### YYYY-MM-DD`). If found and content overlap is > 50% (same Last shipped, same Next up, mostly identical bullets) — **merge into the existing entry**, do not append a near-duplicate. Two entries for the same date with overlapping content is a frequent Phase 3 bug observed on reference projects.
 
 ---
 
