@@ -31,6 +31,10 @@ Always document the available text commands in the `«помощь»` response �
 
 Easy to copy-paste the wrong one. Add a tiny helper if you reach for it more than twice.
 
+### chat_id vs user_id — they're different even in DIALOG
+
+In Max DIALOG chats `event.message.recipient.chat_id` is the **dialog room ID** and `event.message.sender.user_id` is the **user ID** — they are independent integers (real prod: `chat_id=271170814`, `user_id=11004847`). This breaks the Telegram intuition where `chat.id == from_user.id` in private DMs (TG-side invariant). For any external mapping / cross-channel identity in Max, use `user_id`. Use `chat_id` only as the destination of `bot.send_message(chat_id=...)`. Tests MUST use distinct integers for the two fields — fixtures like `chat_id=7, user_id=7` mask the bug entirely. The pattern bites hardest when message-handling code keys conversation state on `chat_id` and callback-handling code keys on `user_id`: same physical user generates two parallel conversations server-side.
+
 ## Callback routing
 
 Telegram libraries (aiogram) let you decorate handlers per callback pattern. **Max does not.** You register **one** `message_callback` handler and dispatch by payload prefix yourself:
