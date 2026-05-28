@@ -2,10 +2,14 @@
 
 ## Language & Communication
 
-- Отвечай на русском если я пишу на русском, на английском если на английском
-- Код, коммиты, PR, комментарии в коде — всегда на английском
-- Документация — всегда на английском: codemaps (`docs/CODEMAPS/*.md`), ADR (`docs/ADR/*.md`), `STATE.md`, REPORT.md, планы после согласования. **Исключение**: на этапе согласования (step 2-3 workflow) `docs/plans/<branch-slug>.md` пишется на русском для скорости чтения. Сразу после твоего approval — один проход перевода в английский, дальше plan-reviewer и весь downstream работают с английской версией как canonical. Малые задачи без plan file (small-task exception workflow) исключение не используют — там плана и согласования нет
-- Будь кратким. Не повторяй то, что я уже вижу в диффе
+- Reply in Russian if I write in Russian, English if English
+- Code, commits, PRs, code comments — always English
+- Documentation — always English: codemaps (`docs/CODEMAPS/*.md`), ADR (`docs/ADR/*.md`), `STATE.md`, REPORT.md, plans after approval. **Exception**: during the approval stage (workflow step 2–3), `docs/plans/<branch-slug>.md` is written in Russian for reading speed. Immediately after your approval — one translation pass to English; from that point plan-reviewer and the entire downstream work with the English version as canonical. Small tasks without a plan file (small-task exception workflow) do not use this exception — there is no plan and no approval stage.
+- Be terse. Do not repeat what I already see in the diff.
+
+## Code-level discipline
+
+- **Comment discipline.** Do not write code comments by default. Before adding any comment, ask: "would removing this confuse a future reader?" If no, cut it. Multi-line comment blocks on a single declaration are nearly always wrong.
 
 ## Project State Awareness
 
@@ -20,7 +24,7 @@ Rules:
 - **Never edit STATE.md from the main session.** It is owned by the project's documentation agent (`document-agent` Phase 3 for engineering, `experiment-doc-agent` Phase 4 for research; project-level `CLAUDE.md` may declare `state_owner` explicitly). Editing it from the main session causes conflicts. If you think STATE.md should be updated, suggest invoking the appropriate documentation agent with `--state-only`.
 - **Do not surface STATE.md content unprompted.** Use it for your own orientation. The user does not need a recap of their own project unless they ask for one.
 
-Аналогично — при работе вне workflow.md (debugging-сессии, ad-hoc вопросы, refactoring без формального плана) читай `docs/CODEMAPS/<area>.md` и релевантные ADR из `docs/ADR/`, если работа касается архитектурных решений или зафиксированных инвариантов. Для тривиальных правок (typo, форматирование, локальный bugfix) это не нужно.
+Similarly — when working outside workflow.md (debugging sessions, ad-hoc questions, refactoring without a formal plan), read `docs/CODEMAPS/<area>.md` and relevant ADRs from `docs/ADR/` if the work touches architectural decisions or recorded invariants. For trivial edits (typo, formatting, local bugfix) this is not needed.
 
 ## Verification Before Claims
 
@@ -52,35 +56,35 @@ If the verification reveals failure — report the failure, do not paper over it
 
 ## Tool Hygiene
 
-**Никогда не используй `sed`, `cat`, `head`, `tail`, `awk`, `echo` через Bash для работы с файлами.** В моей конфигурации каждый такой вызов провоцирует permission prompt, что замедляет работу и раздражает.
+**Never use `sed`, `cat`, `head`, `tail`, `awk`, `echo` via Bash for file operations.** In my configuration every such call triggers a permission prompt, which slows the work down and is annoying.
 
-- Чтение файлов (включая фрагменты) — `Read` с параметрами `offset`/`limit`. НЕ `sed -n 'N,Mp'`, `head -N`, `tail -N`, `cat`.
-- Изменение файлов — `Edit`/`Write`. НЕ `sed -i`, НЕ `echo > file`, НЕ `cat <<EOF > file`.
-- Вывод текста пользователю — прямой текст в ответе. НЕ `echo`/`printf` через Bash.
+- Reading files (including fragments) — `Read` with `offset`/`limit` parameters. NOT `sed -n 'N,Mp'`, `head -N`, `tail -N`, `cat`.
+- Modifying files — `Edit`/`Write`. NOT `sed -i`, NOT `echo > file`, NOT `cat <<EOF > file`.
+- Outputting text to the user — direct text in the response. NOT `echo`/`printf` via Bash.
 
-Bash оставь для того, что `Read`/`Edit`/`Write` не умеют:
-- Запуск процессов (`python`, `npm`, `docker`, `uvicorn`, тесты)
+Leave Bash for what `Read`/`Edit`/`Write` cannot do:
+- Launching processes (`python`, `npm`, `docker`, `uvicorn`, tests)
 - Git (`git status`, `git diff`, `git log`, `git commit`)
-- Поиск по дереву (`grep -rn`, `find`) — но не для чтения найденных файлов, только для поиска
-- Листинг директорий (`ls`) когда структура неизвестна
+- Tree-wide search (`grep -rn`, `find`) — but not for reading found files, only for searching
+- Listing directories (`ls`) when the structure is unknown
 
-Правило простое: если есть специализированный tool — используй его. Bash — последнее средство.
+Rule of thumb: if a specialised tool exists, use it. Bash is the last resort.
 
-## Long-running sub-agents — всегда в background
+## Long-running sub-agents — always in background
 
-**Правило по списку агентов, не по таймеру.** Решение foreground/background принимай по конкретному агенту, а не по эвристике "сколько секунд".
+**Rule by agent list, not by timer.** Make the foreground/background decision per specific agent, not by a "how many seconds" heuristic.
 
-- **Обязательно в background**: `code-reviewer`, `test-writer`, `document-agent`, `experiment-doc-agent`, `Explore` (thorough), `Plan`, `debugger`, `general-purpose` для многошаговых задач. Pre-merge триада (reviewer + test-writer + document-agent) — **всегда** три параллельных background-агента в одном сообщении.
-- **Можно в foreground**: короткие целевые запросы (Explore quick, targeted grep через general-purpose) где результат нужен для следующего шага *немедленно*. `plan-reviewer` обычно тоже короткий — на усмотрение, но если план большой, запускай в background.
+- **Always background**: `code-reviewer`, `test-writer`, `document-agent`, `experiment-doc-agent`, `Explore` (thorough), `Plan`, `debugger`, `general-purpose` for multi-step tasks. Pre-merge triad (reviewer + test-writer + document-agent) — **always** three parallel background agents in one message.
+- **Foreground acceptable**: short targeted requests (Explore quick, targeted grep via general-purpose) where the result is needed for the next step *immediately*. `plan-reviewer` is typically short too — your call, but if the plan is large, launch in background.
 
-Rule of thumb для агентов вне списка: если ожидаемая работа дольше ~30 секунд — в background.
+Rule of thumb for agents outside the list: if the expected work is longer than ~30 seconds — background.
 
-Почему это базовое правило:
-1. Агент работает в изолированном контексте — он ничего не ждёт от main-сессии.
-2. Foreground-агент блокирует main-сессию целиком на 5-15 минут. Пользователь не может перебить без cancel'а всего вызова. Контекст расходуется на ожидание.
-3. Background освобождает main-сессию для параллельной работы + runtime присылает уведомление о завершении. Не нужно sleep/poll.
+Why this is the base rule:
+1. The agent works in an isolated context — it does not wait for anything from main-session.
+2. A foreground agent blocks main-session entirely for 5–15 minutes. The user cannot interrupt without cancelling the whole call. Context is consumed by waiting.
+3. Background frees main-session for parallel work + runtime sends a notification on completion. No sleep/poll needed.
 
-Если не уверен — в background. Цена ошибки в обратную сторону (запустил в background задачу, которая нужна немедленно) минимальна: просто ждёшь notification. Цена foreground на долгой задаче — потерянные минуты времени пользователя.
+When in doubt — background. The cost of getting it wrong the other way (launching in background a task that was needed immediately) is minimal: you just wait for the notification. The cost of foreground on a long task is lost minutes of the user's time.
 
 ## Task Workflow
 
@@ -112,42 +116,42 @@ Run all agents in **parallel** in one message — disjoint write targets, no con
 
 For `document-agent` (engineering or split mode), main-session first decomposes work by codemap:
 
-**Pre-decomposition constraint.** Decomposition работает на committed changes (`git diff main...HEAD`). Если есть uncommitted modifications или untracked файлы, относящиеся к делу — закоммить перед запуском, иначе они не попадут в scope.
+**Pre-decomposition constraint.** Decomposition runs on committed changes (`git diff main...HEAD`). If there are uncommitted modifications or untracked files relevant to the work — commit them first, otherwise they will not be in scope.
 
-1. `git diff main...HEAD --name-only` — список изменённых файлов в ветке.
-2. Если `docs/CODEMAPS/` не существует или пуст — пропустить декомпозицию: запустить один `document-agent` invocation без указания scope (full pass) + `--state-only`.
-3. Для каждого file: `grep -lF "$file" docs/CODEMAPS/*.md` — какие codemap'ы упоминают этот path. Group `{codemap → [files]}`. Files без матча накапливаются в unmapped-batch.
-3.5. **Pre-decompose siblings и pre-declared.** Для каждого file в unmapped-batch:
-   - **Sibling proximity:** есть mapped file в той же директории (exact dirname, не recursive) → переместить в scope того codemap'а.
-   - **Pre-declared marker:** упомянут в codemap'е с `(planned …)` / `(implementation branch)` / `(future)` / `(deferred)` → переместить в scope того codemap'а.
-   - Приоритет sibling > pre-declared. Ties в одном tier — остаётся в unmapped-batch.
-4. В одном сообщении запустить параллельно:
-   - **N узких `document-agent` invocations** — по одному на каждый матчнувшийся codemap. **Grouping invariant: один codemap фигурирует ровно в одном invocation per message.** Каждый получает explicit prompt: «Run on `docs/CODEMAPS/<area>.md` with these source files: [список]. Do not touch other codemaps».
-   - **+1 unmapped fallback** (если unmapped-batch непустой) — один `document-agent` invocation: «эти N файлов не упомянуты ни в одном codemap; решай куда добавить или создавай новый».
-   - **+1 `document-agent --state-only`** — Phase 3, всегда, параллельно остальным.
-   - `code-reviewer` и `test-writer` — как раньше, в том же сообщении.
+1. `git diff main...HEAD --name-only` — list of changed files in the branch.
+2. If `docs/CODEMAPS/` does not exist or is empty — skip decomposition: launch one `document-agent` invocation without scope (full pass) + `--state-only`.
+3. For each file: `grep -lF "$file" docs/CODEMAPS/*.md` — which codemaps mention this path. Group `{codemap → [files]}`. Files without a match accumulate into the unmapped-batch.
+3.5. **Pre-decompose siblings and pre-declared.** For each file in unmapped-batch:
+   - **Sibling proximity:** there is a mapped file in the same directory (exact dirname, not recursive) → move into that codemap's scope.
+   - **Pre-declared marker:** mentioned in a codemap as `(planned …)` / `(implementation branch)` / `(future)` / `(deferred)` → move into that codemap's scope.
+   - Priority sibling > pre-declared. Ties within the same tier — stays in unmapped-batch.
+4. In one message launch in parallel:
+   - **N narrow `document-agent` invocations** — one per matched codemap. **Grouping invariant: one codemap appears in exactly one invocation per message.** Each gets an explicit prompt: "Run on `docs/CODEMAPS/<area>.md` with these source files: [list]. Do not touch other codemaps".
+   - **+1 unmapped fallback** (if unmapped-batch is non-empty) — one `document-agent` invocation: "these N files are not mentioned in any codemap; decide where to add them or create a new one".
+   - **+1 `document-agent --state-only`** — Phase 3, always, in parallel with the others.
+   - `code-reviewer` and `test-writer` — as before, in the same message.
 
-Если `git diff` пустой или нет изменений в source files — `document-agent` invocations не запускаются (только `--state-only` если того требует session-boundary trigger).
+If `git diff` is empty or there are no changes in source files — `document-agent` invocations are not launched (only `--state-only` if a session-boundary trigger requires it).
 
-**Reverse-grep false positives — accepted bloat.** `grep -lF "$file"` матчит подстрочное вхождение filename в любой codemap, включая «see also», ADR pointer, прозу с упоминанием соседних путей. Лишний матч → лишний агент-вызов, читающий этот file. Не разрушительно: агент видит, что file не вписывается в его area, не делает правок (или делает минорные — pointer). Wall-clock bloat остаётся в рамках max() параллелизма.
+**Reverse-grep false positives — accepted bloat.** `grep -lF "$file"` matches any substring occurrence of a filename in any codemap, including "see also", ADR pointers, prose mentioning neighbouring paths. An extra match → an extra agent call reading that file. Not destructive: the agent sees that the file does not fit its area and makes no edits (or minor ones — a pointer). Wall-clock bloat stays within the max() of the parallel run.
 
-For `experiment-doc-agent` (research or split mode), main-session декомпозирует по experiment:
+For `experiment-doc-agent` (research or split mode), main-session decomposes by experiment:
 
-1. `git diff main...HEAD --name-only` — список изменённых файлов в ветке.
-2. Отфильтровать paths под `notebooks/<domain>/<file>.ipynb`. Если в diff только notebook changes — применима декомпозиция. Если есть изменения в env-lock / data-manifest / любых других не-notebook путях (которые тригерят drift через mtime в Phase 1) — пропустить декомпозицию: один full-pass `experiment-doc-agent` invocation + `--state-only`.
-3. Для каждого изменённого notebook: `grep -lF "<notebook-path>" experiments/*/*/REPORT.md` — найти REPORT.md, чей `notebook:` frontmatter ссылается на этот путь. Group `{experiment → [notebooks]}`. Notebooks без матча — новые, ещё без REPORT.md; накапливать в unmapped-batch.
-3.5. **Pre-decompose siblings и pre-declared.** Для каждого notebook в unmapped-batch:
-   - **Sibling proximity:** есть mapped notebook в той же `notebooks/<domain>/` подпапке → переместить в scope того experiment'а.
-   - **Pre-declared marker:** notebook упомянут в REPORT.md как future / planned / related-experiment → переместить в scope того experiment'а.
-   - Приоритет sibling > pre-declared. Ties в одном tier — остаётся в unmapped-batch.
-4. В одном сообщении запустить параллельно:
-   - **N узких `experiment-doc-agent` invocations** — по одному на каждый затронутый experiment. **Grouping invariant**: один experiment фигурирует ровно в одном invocation per message. Каждый получает explicit prompt: «Run on `experiments/<domain>/<NN_slug>/`. Source notebook: <path>. Do not touch other experiments».
-   - **+1 unmapped fallback** (если unmapped-batch непустой) — один `experiment-doc-agent` invocation: «эти N notebook'ов не имеют REPORT.md; создай их по template, размещай в `experiments/<domain>/<NN_slug>/`».
-   - **+1 `experiment-doc-agent --state-only`** — Phase 4, всегда, параллельно остальным.
+1. `git diff main...HEAD --name-only` — list of changed files in the branch.
+2. Filter paths under `notebooks/<domain>/<file>.ipynb`. If the diff contains only notebook changes — decomposition applies. If there are changes in env-lock / data-manifest / any other non-notebook paths (which trigger drift via mtime in Phase 1) — skip decomposition: one full-pass `experiment-doc-agent` invocation + `--state-only`.
+3. For each changed notebook: `grep -lF "<notebook-path>" experiments/*/*/REPORT.md` — find the REPORT.md whose `notebook:` frontmatter points to this path. Group `{experiment → [notebooks]}`. Notebooks without a match are new, without a REPORT.md yet; accumulate them in the unmapped-batch.
+3.5. **Pre-decompose siblings and pre-declared.** For each notebook in unmapped-batch:
+   - **Sibling proximity:** there is a mapped notebook in the same `notebooks/<domain>/` subfolder → move into that experiment's scope.
+   - **Pre-declared marker:** the notebook is mentioned in a REPORT.md as future / planned / related-experiment → move into that experiment's scope.
+   - Priority sibling > pre-declared. Ties within the same tier — stays in unmapped-batch.
+4. In one message launch in parallel:
+   - **N narrow `experiment-doc-agent` invocations** — one per affected experiment. **Grouping invariant**: one experiment appears in exactly one invocation per message. Each gets an explicit prompt: "Run on `experiments/<domain>/<NN_slug>/`. Source notebook: <path>. Do not touch other experiments".
+   - **+1 unmapped fallback** (if unmapped-batch is non-empty) — one `experiment-doc-agent` invocation: "these N notebooks have no REPORT.md; create them per the template, place them under `experiments/<domain>/<NN_slug>/`".
+   - **+1 `experiment-doc-agent --state-only`** — Phase 4, always, in parallel with the others.
 
-Если `git diff` пустой или нет notebook changes — `experiment-doc-agent` invocations не запускаются (только `--state-only` если того требует session-boundary trigger).
+If `git diff` is empty or there are no notebook changes — `experiment-doc-agent` invocations are not launched (only `--state-only` if a session-boundary trigger requires it).
 
-**Split mode safety.** В `state_owner: split` режиме можно запускать decomposition для document-agent и experiment-doc-agent параллельно в одном сообщении — write targets disjoint by construction (`docs/CODEMAPS/<area>.md` vs `experiments/<domain>/<NN_slug>/REPORT.md`). STATE.md и RESEARCH-STATE.md тоже disjoint.
+**Split mode safety.** In `state_owner: split` mode, decomposition for document-agent and experiment-doc-agent can run in parallel in one message — write targets disjoint by construction (`docs/CODEMAPS/<area>.md` vs `experiments/<domain>/<NN_slug>/REPORT.md`). STATE.md and RESEARCH-STATE.md are disjoint too.
 
 Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files unstaged, doc/ADR/STATE.md updates unstaged. The user decides how to commit.
 
@@ -155,11 +159,11 @@ Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files un
 
 Fallback if the triad was skipped and the branch introduced structural changes (routes, schema, models, dependencies, architectural decisions for engineering; new/refreshed experiments for research). Prefer the triad path.
 
-Apply the same scope-decomposition as in the triad. После squash merge HEAD уже на main, поэтому diff на изменения мерж-коммита — `git diff HEAD~1 HEAD --name-only`. Дальше:
-- для `document-agent` — reverse-grep по `docs/CODEMAPS/*.md`;
-- для `experiment-doc-agent` — reverse-grep по `experiments/*/*/REPORT.md`.
+Apply the same scope-decomposition as in the triad. After a squash merge HEAD is already on main, so the diff for the merge-commit changes is `git diff HEAD~1 HEAD --name-only`. Then:
+- for `document-agent` — reverse-grep over `docs/CODEMAPS/*.md`;
+- for `experiment-doc-agent` — reverse-grep over `experiments/*/*/REPORT.md`.
 
-N узких invocations + 1 unmapped fallback (если нужен) + 1 `--state-only`, все параллельно в одном сообщении. Если соответствующая директория (`docs/CODEMAPS/` или `experiments/`) не существует — один full-pass invocation + `--state-only`.
+N narrow invocations + 1 unmapped fallback (if needed) + 1 `--state-only`, all in parallel in one message. If the corresponding directory (`docs/CODEMAPS/` or `experiments/`) does not exist — one full-pass invocation + `--state-only`.
 
 ### End-of-session `--state-only`
 
@@ -186,22 +190,22 @@ Post-merge STATE.md remains valid: `## Current` is a snapshot describing what's 
 ## Git & Workflow
 
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`
-- Одна ветка на фичу: `feature/short-name` или `fix/short-name`
-- Squash merge в main через PR
-- Не пушь секреты. Используй `.env` + `.env.example`
-- **НИКОГДА не делай `git commit`, `git push`, `docker push`, и не запускай команды `/ship`, `/commit-push`, `/merge-pr` (и их прямые эквиваленты `gh pr create`, `gh pr merge`, MCP-аналоги `mcp__github__create_pull_request`, `mcp__github__merge_pull_request`) без явной просьбы пользователя.** Реализация задачи не подразумевает автоматический коммит, публикацию или мерж. После имплементации (включая code-review и применение nit'ов) — **остановись и жди явной команды**. Триггерные слова, разрешающие переход к shipping-фазе: «коммить» / «закоммить» / «commit», «push» / «запушь», «/ship» / «шипай», «/commit-push», «/merge-pr <N>», «merge», «открой PR» / «open PR». Двусмысленность («сделай», «имплементируй», «продолжай») трактуется консервативно — только code-level правки, без commit/push. Docker-образы можно собирать локально (`docker build`), но пушить в реестр — только по явной команде.
+- One branch per feature: `feature/short-name` or `fix/short-name`
+- Squash merge to main via PR
+- Do not push secrets. Use `.env` + `.env.example`
+- **NEVER run `git commit`, `git push`, `docker push`, or invoke commands `/ship`, `/commit-push`, `/merge-pr` (and their direct equivalents `gh pr create`, `gh pr merge`, MCP analogs `mcp__github__create_pull_request`, `mcp__github__merge_pull_request`) without an explicit user request.** Implementing a task does not imply automatic commit, publication, or merge. After implementation (including code-review and applying nits) — **stop and wait for an explicit command**. Trigger words allowing the shipping phase: «коммить» / «закоммить» / «commit», «push» / «запушь», «/ship» / «шипай», «/commit-push», «/merge-pr <N>», «merge», «открой PR» / «open PR». Ambiguity ("сделай", "имплементируй", "продолжай", "do", "implement", "continue") is interpreted conservatively — code-level edits only, no commit/push. Docker images can be built locally (`docker build`), but pushing to a registry — only on an explicit command.
 
 ## Stack Preferences
 
-- **Python 3.12**, conda для envs (`environment.yml`)
+- **Python 3.12**, conda for envs (`environment.yml`)
 - **FastAPI** + `uvicorn` (async, lifespan context manager)
-- **Go** для перформанс-критичных сервисов
-- **React** + **TypeScript** для фронтенда
+- **Go** for performance-critical services
+- **React** + **TypeScript** for the frontend
 - **PostgreSQL** + `asyncpg` + **SQLAlchemy 2.x** async (Python) / `pgx` (Go)
-- **Alembic** для миграций (Python), `golang-migrate` (Go)
-- **pandas** для data processing
-- **Docker Compose** для инфраструктуры
+- **Alembic** for migrations (Python), `golang-migrate` (Go)
+- **pandas** for data processing
+- **Docker Compose** for infrastructure
 
 ## Library Documentation
 
-Для вопросов про библиотеки/фреймворки/SDK/CLI (синтаксис API, конфигурация, миграции версий, library-specific дебаг) предпочитай **context7 MCP** (`mcp__plugin_context7_context7__resolve-library-id` → `query-docs`) над тренировочными данными и WebSearch. Тренировочный cutoff может не отражать свежие изменения; context7 ходит в актуальные доки. Не использовать для рефакторинга, общих программных концепций или дебага бизнес-логики.
+For questions about libraries / frameworks / SDKs / CLIs (API syntax, configuration, version migrations, library-specific debugging) prefer **context7 MCP** (`mcp__plugin_context7_context7__resolve-library-id` → `query-docs`) over training data and WebSearch. The training cutoff may not reflect recent changes; context7 fetches current docs. Do not use for refactoring, general programming concepts, or debugging business logic.

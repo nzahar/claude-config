@@ -6,22 +6,22 @@ paths: ["**/*.py"]
 
 ### Imports
 
-Строгий порядок: `from __future__ import annotations` → stdlib → third-party → local.
-Каждая группа разделена пустой строкой. Не используй `import *`.
+Strict order: `from __future__ import annotations` → stdlib → third-party → local.
+Each group separated by a blank line. Do not use `import *`.
 
 ### Type Hints
 
-- Используй modern syntax: `dict[str, Any]`, `list[int]`, `str | None` (не `Dict`, `List`, `Optional`)
-- `Optional` допустим в сигнатурах public-функций для ясности
-- `from __future__ import annotations` — всегда первая строка файла
-- `TYPE_CHECKING` для тяжёлых импортов которые нужны только для аннотаций
+- Use modern syntax: `dict[str, Any]`, `list[int]`, `str | None` (not `Dict`, `List`, `Optional`)
+- `Optional` is acceptable in public function signatures for clarity
+- `from __future__ import annotations` — always the first line of the file
+- `TYPE_CHECKING` for heavy imports needed only for annotations
 
 ### Naming
 
-- `snake_case` для функций и переменных
-- `_private_prefix` для внутренних хелперов, не являющихся частью public API
-- `UPPER_CASE` для констант на уровне модуля
-- `_UPPER_CASE` для приватных констант (например `_CHUNK`, `_UPDATE_COLS`)
+- `snake_case` for functions and variables
+- `_private_prefix` for internal helpers that are not part of the public API
+- `UPPER_CASE` for module-level constants
+- `_UPPER_CASE` for private constants (e.g. `_CHUNK`, `_UPDATE_COLS`)
 
 ### Module Layout
 
@@ -42,49 +42,49 @@ def public_functions():
     ...
 ```
 
-Используй `# ── Section ───` em-dash разделители для визуальной группировки в длинных файлах.
+Use `# ── Section ───` em-dash separators for visual grouping in long files.
 
 ### Docstrings
 
-- Только для public API и неочевидных функций
-- Не пиши docstring если имя функции полностью объясняет что она делает
-- Формат: краткое описание + детали если нужны. Без шаблонных `Args:/Returns:` секций, если это не библиотека
+- Only for public API and non-obvious functions
+- Do not write a docstring if the function name already explains what it does
+- Format: brief description + details if needed. No boilerplate `Args:/Returns:` sections unless it is a library
 
 ### Error Handling
 
-- FastAPI endpoints: `HTTPException` с конкретным status code и detail
-- Background tasks: `try/except Exception` + `logger.exception()` + обновление статуса в БД
-- Не глотай ошибки молча. Логируй и обновляй состояние
+- FastAPI endpoints: `HTTPException` with a concrete status code and detail
+- Background tasks: `try/except Exception` + `logger.exception()` + update status in the DB
+- Do not swallow errors silently. Log and update state
 
 ### Async
 
-- `asyncio.to_thread()` для sync CPU-heavy вызовов в async-функциях (pandas, openpyxl, файловый I/O)
-- `async with SessionLocal() as session:` — каждая операция в своём контексте
-- Не блокируй event loop
+- `asyncio.to_thread()` for sync CPU-heavy calls inside async functions (pandas, openpyxl, file I/O)
+- `async with SessionLocal() as session:` — each operation in its own context
+- Do not block the event loop
 
 ### Formatting
 
-- F-strings для строк. `%s` для logging (`logger.info("msg %s", val)`)
-- Line length: стремись к <100, но читаемость важнее строгого лимита
-- Комментарии — только когда код не объясняет себя сам. Не комментируй очевидное
+- F-strings for strings. `%s` for logging (`logger.info("msg %s", val)`)
+- Line length: aim for <100, but readability matters more than a strict limit
+- Comments — only when the code does not explain itself. Do not comment the obvious
 
 ### Dataclasses
 
-`@dataclass(frozen=True)` с дефолтами. Inline-комментарии для неочевидных параметров.
+`@dataclass(frozen=True)` with defaults. Inline comments for non-obvious parameters.
 
 ### Python Environment
 
-Перед запуском Python через Bash — определи путь к нужному интерпретатору. Никогда не использовать `python`, `python3`, `conda run` напрямую — это даёт системный или случайный env. Всегда абсолютный путь к интерпретатору проектного env.
+Before running Python via Bash — determine the path to the right interpreter. Never use `python`, `python3`, `conda run` directly — that gives a system or random env. Always use the absolute path to the project env's interpreter.
 
-**Порядок поиска:**
+**Resolution order:**
 
-1. **Conda env по `environment.yml`.** Если в проекте есть `environment.yml`:
-   - Имя env: `name:` из YAML.
-   - Путь: получить через `conda env list | awk '$1=="<name>"{print $NF}'`. Это надёжнее, чем угадывать инсталляционный префикс conda — он различается между машинами (`~/miniforge3`, `~/miniconda3`, `~/anaconda3`, `/opt/conda` в облаке).
-   - Бинарник: `<env-path>/bin/python`.
-   - **Если `conda` не установлен (cloud-runner без conda) или `conda env list` падает / возвращает пустой результат** — сразу провались на шаг 2, не пытайся повторно. Сообщение об ошибке не блокирует chain.
-2. **Venv проекта.** Если есть `.venv/` или `venv/` в корне — использовать `<root>/.venv/bin/python` или `<root>/venv/bin/python`.
-3. **Активный env как fallback.** Если активирован какой-то env (есть `$CONDA_PREFIX` или `$VIRTUAL_ENV`) — использовать `$CONDA_PREFIX/bin/python` / `$VIRTUAL_ENV/bin/python`.
-4. **Иначе** — спросить пользователя или прочитать `CLAUDE.md`/`README.md` проекта на предмет инструкций.
+1. **Conda env per `environment.yml`.** If the project has `environment.yml`:
+   - Env name: `name:` from the YAML.
+   - Path: obtain via `conda env list | awk '$1=="<name>"{print $NF}'`. More reliable than guessing the conda install prefix — it varies across machines (`~/miniforge3`, `~/miniconda3`, `~/anaconda3`, `/opt/conda` in the cloud).
+   - Binary: `<env-path>/bin/python`.
+   - **If `conda` is not installed (cloud runner without conda) or `conda env list` fails / returns empty** — fall through to step 2 immediately, do not retry. The error message does not block the chain.
+2. **Project venv.** If `.venv/` or `venv/` is in the root — use `<root>/.venv/bin/python` or `<root>/venv/bin/python`.
+3. **Active env as fallback.** If some env is activated (there is `$CONDA_PREFIX` or `$VIRTUAL_ENV`) — use `$CONDA_PREFIX/bin/python` / `$VIRTUAL_ENV/bin/python`.
+4. **Otherwise** — ask the user or read the project's `CLAUDE.md`/`README.md` for instructions.
 
-Это работает и локально (macOS/miniforge), и в облачном Claude Code, и на Linux-серверах.
+This works locally (macOS/miniforge), in cloud Claude Code, and on Linux servers.
