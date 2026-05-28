@@ -6,21 +6,21 @@ paths: ["**/*.{ts,tsx,js,jsx}"]
 
 ### Components
 
-- Functional components + hooks. Без class components
-- Один компонент на файл. Имя файла = имя компонента
+- Functional components + hooks. No class components
+- One component per file. File name = component name
 
 ### TypeScript
 
-- Strict mode. Избегай `any` — используй `unknown` + type guards
-- Props через interface, не type alias
-- Generics когда это уменьшает дублирование
+- Strict mode. Avoid `any` — use `unknown` + type guards
+- Props via interface, not type alias
+- Generics when they reduce duplication
 
 ### Hooks
 
-- Не вызывай хуки условно или внутри циклов
-- Custom hooks — выноси логику из компонентов в `use*` хуки
+- Do not call hooks conditionally or inside loops
+- Custom hooks — extract logic from components into `use*` hooks
 
 ### State
 
-- Никогда не мутируй state напрямую
-- Для сложного state — `useReducer` вместо множества `useState`
+- Never mutate state directly
+- For complex state — `useReducer` instead of many `useState`

@@ -1,36 +1,36 @@
-Выполни следующие шаги:
+Run the following steps:
 
-**Mode detection.** В самом начале определи режим по URL `origin`:
+**Mode detection.** At the very start, determine the mode by the `origin` URL:
 
 ```bash
 git remote get-url origin | grep -qE '127\.0\.0\.1|localhost|local_proxy' && echo cloud || echo local
 ```
 
-Если результат `cloud` — работаем через GitHub MCP в одной разрешённой ветке сессии. Если `local` — `gh` cli и push в любые ветки. Дальше шаги, общие для обоих режимов, идут без префикса; различающиеся помечены **Local:** / **Cloud:**.
+If the result is `cloud` — we work via the GitHub MCP in the single permitted session branch. If `local` — `gh` CLI and push to any branch. Steps common to both modes appear without a prefix; mode-specific steps are marked **Local:** / **Cloud:**.
 
-**Atomicity.** Эта команда делает только коммит и push. Ревью, тесты, обновление документации — отдельные шаги до или после. Полная политика — `CLAUDE.md` §"Atomicity of commands".
+**Atomicity.** This command does only commit and push. Review, tests, documentation updates — separate steps before or after. Full policy — `CLAUDE.md` §"Atomicity of commands".
 
-1. Покажи `git status` — пойми что изменилось и что не отслеживается.
-2. Проверь что среди изменённых файлов нет секретов (.env, credentials, private keys, *.pem). Если есть — останови и предупреди.
-3. Подготовь ветку.
-   - **Local:** если текущая ветка `main` или `master` — создай новую ветку с осмысленным именем (формат: `feature/краткое-описание` или `fix/краткое-описание`). Если уже на feature/fix-ветке — коммить в текущую, новую не создавай.
-   - **Cloud:** **не создавай новую ветку** — текущая ветка (`claude/<slug>-<hash>`) и есть единственная разрешённая ветка сессии, коммитим в неё.
-4. Добавь файлы в staging **явно по именам** (не `git add .` и не `git add -A`). Если изменённых файлов больше десяти — спроси какие коммитить, перед тем как стейджить.
-5. Сделай коммит с осмысленным сообщением на английском (conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
-6. Запуши ветку.
+1. Show `git status` — understand what changed and what is untracked.
+2. Verify there are no secrets among the changed files (.env, credentials, private keys, *.pem). If there are — stop and warn.
+3. Prepare the branch.
+   - **Local:** if the current branch is `main` or `master` — create a new branch with a meaningful name (format: `feature/short-description` or `fix/short-description`). If already on a feature/fix branch — commit to the current one, do not create a new one.
+   - **Cloud:** **do not create a new branch** — the current branch (`claude/<slug>-<hash>`) is the single permitted session branch; commit to it.
+4. Stage files **explicitly by name** (not `git add .` and not `git add -A`). If more than ten files changed — ask which ones to commit before staging.
+5. Make the commit with a meaningful message in English (conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`).
+6. Push the branch.
    - **Local:** `git push -u origin <branch>`.
-   - **Cloud:** `git push -u origin HEAD` (push разрешён только в текущую ветку сессии; любая другая получит 403 от прокси).
-7. Создай Pull Request с описанием:
-   - **Summary** — что изменилось (буллеты)
-   - **Motivation** — зачем
-   - **Changed files** — таблица файлов с кратким описанием
+   - **Cloud:** `git push -u origin HEAD` (push is allowed only to the current session branch; any other gets 403 from the proxy).
+7. Create a Pull Request with the description:
+   - **Summary** — what changed (bullets)
+   - **Motivation** — why
+   - **Changed files** — table of files with a brief description
 
-   Шаблон тела общий для обоих режимов; различается только транспорт.
+   The body template is shared between modes; only the transport differs.
 
-   - **Local:** `gh pr create` с `--title` и `--body` (HEREDOC). Если `gh` не установлен — скажи мне.
-   - **Cloud:** перед вызовом получи схему MCP-инструмента через `ToolSearch` с `query: "select:mcp__github__create_pull_request"` (имена полей в схеме — источник истины, не угадывай). Затем вызови `mcp__github__create_pull_request` с параметрами:
-     - `head` — имя текущей ветки (`git rev-parse --abbrev-ref HEAD`)
+   - **Local:** `gh pr create` with `--title` and `--body` (HEREDOC). If `gh` is not installed — tell me.
+   - **Cloud:** before the call, fetch the MCP tool schema via `ToolSearch` with `query: "select:mcp__github__create_pull_request"` (field names in the schema are the source of truth — do not guess). Then call `mcp__github__create_pull_request` with parameters:
+     - `head` — name of the current branch (`git rev-parse --abbrev-ref HEAD`)
      - `base` — `main`
-     - `title` — то же, что в локальном
-     - `body` — тот же шаблон Summary/Motivation/Changed files
-     - `owner`, `repo` — извлеки из `git remote get-url origin` (последние два сегмента пути без `.git`). В облаке URL — это прокси (`http://...@127.0.0.1:<port>/<owner>/<repo>`), реальные owner/repo всё равно лежат в последних двух сегментах. Если по каким-то причинам они не парсятся — попроси у меня вместо угадывания.
+     - `title` — same as in local
+     - `body` — same Summary/Motivation/Changed files template
+     - `owner`, `repo` — extract from `git remote get-url origin` (the last two path segments without `.git`). In cloud the URL is a proxy (`http://...@127.0.0.1:<port>/<owner>/<repo>`); the real owner/repo still live in the last two segments. If for any reason they do not parse — ask me instead of guessing.

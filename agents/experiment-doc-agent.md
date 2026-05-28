@@ -46,7 +46,7 @@ This is a runtime interpretation of the prompt, not a parameter. There is no req
 
 ## Invocation triggers
 
-**Phase 1-3 (drift + reports + index)** — explicit user request ("обнови отчёты по C61", "experiment-doc-agent на 14_low_psa_tp_analysis"), after a notebook is added or modified (drift detection in Phase 1 will trigger refresh), before a paper / presentation milestone.
+**Phase 1-3 (drift + reports + index)** — explicit user request ("refresh reports for C61", "experiment-doc-agent on 14_low_psa_tp_analysis"), after a notebook is added or modified (drift detection in Phase 1 will trigger refresh), before a paper / presentation milestone.
 
 **Phase 4 (state)** — session boundaries, not notebook events. Common scenarios:
 - End of a research session even if no notebook was finalized.
