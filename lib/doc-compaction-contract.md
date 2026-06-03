@@ -57,8 +57,9 @@ Do **not** store a literal sorted file-path list in the codemap. Keep only the `
 
 ## Pass-cost process discipline (applies on every pass, any size)
 
-These are agent-behavior rules with no separate detection procedure (read-once relies on the agent following prose; batch-edit and scope are observable in the pass tool-call trace):
+These are agent-behavior rules with no separate detection procedure (read-once relies on the agent following prose; read-parallel, batch-edit and scope-strict are observable in the pass tool-call trace). The first three are orthogonal read/write levers — `read-once` and `read-parallel` govern *reads*, `batch-edit` governs *writes*; do not conflate read-parallel with batch-edit (`scope-strict` below is a separate narrow-invocation concern, not a batching lever):
 
 - **read-once.** Read the target doc once and each in-scope source once; hold them in working context. Do not re-read a file "to find the edit site."
+- **read-parallel.** Once the in-scope file set is known (after the Phase 1 inventory the source list is fully enumerable), issue all of those Reads in a single batched message — not one Read per round-trip. N independent reads then cost one round-trip of latency instead of N. This is the dominant wall-clock cost of a pass: `read-once` removes redundant reads, `read-parallel` removes the sequencing of the independent reads that remain. Reads only — edits to a single file are inherently sequential (each Edit needs the prior file state) and are not the target here.
 - **batch-edit.** Rewrite an affected section in one Edit, not 3–5 single-line edits. (This is the every-pass write discipline. Compaction reuses the same mechanical section-rewrite but is a distinct, size-triggered operation — a routine batch-edit does **not** trigger compaction.)
 - **scope-strict.** In a narrow invocation, reconcile only the lines for in-scope files. Do not re-verify the rest of a large doc against the tree.

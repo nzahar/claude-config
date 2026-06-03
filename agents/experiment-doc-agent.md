@@ -35,8 +35,9 @@ If the invocation prompt names a specific subset of experiments (e.g., "Run on `
 - **Phase 1**: drift detect and (if drifted) refresh only the named experiments. Do not touch other `REPORT.md` files; do not update their `last_reviewed`.
 - **Phase 2**: read only the listed notebooks. Fill template only for the named experiments.
 - **Phase 3**: regenerate `experiments/<domain>/README.md` only for domains covered by the named experiments. Leave indexes of other domains untouched.
+- **Phase 4**: do not run. A narrow invocation is notebook-triggered, and the state phase is session-boundary-triggered (see Invocation triggers below) — the state file is owned exclusively by the `--state-only` invocation. This holds for **every** narrow invocation, not just triad-spawned ones; in the pre-merge triad it is what keeps the N narrow invocations from racing the one `--state-only` invocation on the state file.
 
-Default — no subset named: run full pass over every `experiments/<domain>/<NN_slug>/REPORT.md` (current behaviour, as in Phase 1 step 1).
+Default — no subset named: run full pass over every `experiments/<domain>/<NN_slug>/REPORT.md` (current behaviour, as in Phase 1 step 1). Unlike a narrow invocation, the default pass is not restricted to Phase 1-3 — Phase 4 still runs on its own session-boundary trigger (or via `--state-only`).
 
 This is a runtime interpretation of the prompt, not a parameter. There is no required `scope:` field; if the prompt is ambiguous or silent, default to full pass — never halt without tool calls.
 
@@ -90,6 +91,8 @@ Used to judge whether a notebook change triggers the pre-execution review gate (
 - **Not substantial**: plot styling, markdown edits, variable renames, exploratory cell iteration
 
 ### Phase 2 — Fill the template
+
+The set of reports needing refresh is fully known from Phase 1's drift pass. When more than one is in scope, read their notebooks in one batched message (`read-parallel` in [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md) § Pass-cost process discipline) — one Read per round-trip across many notebooks is the dominant wall-clock cost of a multi-experiment pass.
 
 For each report needing refresh:
 
