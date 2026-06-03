@@ -50,7 +50,7 @@ Steps below are common to both modes; mode-specific steps are marked **Local:** 
    - Not MERGEABLE (conflicts) → stop, show the reason. Checks failed → warn and ask whether to continue.
 
 8. Merge as squash + delete branch.
-   - **Local:** `gh pr merge <N> --squash --delete-branch`. **Do not add `--repo`** — with an explicit `--repo`, gh goes into pure-API mode and skips local git operations (including local-branch deletion), leaving leftovers for step 10.
+   - **Local:** `gh pr merge <N> --squash --delete-branch`. **Do not add `--repo`** — explicit `--repo` switches gh to API-only mode and skips local-branch cleanup (leftovers for step 10).
    - **Cloud:** `mcp__github__merge_pull_request` (query: `select:mcp__github__merge_pull_request`). Parameters: `mergeMethod: "squash"`, `deleteBranch: true`, `pullNumber: <N>`.
 
 9. Switch to main and pull.
@@ -58,7 +58,7 @@ Steps below are common to both modes; mode-specific steps are marked **Local:** 
    - **Cloud:** `git fetch origin main && (git checkout main 2>/dev/null || git switch -c main origin/main) && git pull origin main` (without `fetch --prune`: the remote branch was already deleted by the MCP merge; local `git push --delete` is forbidden by the proxy).
 
 10. Delete the local feature branch.
-    - **Local:** `git branch -d <branch> 2>/dev/null` (silently, no error if absent). Usually `gh pr merge --delete-branch` already deleted it locally at step 8 — this step insures against the case when it did not.
+    - **Local:** `git branch -d <branch> 2>/dev/null` (silently, no error if absent).
     - **Cloud:** skip — runtime will create a new session branch.
 
 **Recovery from a partial failure.**

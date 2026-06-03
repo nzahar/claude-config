@@ -1,6 +1,6 @@
 # Architecture patterns for Max bots
 
-These are the patterns that survived contact with production. Apply by default unless there's a specific reason not to.
+Apply by default unless there's a specific reason not to.
 
 ## Module layout
 
@@ -45,7 +45,7 @@ async def handle_bot_started(event):
     ...
 ```
 
-This sidesteps circular imports cleanly. `main.py` registers handlers from submodules; submodules need `bot`/`api`; the cycle is broken by deferring the import to call-time.
+`main.py` registers handlers from submodules; submodules need `bot`/`api`; the cycle is broken by deferring the import to call-time.
 
 ## Handler registration
 
@@ -78,7 +78,7 @@ def error_wrapper(handler):
 | Persistent UI session (e.g. invoice awaiting confirmation across restart) | SQLite `*_sessions` table | Yes |
 | Domain data (regions, prices, history) | Backend API (not the bot) | Yes — owned by API |
 
-**Rule**: the bot is a thin client. If a fact needs to outlive the bot process AND is part of the domain, it lives in the backend API, not in the bot's SQLite. SQLite holds **only** the mapping layer and short-lived persistent UI sessions.
+**Rule**: the bot is a thin client. If a fact needs to outlive the bot process AND is part of the domain, it lives in the backend API, not in the bot's SQLite.
 
 ### `user_data.py` skeleton
 

@@ -33,4 +33,4 @@ If the result is `cloud` — we work via the GitHub MCP in the single permitted 
      - `base` — `main`
      - `title` — same as in local
      - `body` — same Summary/Motivation/Changed files template
-     - `owner`, `repo` — extract from `git remote get-url origin` (the last two path segments without `.git`). In cloud the URL is a proxy (`http://...@127.0.0.1:<port>/<owner>/<repo>`); the real owner/repo still live in the last two segments. If for any reason they do not parse — ask me instead of guessing.
+     - `owner`, `repo` — extract from `git remote get-url origin` (the last two path segments without `.git`). The cloud URL is a proxy (`http://...@127.0.0.1:<port>/<owner>/<repo>`), but owner/repo are still the last two segments. If for any reason they do not parse — ask me instead of guessing.

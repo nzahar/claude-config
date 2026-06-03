@@ -43,7 +43,11 @@ Prepend the compressed entry to `## History` (newest on top). Do not edit existi
 
 ### Same-day guard
 
-If the existing Current's `_Last updated:_` date matches today's date (multiple invocations the same day — morning sync + afternoon sync), **overwrite Current in place without demoting**. History is for trajectory across days, not micro-snapshots. Demoting the same day twice creates History entries identical except for timestamp and pollutes the record.
+If the existing Current's `_Last updated:_` date matches today's date, **overwrite Current in place without demoting**. History is for trajectory across days, not micro-snapshots.
+
+### History dedup
+
+Before appending a new History entry, check for existing entries with the same date prefix (`### YYYY-MM-DD`). If found and content overlap is > 50% (same Last shipped, same Next up, mostly identical bullets) — **merge into the existing entry**, do not append a near-duplicate.
 
 ## Invariant under merge
 
@@ -63,11 +67,9 @@ Trajectory fields describe *what's been done and what's planned* (or *what's bei
 
 "What's being built right now" lives in `docs/plans/<branch-slug>.md` (the plan file), not in STATE.md.
 
-By construction, every Current field describes work either (a) not yet started (`Next up`), (b) actively blocked on a non-merge condition (`Blocked / waiting on`), or (c) a free-form observation (`Notes`). None of these change at merge — merge moves work *into* main, not *out of* `Next up` (which the next pass updates), and clears blockers that depended on the merge happening (which the next pass observes from updated reality). Routine merges do not require STATE.md refresh. The "what was just merged" answer lives in `git log main --merges -1 --pretty=%s`, not in STATE.md.
-
 ## Hex-string constraint covers all of Current
 
-**No hex strings of the form `[0-9a-f]{7,}` in any value in Current**, including free-text Notes and any agent-specific fields. Commit hashes anywhere in Current decay at merge boundaries — they reference work that may be rebased, reordered, or rewritten on its way to main.
+**No hex strings of the form `[0-9a-f]{7,}` in any value in Current**, including free-text Notes and any agent-specific fields.
 
 Exception: a hex inside a quoted command or URL that is itself a stable artifact reference (e.g. `pip install git+...@<sha>`) is allowed, but such content usually belongs in a codemap, ADR, REPORT.md, or findings/ — when in doubt, move the bullet out of STATE.md.
 
@@ -85,7 +87,7 @@ If a Notes bullet duplicates content available in an ADR, plan file, codemap, RE
 
 Test for each bullet: "if I delete this, is anything lost that isn't recoverable from ADR / plan / codemap / git / REPORT.md?" If no — drop.
 
-Exceptions worth keeping inline are snapshot operational facts that aren't recorded elsewhere (live system state, observed counts, environment-specific gotchas).
+Exceptions worth keeping inline are snapshot operational facts not recorded elsewhere (live system state, observed counts, environment-specific gotchas).
 
 ## No Read-order block
 
@@ -110,13 +112,9 @@ After the file has settled into its final shape this run (whether the Demote ste
 | `split` — engineering half | `docs/STATE.md` | `docs/STATE-ARCHIVE.md` |
 | `split` — research half | `docs/RESEARCH-STATE.md` | `docs/RESEARCH-STATE-ARCHIVE.md` |
 
-Split-mode separation prevents engineering and research entries from being interleaved under one title.
-
 ## Hard limit on Current size
 
 Current ≤ **30 lines total**, including the Notes subsection. If it doesn't fit, the overflow belongs in an ADR, codemap, REPORT.md, findings/, or fresh `docs/ONBOARDING.md` (if read-order) — not in STATE.md.
-
-Treat "doesn't fit" as a signal that Notes is paraphrasing something that should live elsewhere — promote it, don't shrink the font.
 
 ## Pre-merge gates are never project state
 
@@ -133,20 +131,19 @@ Severity vocabularies are **agent-local** and do not transfer across agents. The
 - `TODO` / `WARNING` — `experiment-doc-agent` Phases 1–3, in REPORT.md and the domain README
 - `debugger` has no severity vocabulary by design — findings are root-cause statements, not graded issues
 
-Each agent's vocabulary is calibrated to its domain. This block is the canonical cross-agent reference; each agent file states its own vocabulary and points back here.
+This block is the canonical cross-agent reference; each agent file states its own vocabulary and points back here.
 
 ## Anti-duplication
 
-STATE.md is about *now*, not about *what the code does* or *why it was decided*. Four concrete duplication patterns to actively avoid:
+STATE.md is about *now*, not about *what the code does* or *why it was decided*. Three concrete duplication patterns to actively avoid:
 
 - **ADR / plan / REPORT.md rationale pasted inline.** If a Notes bullet explains *why* something is the way it is, that belongs in an ADR — reference it with `(see ADR-NNNN §X)`, do not paraphrase. For research, full result narratives belong in REPORT.md, not STATE.md
 - **Recently-shipped DDL, code, figure, or table blocks.** If a bullet contains `CREATE TABLE`, full SQL, a multi-line code fence, or a figure caption, it belongs in the codemap / REPORT.md / `git show <commit>` — reference the commit / PR / REPORT.md, do not paste
-- **Read-order TOC.** A list of "1. read this file, 2. read that ADR, 3. read this plan" inside STATE is duplication of pointers that already exist in ADR / README, plan headers, codemap indexes, and REPORT.md sections. Drop it — if a stable onboarding sequence is genuinely needed, that's `docs/ONBOARDING.md`
 - **Recently-shipped commit narrative inline.** If a Notes bullet paraphrases "shipped X" or "just merged Y", drop it — `git log main --merges -1 --pretty=%s` is the source. Notes captures snapshot facts not in git (live system state, environment-specific gotchas), not git-history paraphrase
 
 ## History is sacred
 
-Never edit a compressed History entry once it has been written by a past pass — even if you now think it captured the wrong things, it was an accurate record of what was emphasized at the time. Corrections go in the next Current update.
+Never edit a compressed History entry once it has been written by a past pass. Corrections go in the next Current update.
 
 ## Cadence
 
@@ -156,7 +153,7 @@ The STATE update phase (`document-agent` Phase 3, `experiment-doc-agent` Phase 4
 
 Skip the STATE update phase entirely if the session was purely exploratory and produced no decisions, no blockers, and no plan changes — nothing has happened that needs to be picked up.
 
-Routine drift updates or routine merges with no plan-state shift do NOT auto-trigger STATE update. STATE.md churn destroys history value.
+Routine drift updates or routine merges with no plan-state shift do NOT auto-trigger STATE update.
 
 ## Ask the user at most once at the end
 

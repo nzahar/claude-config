@@ -74,17 +74,15 @@ Use `# ── Section ───` em-dash separators for visual grouping in long 
 
 ### Python Environment
 
-Before running Python via Bash — determine the path to the right interpreter. Never use `python`, `python3`, `conda run` directly — that gives a system or random env. Always use the absolute path to the project env's interpreter.
+Before running Python via Bash — determine the path to the right interpreter. Never use `python`, `python3`, `conda run` directly. Always use the absolute path to the project env's interpreter.
 
 **Resolution order:**
 
 1. **Conda env per `environment.yml`.** If the project has `environment.yml`:
    - Env name: `name:` from the YAML.
-   - Path: obtain via `conda env list | awk '$1=="<name>"{print $NF}'`. More reliable than guessing the conda install prefix — it varies across machines (`~/miniforge3`, `~/miniconda3`, `~/anaconda3`, `/opt/conda` in the cloud).
+   - Path: obtain via `conda env list | awk '$1=="<name>"{print $NF}'`. More reliable than guessing the conda install prefix, which varies across machines.
    - Binary: `<env-path>/bin/python`.
-   - **If `conda` is not installed (cloud runner without conda) or `conda env list` fails / returns empty** — fall through to step 2 immediately, do not retry. The error message does not block the chain.
+   - **If `conda` is not installed (cloud runner without conda) or `conda env list` fails / returns empty** — fall through to step 2 immediately, do not retry.
 2. **Project venv.** If `.venv/` or `venv/` is in the root — use `<root>/.venv/bin/python` or `<root>/venv/bin/python`.
 3. **Active env as fallback.** If some env is activated (there is `$CONDA_PREFIX` or `$VIRTUAL_ENV`) — use `$CONDA_PREFIX/bin/python` / `$VIRTUAL_ENV/bin/python`.
 4. **Otherwise** — ask the user or read the project's `CLAUDE.md`/`README.md` for instructions.
-
-This works locally (macOS/miniforge), in cloud Claude Code, and on Linux servers.

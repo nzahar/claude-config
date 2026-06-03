@@ -64,7 +64,7 @@ The YAML frontmatter is mandatory. It has three required fields:
 
 - `name` — pretty title in Title Case, mirrors the H1 heading below
 - `description` — one-line summary that future sessions read to decide whether the skill is relevant. Be specific: "X happens, fix is Y" beats "tips for X"
-- `type: feedback` — fixed value for learned-skills (matches the auto-memory feedback type: a rule extracted from a past failure or success)
+- `type: feedback` — fixed value for learned-skills
 
 ## Process
 
@@ -76,7 +76,6 @@ The YAML frontmatter is mandatory. It has three required fields:
 ## Notes
 
 - Don't extract trivial fixes (typos, simple syntax errors)
-- Don't extract one-time issues (specific API outages, etc.)
+- Don't extract one-time issues
 - Focus on patterns that will save time in future sessions
 - Keep skills focused — one pattern per skill
-- The `description:` field is what future Claude sessions see in skill summaries; treat it as the index entry, not as filler

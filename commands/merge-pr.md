@@ -14,14 +14,14 @@ If `cloud` — merge and checks go via GitHub MCP; local `git push --delete` is 
    - In both modes: if the PR is not MERGEABLE (conflicts) — stop and show the reason; if checks failed — warn and ask whether to continue.
 2. Merge as squash + delete branch.
    - **Local:** `gh pr merge $ARGUMENTS --squash --delete-branch`.
-   - **Cloud:** before the call — `ToolSearch` with `query: "select:mcp__github__merge_pull_request"`, read the schema. Then call with `mergeMethod: "squash"`, `deleteBranch: true`, `pullNumber: $ARGUMENTS`, `owner`, `repo` (parameter names per the schema, if different from those listed).
+   - **Cloud:** call `mcp__github__merge_pull_request` (query: `select:mcp__github__merge_pull_request`) with `mergeMethod: "squash"`, `deleteBranch: true`, `pullNumber: $ARGUMENTS`. (owner/repo per the Mode-detection header; do-not-guess-schema per step 1.)
 3. Switch to main.
    - **Local:** `git checkout main`.
-   - **Cloud:** `git fetch origin main && (git checkout main 2>/dev/null || git switch -c main origin/main)`. A local `main` branch may not exist in a fresh session — hence the `switch -c` fallback.
+   - **Cloud:** `git fetch origin main && (git checkout main 2>/dev/null || git switch -c main origin/main)`.
 4. Pull updates: `git pull origin main` (read-only through the proxy, allowed in cloud too).
 5. Clean remote refs.
    - **Local:** `git fetch --prune`.
-   - **Cloud:** skip — the remote branch deletion was handled by the MCP merge with `deleteBranch: true`; local `git push --delete` is forbidden by the proxy.
+   - **Cloud:** skip — the MCP merge already deleted the remote branch (`deleteBranch: true`); `git push --delete` is forbidden by the proxy.
 6. Delete the local feature branch if any remains.
    - **Local:** `git branch -d <branch> 2>/dev/null` (silently, no error if absent).
    - **Cloud:** skip — runtime recreates the session with a new `claude/<slug>-<hash>`; the local feature branch is not needed.

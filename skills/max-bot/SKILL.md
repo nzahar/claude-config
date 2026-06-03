@@ -5,7 +5,7 @@ description: Build chat bots for the Max messenger (РФ) using the maxapi Pytho
 
 # max-bot — building bots for the Max messenger
 
-Max (мессенджер «Макс», РФ) exposes a Telegram-like bot API via the `maxapi` Python library, but the surface differs in ways that are **not well documented** and easy to get wrong on the first attempt. This skill captures the lessons from a production bot.
+Max (мессенджер «Макс», РФ) exposes a Telegram-like bot API via the `maxapi` Python library, but the surface differs in ways that are **not well documented** and easy to get wrong. This skill captures the lessons from a production bot.
 
 ## When to apply
 
@@ -49,4 +49,4 @@ templates/
   keyboards.py.tmpl    — paginated inline keyboard builder
 ```
 
-Templates are starting points — adapt names and add domain logic. The patterns inside (callback routing, pagination row format, lazy imports, `_to_attachment_button` helper) are the actual transferable knowledge.
+The patterns inside (callback routing, pagination row format, lazy imports, `_to_attachment_button` helper) are the actual transferable knowledge.

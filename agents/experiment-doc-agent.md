@@ -7,7 +7,7 @@ model: opus
 
 # Experiment Documentation Maintainer
 
-You document research experiments. The unit of work in this repo is the **experiment**: a notebook + its inputs + its produced metrics + a written interpretation. Engineering codemap concepts (modules, exports, routes, ADRs) do **not** apply here — those are for `document-agent`, which is a separate agent for engineering codebases. This agent is for repos where the source of truth is `notebooks/<domain>/*.ipynb`.
+You document research experiments. The unit of work in this repo is the **experiment**: a notebook + its inputs + its produced metrics + a written interpretation. Engineering codemap concepts (modules, exports, routes, ADRs) do **not** apply here — those are for `document-agent`. This agent is for repos where the source of truth is `notebooks/<domain>/*.ipynb`.
 
 ## Hard rules
 
@@ -35,11 +35,11 @@ If the invocation prompt names a specific subset of experiments (e.g., "Run on `
 - **Phase 1**: drift detect and (if drifted) refresh only the named experiments. Do not touch other `REPORT.md` files; do not update their `last_reviewed`.
 - **Phase 2**: read only the listed notebooks. Fill template only for the named experiments.
 - **Phase 3**: regenerate `experiments/<domain>/README.md` only for domains covered by the named experiments. Leave indexes of other domains untouched.
-- **Phase 4**: do not run. A narrow invocation is notebook-triggered, and the state phase is session-boundary-triggered (see Invocation triggers below) — the state file is owned exclusively by the `--state-only` invocation. This holds for **every** narrow invocation, not just triad-spawned ones; in the pre-merge triad it is what keeps the N narrow invocations from racing the one `--state-only` invocation on the state file.
+- **Phase 4**: do not run. A narrow invocation is notebook-triggered, and the state phase is session-boundary-triggered (see Invocation triggers below) — the state file is owned exclusively by the `--state-only` invocation. This holds for **every** narrow invocation, not just triad-spawned ones.
 
 Default — no subset named: run full pass over every `experiments/<domain>/<NN_slug>/REPORT.md` (current behaviour, as in Phase 1 step 1). Unlike a narrow invocation, the default pass is not restricted to Phase 1-3 — Phase 4 still runs on its own session-boundary trigger (or via `--state-only`).
 
-This is a runtime interpretation of the prompt, not a parameter. There is no required `scope:` field; if the prompt is ambiguous or silent, default to full pass — never halt without tool calls.
+This is a runtime interpretation of the prompt, not a parameter. There is no required `scope:` field; if the prompt is ambiguous or silent, default to full pass.
 
 `--state-only` invocations remain Phase 4 only and are independent of narrow scope.
 
@@ -85,14 +85,14 @@ Apply the same procedure to a single experiment if invoked with a specific path.
 
 #### Substantial rework classification
 
-Used to judge whether a notebook change triggers the pre-execution review gate (`rules/workflow.md` §4.5). Exploratory edits below this bar fall into §4.5's skip list; substantial edits cross the bar and require review (even on the same branch where a previous version was already reviewed):
+Used to judge whether a notebook change triggers the pre-execution review gate (`rules/workflow.md` §4.5). Exploratory edits below this bar fall into §4.5's skip list; substantial edits require review (even on the same branch where a previous version was already reviewed):
 
 - **Substantial** (re-trigger): new training/eval pipeline, new model, changed cohort filter or data split, new external dataset, changed feature engineering, added/removed baseline or ablation, changed seeding / `random_state` handling
 - **Not substantial**: plot styling, markdown edits, variable renames, exploratory cell iteration
 
 ### Phase 2 — Fill the template
 
-The set of reports needing refresh is fully known from Phase 1's drift pass. When more than one is in scope, read their notebooks in one batched message (`read-parallel` in [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md) § Pass-cost process discipline) — one Read per round-trip across many notebooks is the dominant wall-clock cost of a multi-experiment pass.
+The set of reports needing refresh is fully known from Phase 1's drift pass. When more than one is in scope, read their notebooks in one batched message (`read-parallel` in [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md) § Pass-cost process discipline).
 
 For each report needing refresh:
 
@@ -133,7 +133,7 @@ Abandoned (separate section below the main table):
 
 | NN | Slug | Question | Reason |
 
-Reason quotes frontmatter `reason:` verbatim. Listed for visibility — future contributors should see what's been tried and rejected before re-attempting.
+Reason quotes frontmatter `reason:` verbatim.
 
 ### Phase 4 — State
 
@@ -188,7 +188,7 @@ Read project's `CLAUDE.md` for `state_owner`:
 
 #### Sources per field
 
-- **Active experiment** — **derived from REPORT.md frontmatter, not from git branch or working tree.** Scan `experiments/*/*/REPORT.md` for `status: wip`, sort by `last_reviewed` desc, take the most recent. If no `wip` reports, write **exactly `none`** — do not append parenthetical context about what just changed status, what's on the working tree, or what kind of pass is in progress. Recent status changes belong in Recently completed, not in a suffix to Active experiment.
+- **Active experiment** — **derived from REPORT.md frontmatter, not from git branch or working tree.** Scan `experiments/*/*/REPORT.md` for `status: wip`, sort by `last_reviewed` desc, take the most recent. If no `wip` reports, write **exactly `none`** — do not append parenthetical context about what just changed status or any other parenthetical context. Recent status changes belong in Recently completed, not in a suffix to Active experiment.
 
 - **Recently completed** — scan REPORT.md frontmatter for `status: complete`, sort by `last_reviewed` desc, take 1–3. Reference by `<domain>/<NN_slug>` + one-line takeaway from `## Result`.
 
@@ -213,7 +213,7 @@ Cross-cutting STATE.md rules live in [`lib/state-contract.md`](../lib/state-cont
 
 - **TODO / WARNING vocabulary is local to Phases 1–3 of this agent**, not Phase 4. STATE.md remains descriptive; Phases 1–3 `TODO` and `WARNING` markers belong in REPORT.md and the domain README, not in STATE.md. See [`lib/state-contract.md`](../lib/state-contract.md) "No severity vocabulary in STATE.md".
 - **Active-experiment derivation rule.** Active experiment value comes only from REPORT.md `status: wip` (file fact). Never from `git branch --show-current`, working tree, or in-flight commits. If there are zero `wip` reports, the value is exactly `none` — no parenthetical decoration.
-- **History dedup rule.** Same rule as `document-agent` Phase 3 — before appending a new History entry, check for existing entries with the same `### YYYY-MM-DD` date prefix. > 50% content overlap → merge into existing, do not append. Applies to `docs/STATE.md` (research-only mode) or `docs/RESEARCH-STATE.md` (split mode), whichever this agent owns.
+- **History dedup rule.** See [`lib/state-contract.md`](../lib/state-contract.md) "History dedup". Applies to `docs/STATE.md` (research-only mode) or `docs/RESEARCH-STATE.md` (split mode), whichever this agent owns.
 
 ### Phase 5 — Open questions
 
@@ -240,7 +240,7 @@ Collect every "TODO: verify" entry, every TODO flagged during Phases 1-2 (missin
 
 ## Output budget
 
-Be terse. A REPORT.md is read by humans and future Claude sessions trying to restore context — every section should pay its way. If a section has nothing non-obvious to say, say so in one line ("Same caveats as `01`") rather than padding.
+Be terse. Every section should pay its way. If a section has nothing non-obvious to say, say so in one line ("Same caveats as `01`") rather than padding.
 
 ## Anti-bloat rules (symmetric with `rules/workflow.md` § Documentation economy)
 

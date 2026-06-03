@@ -13,7 +13,7 @@
 
 ## Project State Awareness
 
-**At the start of every session in a project, read `docs/STATE.md` if it exists.** This file is maintained by the project's documentation agent (`document-agent` for engineering projects, `experiment-doc-agent` for research projects; project-level `CLAUDE.md` may declare `state_owner` explicitly). It contains the current trajectory of work: what's blocked, what's planned next, and a history of resolved decisions and cleared blockers — described in terms invariant under merge (PR titles, file-derived statuses), not in terms of branch / working-tree state. "What was just merged" lives in `git log main --merges -1`, not in STATE.md. Reading STATE.md once at session start gives you the orientation a returning collaborator would have.
+**At the start of every session in a project, read `docs/STATE.md` if it exists.** This file is maintained by the project's documentation agent (`document-agent` for engineering projects, `experiment-doc-agent` for research projects; project-level `CLAUDE.md` may declare `state_owner` explicitly). It contains the current trajectory of work: what's blocked, what's planned next, and a history of resolved decisions and cleared blockers — described in terms invariant under merge (PR titles, file-derived statuses), not in terms of branch / working-tree state. "What was just merged" lives in `git log main --merges -1`, not in STATE.md.
 
 Rules:
 
@@ -21,7 +21,7 @@ Rules:
 - **Read the `## Current` section.** The `## History` section is for deep context on past trajectory; consult it only if the user asks about prior decisions or you need to understand how the project got here.
 - **If the file does not exist, do nothing.** Do not ask the user to create it, do not offer to create it. Some projects don't have one yet, that's fine.
 - **STATE.md can be stale.** If the user's first message contradicts what STATE.md treats as currently active or planned (e.g. user opens with "let's work on Y" while STATE.md's `Next up:` says Z) — trust the user. STATE.md describes the project's snapshot at the last documentation pass; it does not bind the user's plans for this session. Note the discrepancy briefly if relevant, do not argue.
-- **Never edit STATE.md from the main session.** It is owned by the project's documentation agent (`document-agent` Phase 3 for engineering, `experiment-doc-agent` Phase 4 for research; project-level `CLAUDE.md` may declare `state_owner` explicitly). Editing it from the main session causes conflicts. If you think STATE.md should be updated, suggest invoking the appropriate documentation agent with `--state-only`.
+- **Never edit STATE.md from the main session.** It is owned by the project's documentation agent (per `state_owner`; default `document-agent` Phase 3 engineering / `experiment-doc-agent` Phase 4 research). Editing it from the main session causes conflicts. If you think STATE.md should be updated, suggest invoking the appropriate documentation agent with `--state-only`.
 - **Do not surface STATE.md content unprompted.** Use it for your own orientation. The user does not need a recap of their own project unless they ask for one.
 
 Similarly — when working outside workflow.md (debugging sessions, ad-hoc questions, refactoring without a formal plan), read `docs/CODEMAPS/<area>.md` and relevant ADRs from `docs/ADR/` if the work touches architectural decisions or recorded invariants. For trivial edits (typo, formatting, local bugfix) this is not needed.
@@ -41,7 +41,7 @@ If you catch yourself about to write any of these phrases — stop and verify fi
 - "по идее" / "in theory"
 - "fix should be sufficient" / "фикс должен закрыть"
 
-These phrases are signals that you are about to claim completion without evidence. Run the verification, paste the output, *then* claim.
+Run the verification, paste the output, *then* claim.
 
 This applies equally to:
 - Implementation work ("I fixed the bug" → run the failing scenario, show it passes)
@@ -56,7 +56,7 @@ If the verification reveals failure — report the failure, do not paper over it
 
 ## Tool Hygiene
 
-**Never use `sed`, `cat`, `head`, `tail`, `awk`, `echo` via Bash for file operations.** In my configuration every such call triggers a permission prompt, which slows the work down and is annoying.
+**Never use `sed`, `cat`, `head`, `tail`, `awk`, `echo` via Bash for file operations.** In my configuration every such call triggers a permission prompt.
 
 - Reading files (including fragments) — `Read` with `offset`/`limit` parameters. NOT `sed -n 'N,Mp'`, `head -N`, `tail -N`, `cat`.
 - Modifying files — `Edit`/`Write`. NOT `sed -i`, NOT `echo > file`, NOT `cat <<EOF > file`.
@@ -79,12 +79,7 @@ Rule of thumb: if a specialised tool exists, use it. Bash is the last resort.
 
 Rule of thumb for agents outside the list: if the expected work is longer than ~30 seconds — background.
 
-Why this is the base rule:
-1. The agent works in an isolated context — it does not wait for anything from main-session.
-2. A foreground agent blocks main-session entirely for 5–15 minutes. The user cannot interrupt without cancelling the whole call. Context is consumed by waiting.
-3. Background frees main-session for parallel work + runtime sends a notification on completion. No sleep/poll needed.
-
-When in doubt — background. The cost of getting it wrong the other way (launching in background a task that was needed immediately) is minimal: you just wait for the notification. The cost of foreground on a long task is lost minutes of the user's time.
+When in doubt — background.
 
 ## Task Workflow
 
@@ -92,7 +87,7 @@ See [rules/workflow.md](rules/workflow.md).
 
 ## Sub-agent Invocation Policy
 
-Sub-agents run in isolated fresh contexts — they offload work from the main session, not bloat it. The unit of review is the **branch** (PR), not the individual commit. Use them fully; full agent contracts live in `agents/*.md`.
+Sub-agents run in isolated fresh contexts. The unit of review is the **branch** (PR), not the individual commit. Use them fully; full agent contracts live in `agents/*.md`.
 
 ### Agent modes
 
@@ -110,7 +105,7 @@ Trigger — step 4 of `workflow.md`, after the user approves the plan, before an
 
 **Scope.** Branch-level gate before merge. Does **not** cover operation-level pre-execution review (`workflow.md` §4.5, auto-detected per-operation). Both gates can fire on the same branch — §4.5 keeps gating operations launched while preparing for merge.
 
-**Trigger — signal from the user**, not auto-detection. Claude Code cannot distinguish "still working" from "ready to merge" — they are the same git state. Triggers: explicit ("ready to merge", "готовлю к мержу", "прогони проверки"), implicit (the user requests one triad agent but not the others — ask whether to run all three), or `/merge-pr` without prior checks (pause, confirm).
+**Trigger — signal from the user**, not auto-detection. Triggers: explicit ("ready to merge", "готовлю к мержу", "прогони проверки"), implicit (the user requests one triad agent but not the others — ask whether to run all three), or `/merge-pr` without prior checks (pause, confirm).
 
 Run all agents in **parallel** in one message — disjoint write targets, no conflicts.
 
@@ -133,7 +128,7 @@ For `document-agent` (engineering or split mode), main-session first decomposes 
 
 If `git diff` is empty or there are no changes in source files — `document-agent` invocations are not launched (only `--state-only` if a session-boundary trigger requires it).
 
-**Reverse-grep false positives — accepted bloat.** `grep -lF "$file"` matches any substring occurrence of a filename in any codemap, including "see also", ADR pointers, prose mentioning neighbouring paths. An extra match → an extra agent call reading that file. Not destructive: the agent sees that the file does not fit its area and makes no edits (or minor ones — a pointer). Wall-clock bloat stays within the max() of the parallel run.
+**Reverse-grep false positives — accepted bloat.** `grep -lF "$file"` matches any substring occurrence of a filename in any codemap, including "see also", ADR pointers, prose mentioning neighbouring paths. An extra match → an extra agent call reading that file. Not destructive: the agent sees that the file does not fit its area and makes no edits (or minor ones — a pointer).
 
 For `experiment-doc-agent` (research or split mode), main-session decomposes by experiment:
 
@@ -185,7 +180,7 @@ Allowed when the user asks, or before a large internal refactor that benefits fr
 
 Commands (`/commit-push`, `/merge-pr`, others) are atomic — they do exactly what their name says, no more. They do NOT invoke review/test/documentation agents and do NOT edit documentation files (no STATE.md markers, no codemap fixups, no log entries). All quality gates and doc refresh are explicit steps the user or main session runs before/after.
 
-Post-merge STATE.md remains valid: `## Current` is a snapshot describing what's blocked, open questions, and what's next — not in-progress git state, and not the last merge (which lives in `git log`). Routine merges do not require state refresh.
+Routine merges do not require state refresh — `## Current` is a snapshot (what's blocked / open / next), not in-progress git state or the last merge (which lives in `git log`).
 
 ## Git & Workflow
 
@@ -208,4 +203,4 @@ Post-merge STATE.md remains valid: `## Current` is a snapshot describing what's 
 
 ## Library Documentation
 
-For questions about libraries / frameworks / SDKs / CLIs (API syntax, configuration, version migrations, library-specific debugging) prefer **context7 MCP** (`mcp__plugin_context7_context7__resolve-library-id` → `query-docs`) over training data and WebSearch. The training cutoff may not reflect recent changes; context7 fetches current docs. Do not use for refactoring, general programming concepts, or debugging business logic.
+For questions about libraries / frameworks / SDKs / CLIs (API syntax, configuration, version migrations, library-specific debugging) prefer **context7 MCP** (`mcp__plugin_context7_context7__resolve-library-id` → `query-docs`) over training data and WebSearch. Do not use for refactoring, general programming concepts, or debugging business logic.
