@@ -2,7 +2,9 @@
 
 Cross-cutting rules for keeping `document-agent`-owned codemaps (`docs/CODEMAPS/<area>.md`) and `experiment-doc-agent`-owned `REPORT.md` files from growing without bound, and for keeping a single maintenance pass cheap. Sibling of [`state-contract.md`](state-contract.md), which does the same for `STATE.md`.
 
-This file is the **single source of truth** for the size cap value, the compaction procedure, and the pass-cost process discipline. `rules/workflow.md` § Documentation economy D8 is a pointer here; the agent files reference this file rather than restating its thresholds. When refining any threshold or procedure, edit this file — not the agents.
+This file is the **single source of truth** for the shared size-cap mechanism: the trigger, the soft/hard bands and the soft-cap WARNING, the un-delimited delimit-first bootstrap, the per-artifact protected block and delete-eligible sections, the compaction procedure, the structure-hash command, the move-not-edit invariant, and the pass-cost process discipline. `rules/workflow.md` § Documentation economy D8 is a pointer here.
+
+**Anti-drift — what each agent file may hold.** `document-agent`, `experiment-doc-agent`, and the `code-reviewer` D8 tripwire **reference** this file and must **not** restate the shared mechanism above. An agent file carries only (a) a pointer here, and (b) its **workflow-specific wiring** — which phase runs the check, and any short-circuit override (e.g. `document-agent`'s "over-cap forces the reconcile despite an unchanged hash"). When changing any shared-mechanism rule, edit it **here**; there is then nothing to keep in sync in the agents.
 
 Two distinct problems are addressed, do not conflate them:
 
