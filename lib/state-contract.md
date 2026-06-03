@@ -45,6 +45,10 @@ Prepend the compressed entry to `## History` (newest on top). Do not edit existi
 
 If the existing Current's `_Last updated:_` date matches today's date, **overwrite Current in place without demoting**. History is for trajectory across days, not micro-snapshots.
 
+### History dedup
+
+Before appending a new History entry, check for existing entries with the same date prefix (`### YYYY-MM-DD`). If found and content overlap is > 50% (same Last shipped, same Next up, mostly identical bullets) — **merge into the existing entry**, do not append a near-duplicate.
+
 ## Invariant under merge
 
 **Every field in Current must remain valid after a squash-merge of the current feature branch.** Test each value: "would this still be true after `git merge`?" If not, decompose or drop.

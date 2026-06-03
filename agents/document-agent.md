@@ -257,8 +257,6 @@ Cross-cutting STATE.md rules live in [`lib/state-contract.md`](../lib/state-cont
 
 - **Same-day guard interacts with Phase 1–2.** If the same-day guard fires (Current overwritten in place, no demote), Phase 1–2 may still have run and updated codemaps. Phase 3's same-day guard governs the STATE.md transition only.
 
-- **History dedup rule.** Before appending a new History entry, check for existing entries with the same date prefix (`### YYYY-MM-DD`). If found and content overlap is > 50% (same Last shipped, same Next up, mostly identical bullets) — **merge into the existing entry**, do not append a near-duplicate.
-
 ---
 
 **Remember**: Phase 1 is mechanical — extract and reconcile. Phase 2 is insight — write what a careful reader would eventually figure out. Phase 3 is orientation — write where the work stands now.

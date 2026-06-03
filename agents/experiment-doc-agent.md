@@ -213,7 +213,7 @@ Cross-cutting STATE.md rules live in [`lib/state-contract.md`](../lib/state-cont
 
 - **TODO / WARNING vocabulary is local to Phases 1–3 of this agent**, not Phase 4. STATE.md remains descriptive; Phases 1–3 `TODO` and `WARNING` markers belong in REPORT.md and the domain README, not in STATE.md. See [`lib/state-contract.md`](../lib/state-contract.md) "No severity vocabulary in STATE.md".
 - **Active-experiment derivation rule.** Active experiment value comes only from REPORT.md `status: wip` (file fact). Never from `git branch --show-current`, working tree, or in-flight commits. If there are zero `wip` reports, the value is exactly `none` — no parenthetical decoration.
-- **History dedup rule.** Same rule as `document-agent` Phase 3 (History dedup). Applies to `docs/STATE.md` (research-only mode) or `docs/RESEARCH-STATE.md` (split mode), whichever this agent owns.
+- **History dedup rule.** See [`lib/state-contract.md`](../lib/state-contract.md) "History dedup". Applies to `docs/STATE.md` (research-only mode) or `docs/RESEARCH-STATE.md` (split mode), whichever this agent owns.
 
 ### Phase 5 — Open questions
 

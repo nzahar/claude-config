@@ -79,11 +79,6 @@ Rule of thumb: if a specialised tool exists, use it. Bash is the last resort.
 
 Rule of thumb for agents outside the list: if the expected work is longer than ~30 seconds — background.
 
-Why this is the base rule:
-1. The agent works in an isolated context — it does not wait for anything from main-session.
-2. A foreground agent blocks main-session entirely for 5–15 minutes. The user cannot interrupt without cancelling the whole call. Context is consumed by waiting.
-3. Background frees main-session for parallel work + runtime sends a notification on completion. No sleep/poll needed.
-
 When in doubt — background.
 
 ## Task Workflow
@@ -185,7 +180,7 @@ Allowed when the user asks, or before a large internal refactor that benefits fr
 
 Commands (`/commit-push`, `/merge-pr`, others) are atomic — they do exactly what their name says, no more. They do NOT invoke review/test/documentation agents and do NOT edit documentation files (no STATE.md markers, no codemap fixups, no log entries). All quality gates and doc refresh are explicit steps the user or main session runs before/after.
 
-Post-merge STATE.md remains valid: `## Current` is a snapshot describing what's blocked, open questions, and what's next — not in-progress git state, and not the last merge (which lives in `git log`). Routine merges do not require state refresh.
+Routine merges do not require state refresh — `## Current` is a snapshot (what's blocked / open / next), not in-progress git state or the last merge (which lives in `git log`).
 
 ## Git & Workflow
 
