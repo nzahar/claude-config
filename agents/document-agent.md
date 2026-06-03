@@ -54,6 +54,9 @@ Extract facts from the codebase, compare them against existing codemaps, and rec
 
 ## Workflow
 
+### 0. Size cap (unconditional, before the hash short-circuit)
+Read each in-scope codemap, then run the size-cap check per [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md): count the structural-portion lines (total minus the `<!-- MEANING LAYER -->` block) and, if over the hard cap, run the compaction pass defined there (delete the sorted-path-list section — regenerable from the tree; the duplicate `Module exports` table is folded into Files by source-aware reconcile, not blind-deleted here; trim over-budget Files cells per the contract's cell rule — cut code-restating prose, move genuine *why* verbatim, incrementally as sections are rewritten, not in bulk; never delete or reword the meaning layer). Emit the soft-cap WARNING when in the warning band; for an un-delimited legacy codemap (no `<!-- MEANING LAYER -->` markers), key on total lines and run the delimit-first pass per the contract before compacting. This is **unconditional** — it runs before the freshness-hash short-circuit in step 4 and is independent of how many files churned this pass, so an already-bloated codemap is compacted on the next pass that touches it.
+
 ### 1. Inventory the code
 - Identify packages, entry points, routes, DB models
 - For each area: list files, exported symbols, imports between modules, routes, background jobs
@@ -77,11 +80,13 @@ For each codemap area, compute the diff between current code and the structural 
 At the top of each codemap, maintain:
 ```
 **Last Updated:** YYYY-MM-DD
-**Structure Hash:** <md5 of sorted file paths in the area>
+**Structure Hash:** <hash> (<N> files)
 ```
 The hash is over **sorted file paths only**, not exported symbol signatures. Per-language symbol extraction (Python AST, Go `go list`, TS compiler API) is too brittle and varies across projects — a path-only hash is cheap, deterministic, and catches add/remove/rename, which is what triggers Phase 1 anyway. Stable hash for free; symbol-level changes get caught by Phase 2's read-source pass, not by the hash.
 
-If hash unchanged → update date only, skip the rest for this area.
+Compute it transiently with a pinned, cross-platform command — `git ls-files <area-paths> | LC_ALL=C sort | git hash-object --stdin` (`git hash-object`, not `md5`/`md5sum`, so the hash is identical on macOS and Linux/CI) — and annotate with the file count `(<N> files)` as an add/remove tripwire. **Do not store a literal sorted file-path list section in the codemap**: it duplicates the Files table and is reconstructable from this command (see [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md)).
+
+If hash unchanged → update date only, skip the rest for this area — **except the size-cap check (step 0), which runs unconditionally**.
 
 ### Phase 1 rules
 - Do **not** write descriptions of what a module *does* or *why* it exists. That is Phase 2.
@@ -97,7 +102,7 @@ Per `rules/workflow.md` § Documentation economy, codemaps maintain **only one c
 
 Other tables that are *different projections* of the same area remain valid and are encouraged when relevant: `HTTP routes` (method × path × handler), `DB schema` (table × column × constraint), `DI graph`, `Lifecycle`. These are not duplicates of Files; they are orthogonal views.
 
-**Legacy behavior.** Existing codemaps may have a `Module exports` table from before this rule. Routine Phase 1 passes **do not delete** it — leave legacy data alone. Migration triggers only on substantial rewrite: when Phase 1 produces one of the four bullet outcomes above (add / strikethrough / rename / drift-comment) on **≥ 50% of the Files-table rows** in one pass, migrate symbol descriptions into the Files-table descriptions and drop the standalone `Module exports` table in that same pass. The denominator is the row count of the Files-table at the start of the pass; the numerator counts rows that received at least one of the four outcomes. Fresh codemaps (new files this pass) are written without the table from the start.
+**Legacy behavior — superseded by [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md).** Existing codemaps may carry a `Module exports` table (and a literal sorted-path-list section) from before this rule. The sorted-path-list is deleted by the **size-triggered compaction pass** (step 0) — it is regenerable from the tree. The `Module exports` table is **not** blind-deleted by step 0; the former "≥ 50% of Files-table rows churned in one pass" migration gate (removed: it never fired on incremental PRs, which is why the duplicate became immortal) is replaced by folding it into the Files table during a normal **source-aware reconcile** (steps 1–3 below) — where symbols come from the code itself, so no documented symbol is lost. (Removing it within-doc by comparing the two tables is exactly what can silently drop a symbol the Files cell happens to omit.) Fresh codemaps are written without either section from the start.
 
 ---
 
