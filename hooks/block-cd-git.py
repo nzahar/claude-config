@@ -10,6 +10,12 @@ prompt, and the message in stderr tells the assistant why.
 
 CWD is already the repo root in normal sessions, so just running `git ...`
 directly works. For multi-repo work, use `git -C <path> ...` instead.
+
+Known limitation: the match is a plain regex over the whole command string,
+with no shell-quoting awareness, so the pattern also trips inside quoted
+arguments / heredocs (e.g. `ssh host 'cd /r && git pull'`, or an `echo` of
+the literal text). It fails toward blocking, not toward allowing; rephrase
+or quote differently if a legitimate command is caught.
 """
 from __future__ import annotations
 
@@ -35,6 +41,8 @@ def main() -> int:
         data = json.load(sys.stdin)
     except (json.JSONDecodeError, ValueError):
         return 0  # malformed input — don't block by accident
+    if not isinstance(data, dict):
+        return 0  # valid JSON but not an object — nothing to inspect
     tool_input = data.get("tool_input") or {}
     cmd = tool_input.get("command", "")
     if not isinstance(cmd, str):
