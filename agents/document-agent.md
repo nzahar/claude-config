@@ -26,8 +26,9 @@ If the invocation prompt names a specific subset of codemaps and source files (e
 
 - **Phase 1**: read, inventory, and reconcile only the named codemap. Do not inventory or update other codemaps; do not change their `Last Updated` date or `Structure Hash`.
 - **Phase 2**: read only the listed source files. Write meaning-layer only inside the named codemap.
+- **Phase 3**: do not run. A narrow invocation is code-triggered, and the state phase is session-boundary-triggered (see Invocation triggers below) — STATE.md is owned exclusively by the `--state-only` invocation. This holds for **every** narrow invocation, not just triad-spawned ones; in the pre-merge triad it is what keeps the N narrow invocations from racing the one `--state-only` invocation on STATE.md.
 
-Default — no subset named: run full repo pass over every `docs/CODEMAPS/*.md` (current behaviour).
+Default — no subset named: run full repo pass over every `docs/CODEMAPS/*.md` (current behaviour). Unlike a narrow invocation, the default pass is not restricted to Phase 1-2 — Phase 3 still runs on its own session-boundary trigger (or via `--state-only`).
 
 This is a runtime interpretation of the prompt, not a parameter. There is no required `scope:` field; if the prompt is ambiguous or silent, default to full pass — never halt without tool calls.
 
@@ -61,6 +62,7 @@ Read each in-scope codemap and run the size-cap check per [`lib/doc-compaction-c
 - Identify packages, entry points, routes, DB models
 - For each area: list files, exported symbols, imports between modules, routes, background jobs
 - Record stack-specific facts: API routes with HTTP methods, DB tables with columns, queue names, env vars
+- Once the file set is enumerated, read those files in one batched message (`read-parallel` in [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md) § Pass-cost process discipline), not one Read per round-trip
 
 ### 2. Load existing codemaps
 Read every file in `docs/CODEMAPS/`. For each, identify:
@@ -121,7 +123,7 @@ Now that the structural tables are current, write the "why" around them. You als
 
 ### 1. Read before writing
 For the scope:
-- Read every source file listed in structural tables (actual implementations, not just headers)
+- Read every source file listed in structural tables (actual implementations, not just headers) — the list is fully known from Phase 1, so issue these Reads in one batched message per `read-parallel` ([`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md) § Pass-cost process discipline); reuse any file already held from Phase 1 rather than re-reading
 - Note what is still accurate and what is stale in existing meaning-layer blocks
 
 ### 2. Write the three meaning-layer sections
