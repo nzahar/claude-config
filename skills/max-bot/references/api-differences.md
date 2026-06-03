@@ -1,10 +1,10 @@
 # Max API — differences from Telegram and non-obvious behavior
 
-The `maxapi` Python library is loosely modeled on Telegram bot libraries (aiogram, python-telegram-bot), but the API surface differs in ways that bite on first contact. This file enumerates them.
+The `maxapi` Python library is loosely modeled on Telegram bot libraries (aiogram, python-telegram-bot), but the API surface differs. This file enumerates the differences.
 
 ## Commands and triggers
 
-Max **does not support** the `/command` UI menu Telegram users expect. There is no command registration, no autocomplete, no slash-prefix shortcut.
+Max **does not support** the `/command` UI menu Telegram users expect.
 
 Pattern: handle commands as text inside `message_created`, accepting Russian + English + slash variants:
 

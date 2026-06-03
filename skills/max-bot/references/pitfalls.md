@@ -1,6 +1,6 @@
 # Pitfalls — pre-commit checklist
 
-Sweep this list before declaring a Max bot feature done. Each item is something we got wrong at least once in production.
+Sweep this list before declaring a Max bot feature done.
 
 ## API surface
 
