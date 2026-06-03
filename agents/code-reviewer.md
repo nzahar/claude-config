@@ -90,7 +90,8 @@ Apply detection procedures D1–D7 from `rules/workflow.md` § Documentation eco
 
 - **D3, D5 → HIGH.** Same structural issues that `plan-reviewer` flags as `blocker` at plan stage; if they survived into the diff, they ship with the merge. Scope per workflow.md for each rule.
 - **D1, D2, D4, D6, D7 → MEDIUM.** Smell-level — flag and continue. Scope per workflow.md for each rule.
-- `CRITICAL`, `LOW`, `NEEDS VERIFICATION` do not apply to doc-economy findings: nothing here is runtime/security critical, nothing is below-MEDIUM, and detection is mechanical (no ambiguity to defer).
+- **D8 → LOW (informational).** The size-cap tripwire: when the diff touches `docs/CODEMAPS/*.md` or `*/REPORT.md` and the file's structural portion exceeds the hard cap in [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md), emit ONE LOW finding `over size cap — document-agent compaction owed`. Line-count only (the file is already read for the diff) — **not** a whole-file review, **not** blocking. `document-agent` / `experiment-doc-agent`, not the reviewer, is the enforcement actor.
+- `CRITICAL` and `NEEDS VERIFICATION` do not apply to doc-economy findings: nothing here is runtime/security critical, and detection is mechanical (no ambiguity to defer). `LOW` is used **only** by D8's informational tripwire; D1–D7 findings are never below MEDIUM.
 
 Scope exclusions per workflow.md still apply: D6 does **not** apply to codemaps (`docs/CODEMAPS/*.md`) or REPORT.md — cross-refs there are primary anchoring. README, `skills/*`, and prose snippets outside the doc tree are out of scope for this category entirely.
 
