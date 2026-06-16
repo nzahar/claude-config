@@ -8,6 +8,8 @@ Applicability criteria:
 - **`test-writer`** — there are changes to code with testable logic. **Not** applicable: pure documentation, configuration without behavioural effects, renames.
 - **`document-agent` / `experiment-doc-agent`** — the repo has `docs/CODEMAPS/`, `docs/STATE.md`, or `experiments/` with REPORT.md. **Not** applicable: repos without these artifacts (e.g., the framework itself in `~/.claude/`).
 
+**What counts as a stale snapshot.** A gate's APPROVED covers the diff state it was invoked on. Any commit afterwards that adds behaviour, logic, or contract the gate never evaluated makes the snapshot stale — **this rule dominates the exemption below.** Exemption (`code-reviewer` only): applying its **own** findings at **medium severity or below** does **not** restale the snapshot *when each fix is mechanical and confined to the code the finding named* — a rename, dead-code removal, comment, or the exact narrow guard the reviewer specified. A medium finding whose fix introduces new logic (e.g. "add input validation here", "guard this empty case") is **not** exempt — that fix is code the gate never saw, so it restales. Fixes addressing a high/critical finding always restale. Cross-gate effects: `test-writer` adding tests for already-reviewed code does **not** restale `code-reviewer`; `document-agent` / `experiment-doc-agent` edits to docs, `STATE.md`, or codemaps never restale the code gate.
+
 Decision:
 
 - All applicable gates returned APPROVED → silently move to step 1.
