@@ -30,3 +30,4 @@ security_warnings_state_*.json
 daemon.log
 daemon/
 jobs/
+chrome/
