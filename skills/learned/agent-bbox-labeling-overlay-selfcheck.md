@@ -15,8 +15,10 @@ When an agent estimates a bbox by "looking" at an image and writing coords direc
 ## Solution
 Make a **per-box overlay self-check MANDATORY** in the agent prompt, not optional:
 1. Estimate the box, then **render it** (draw the box on the frame via `ffmpeg drawbox`; for small/faint targets also `crop` a region around the box and `scale=...:flags=neighbor` upscale ~4x) and **Read the rendered image back**.
-2. Check all four edges: top of fuselage / both wingtips / nose / tail fully inside, no large empty margin. If the top pokes out or an edge is cut → **adjust and re-render. Iterate until tight.**
+2. Check all four edges: top of fuselage / both wingtips / nose / tail fully inside, no large empty margin. If the top pokes out or an edge is cut → **adjust and re-render. Iterate.**
 3. Only then write the label.
+
+**Calibrate "tight" carefully — it has two opposite failure modes.** Telling agents to draw "tight boxes, no slack" over-corrects them into **undersized boxes that clip the target** (wide wingspans on banking/closing views lose their wingtips; faint pale wing ends against terrain get cut). The robust framing is **enclosure-first**: PRIMARY = every pixel of the object inside the box (all extremities, including faint/blurred/thin ones); TIE-BREAK = when unsure where an edge is, **include** (a few px slack is fine, clipping is a defect); tightness is SECONDARY — only shrink an edge with an obvious large (>~20%) empty margin. Also instruct agents to **drop, not force**, frames where the object runs past the frame edge or fuses with an occluder/artifact (near-collision/impact) rather than writing a clipped box.
 
 Supporting pipeline that makes this cheap at scale:
 - **Two-resolution scan:** sample frames at low fps (~2), build **contact sheets** (ffmpeg `tile`) so the agent scans many frames in one Read to *locate* target frames; only Read full-res for the *target* frames to draw boxes.

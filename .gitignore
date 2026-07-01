@@ -31,3 +31,5 @@ daemon.log
 daemon/
 jobs/
 chrome/
+claude-statusbar.json
+.last-update-result.json
