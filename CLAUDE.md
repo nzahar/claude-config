@@ -168,8 +168,6 @@ If a session ends without merge but produced state worth recording (decisions pe
 
 On-demand when investigation stalls: first fix failed; you can't state the root cause in one mechanistic sentence (`file:line` + mechanism + condition; "probably/maybe" = not a root cause); symptom and cause in different modules; intermittent / timing-dependent; behavior contradicts your model of the code; regression after merge/bump where `git bisect` isn't obvious; user says it's hard. Full exclusion list and root-cause discipline in `agents/debugger.md`.
 
-Calibration signals (weak alone, two or more = trigger): several back-and-forth exchanges without convergence, same file read more than three times, explanations getting longer not shorter, "let me try X" without being able to predict the outcome.
-
 What to pass: exact error, reproduction steps tried (with outcomes), fixes already attempted (with outcomes), relevant file paths. Do NOT pass your hypotheses — the agent isolates from your theory deliberately.
 
 ### Mid-branch explicit invocations
@@ -204,3 +202,7 @@ Routine merges do not require state refresh — `## Current` is a snapshot (what
 ## Library Documentation
 
 For questions about libraries / frameworks / SDKs / CLIs (API syntax, configuration, version migrations, library-specific debugging) prefer **context7 MCP** (`mcp__plugin_context7_context7__resolve-library-id` → `query-docs`) over training data and WebSearch. Do not use for refactoring, general programming concepts, or debugging business logic.
+
+## Web Search for Known Issues
+
+**Check known-issues before hypothesizing.** When you observe behaviour you can't immediately explain and the failure path runs through a shared/public component — a library, framework, server, tool, OS, or service (or a verbatim error string it emitted) — treat a web search ("<symptom> known issue", "<error> <version>") as a step *before* forming your own fix hypothesis, not a last resort after several failed attempts. Someone else has likely hit it. This is gated to that moment and that kind of component, not to any task type. It complements the context7 rule above: context7 for documented/intended behaviour (syntax, config, migration paths); web search when the behaviour is a suspected defect or not-as-documented.
