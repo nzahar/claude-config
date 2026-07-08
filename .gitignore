@@ -22,7 +22,6 @@ plans/
 docs/
 plugins/
 downloads/
-settings.json
 settings.local.json
 security_warnings_state_*.json
 *.bak
