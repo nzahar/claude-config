@@ -20,17 +20,5 @@ If the result is `cloud` — we work via the GitHub MCP in the single permitted 
 6. Push the branch.
    - **Local:** `git push -u origin <branch>`.
    - **Cloud:** `git push -u origin HEAD` (push is allowed only to the current session branch; any other gets 403 from the proxy).
-7. Create a Pull Request with the description:
-   - **Summary** — what changed (bullets)
-   - **Motivation** — why
-   - **Changed files** — table of files with a brief description
 
-   The body template is shared between modes; only the transport differs.
-
-   - **Local:** `gh pr create` with `--title` and `--body` (HEREDOC). If `gh` is not installed — tell me.
-   - **Cloud:** before the call, fetch the MCP tool schema via `ToolSearch` with `query: "select:mcp__github__create_pull_request"` (field names in the schema are the source of truth — do not guess). Then call `mcp__github__create_pull_request` with parameters:
-     - `head` — name of the current branch (`git rev-parse --abbrev-ref HEAD`)
-     - `base` — `main`
-     - `title` — same as in local
-     - `body` — same Summary/Motivation/Changed files template
-     - `owner`, `repo` — extract from `git remote get-url origin` (the last two path segments without `.git`). The cloud URL is a proxy (`http://...@127.0.0.1:<port>/<owner>/<repo>`), but owner/repo are still the last two segments. If for any reason they do not parse — ask me instead of guessing.
+This command stops after push. It does **not** open a Pull Request — that is a separate, explicitly-requested step (`/ship`, or ask to open a PR). See `CLAUDE.md` §Git & Workflow (PR / merge gate).
