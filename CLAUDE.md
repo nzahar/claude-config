@@ -54,6 +54,29 @@ If the verification is expensive (long test suite, slow build) and you already r
 
 If the verification reveals failure — report the failure, do not paper over it with another attempt disguised as a claim.
 
+## Question Discipline — don't offload decisions
+
+Putting a decision back on the user — via `AskUserQuestion` or plain-text "which should I do?" — is legitimate for exactly these: a preference, a priority trade-off, an external constraint you cannot derive, scope ambiguity that changes *what gets built*, or sign-off before an irreversible / outward-facing action. Nothing else.
+
+This governs choosing among design / methodology **options**. It does **not** touch `workflow.md`'s mandatory gates — spec clarification (step 1) and plan approval before coding (step 3) are always required and are never suppressed by this rule.
+
+Before asking, run this gate. If any branch resolves it, **do not ask** — act:
+
+- **Answer is already written** — plan (`docs/plans/*`), spec, STATE.md, codemap, ADR, or this conversation already fixes it → read it and proceed. Asking what the plan already requires is pure noise.
+- **One option is defensibly best** — pick it, state the choice in one line, proceed. Do not stage a multiple-choice for a decision you can justify.
+- **Resolvable by investigation** — missing a fact → web-search (known-issues rule) or context7; unsure which approach wins → spawn `Explore` / `general-purpose` / a swarm; can't explain a failure → `debugger`; can't predict an outcome → run the experiment and measure.
+
+**Making the user guess is the same degradation as guessing yourself.** A methodological default — which profile to test, which config, which metric when the metric is just a measurement choice — is *your* job to reason out or settle empirically. In research work especially, a question offered in place of a measurement is not diligence, it is a path to stopping work. The exception is when the choice encodes a genuine user priority trade-off (e.g. precision vs recall against the user's cost model) — that stays on the askable side above.
+
+## Guessing Discipline — investigate, don't assume
+
+The mirror of the above. When a fact you don't have determines what you do next, do not silently pick the likely-looking branch and proceed as if you knew. Resolve it, or name it.
+
+- **Resolvable → resolve it.** In the repo → `grep` / `Read`; in a library's behaviour → context7 or web-search; in runtime behaviour → run it and observe; in a failure you can't explain → `debugger`; in a design trade-off → spawn `Explore` / `general-purpose` / a swarm. Cheap investigation beats a confident guess every time.
+- **Genuinely unresolvable → name the assumption.** If the fact cannot be settled in reasonable time and you must proceed, state the assumption inline — "assuming X because Y; if wrong, Z breaks" — never bury a guess in prose as if it were established.
+
+"Probably" / "maybe" / "по идее" reasoning that decides a branch is a guess, not a basis for action — the tokens the Verification and `debugger` rules forbid for claims and root causes also gate silent decisions here. This is **not** a licence to escalate every unknown to the user — that is the offloading the section above forbids. Resolve first; surface only what genuinely needs the user.
+
 ## Tool Hygiene
 
 **Never use `sed`, `cat`, `head`, `tail`, `awk`, `echo` via Bash for file operations.** In my configuration every such call triggers a permission prompt.
