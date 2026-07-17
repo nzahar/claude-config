@@ -19,12 +19,19 @@ set -euo pipefail
 # dashes or 15 depending on ambient locale — and the hook (raw process env) and the
 # skill (Bash tool, initialized from the user's profile) need not share one.
 export LC_ALL=C
+# Same threat model as LC_ALL: cd echoes the resolved directory to stdout when CDPATH
+# matches a relative operand, and stdout is this script's only output.
+CDPATH=
 
 dir="${1:-$PWD}"
 
 # Resolve our own location BEFORE cd'ing anywhere: BASH_SOURCE is relative when the
 # script is invoked by a relative path, and by then $PWD is the project, not here.
-CONFIG_DIR="$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")"
+# Kept as its own assignment so the cd's exit status is the assignment's: nested
+# inside dirname's argument, a failure would be swallowed and print "." — a
+# plausible-looking relative path that lands the handoff inside the project.
+SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_DIR="$(dirname "$SELF_DIR")"
 
 # Fail loudly on an unusable dir instead of printing a plausible path for it: the
 # callers' guard is "prints nothing / non-zero" (the skill then stops and asks the
