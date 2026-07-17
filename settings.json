@@ -11,6 +11,12 @@
             "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/learned/_gen-index.sh\"",
             "timeout": 10,
             "statusMessage": "Loading learned-skills index"
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/handoff-inject.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking for session handoff"
           }
         ]
       }
