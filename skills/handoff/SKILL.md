@@ -107,6 +107,8 @@ anywhere else.>
 
 Unless the user passed `fast`, dispatch `handoff-reviewer` with the **explicit file path** in the prompt (it refuses to guess). It is read-only and fast (git + filesystem checks only).
 
+Dispatch it in the background per `CLAUDE.md` §"Sub-agents — background by default" and end the turn; the completion notification re-invokes you to act on the report. This flow spans a turn boundary — the file is written before the review returns, so if the session ends between dispatch and re-invocation the handoff is left unreviewed (pass `fast` to skip review deliberately).
+
 One run, no loop: fix every blocker and warning it returns, then stop. Surface its `needs-verification` list to the user — those are the claims the next session must re-check before trusting.
 
 ## 6. Report to the user
