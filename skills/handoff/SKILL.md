@@ -20,7 +20,7 @@ You are wrapping the current session's state into a file a fresh session can act
 One file per project. Ask the script — it prints the full path and nothing else:
 
 ```
-"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/handoff-path.sh" <session's working directory>
+"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/handoff-path.sh" "<session's working directory>"
 ```
 
 Write to exactly the path it printed. **Never construct that path yourself** — not the directory, not the filename. The hook that injects the handoff calls this same script; a path that differs by one character means the hook looks where nothing was written and silently injects nothing, and the whole feature no-ops with no signal to anyone.

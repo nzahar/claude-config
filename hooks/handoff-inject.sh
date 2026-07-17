@@ -44,6 +44,10 @@ find "$ARCHIVE" -maxdepth 1 -name '*.md' -mtime +7 -delete 2>/dev/null || true
 stem="$(basename "$handoff" .md)"
 archived="$ARCHIVE/$stem-$(date -u +%Y-%m-%dT%H-%M-%SZ).md"
 mv "$handoff" "$archived" 2>/dev/null || exit 0
+# mv preserves mtime, which would age the archive from when /handoff wrote the file:
+# a handoff authored 8 days before the project is next opened would be swept the
+# session after it arrived. Retention counts from archiving.
+touch "$archived" 2>/dev/null || true
 
 body="$(cat "$archived" 2>/dev/null || true)"
 [[ -n "$body" ]] || exit 0

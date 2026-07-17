@@ -22,12 +22,20 @@ export LC_ALL=C
 
 dir="${1:-$PWD}"
 
-root="$(cd "$dir" 2>/dev/null && git rev-parse --show-toplevel 2>/dev/null || true)"
-root="${root:-$dir}"
+# Resolve our own location BEFORE cd'ing anywhere: BASH_SOURCE is relative when the
+# script is invoked by a relative path, and by then $PWD is the project, not here.
+CONFIG_DIR="$(dirname "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)")"
+
+# Fail loudly on an unusable dir instead of printing a plausible path for it: the
+# callers' guard is "prints nothing / non-zero" (the skill then stops and asks the
+# user, the hook exits 0), and an unreachable dir that answered anyway would slip
+# straight past it. pwd -P also normalizes the non-git fallback, so a trailing slash
+# cannot hash differently from the same path without one.
+cd "$dir" 2>/dev/null || exit 1
+root="$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)"
 
 name="$(basename "$root")"
 name="${name//[^a-zA-Z0-9]/-}"
 hash="$(printf '%s' "$root" | sha1sum | cut -c1-8)"
 
-DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-printf '%s/handoffs/%s-%s.md\n' "$(dirname "$DIR")" "$name" "$hash"
+printf '%s/handoffs/%s-%s.md\n' "$CONFIG_DIR" "$name" "$hash"
