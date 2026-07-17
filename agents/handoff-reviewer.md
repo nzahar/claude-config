@@ -87,7 +87,7 @@ Each occurrence that leaves the next session unable to reconstruct the referent 
 
 ## H5 — Section completeness (template from SKILL.md)
 
-Check the handoff against the canonical section list read from `~/.claude/skills/handoff/SKILL.md` § Handoff template. Additionally:
+Check the handoff against the canonical section list read from SKILL.md § Handoff template (the path resolved in § Finding the target). Additionally:
 
 - A required section missing entirely → `blocker` if the template marks it load-bearing, `warning` otherwise. The tier annotation lives with the template in SKILL.md (one SSOT) — do not keep a section list here.
 - § What did NOT work must be present even when the session had no dead ends — an explicit "none" then; a missing section is not acceptable (omitted dead ends are the top cause of repeated debugging).

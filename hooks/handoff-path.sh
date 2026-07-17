@@ -14,6 +14,12 @@
 # archive the original undelivered.
 set -euo pipefail
 
+# The output must be a pure function of the path bytes. Bash's [^a-zA-Z0-9] matches
+# characters under a UTF-8 locale and bytes under C, so "бот-один" sanitizes to 8
+# dashes or 15 depending on ambient locale — and the hook (raw process env) and the
+# skill (Bash tool, initialized from the user's profile) need not share one.
+export LC_ALL=C
+
 dir="${1:-$PWD}"
 
 root="$(cd "$dir" 2>/dev/null && git rev-parse --show-toplevel 2>/dev/null || true)"

@@ -1,7 +1,7 @@
 ---
 name: handoff
 description: "Write a session handoff file so a fresh session can cold-start the current work, and have it reviewed by handoff-reviewer. Invoke when the user types /handoff [fast] [optional focus], or asks to prepare a handoff for a new session (context nearly full, wrapping up with continuation expected). The file is single-use: the SessionStart hook injects it into the next session and consumes it. NOT a commit/push command — it never touches git state."
-trigger: /handoff
+argument-hint: "[fast] [focus]"
 ---
 
 # /handoff — session handoff with review
@@ -20,12 +20,14 @@ You are wrapping the current session's state into a file a fresh session can act
 One file per project. Ask the script — it prints the full path and nothing else:
 
 ```
-"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/handoff-path.sh" "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/handoff-path.sh" <session's working directory>
 ```
 
 Write to exactly the path it printed. **Never construct that path yourself** — not the directory, not the filename. The hook that injects the handoff calls this same script; a path that differs by one character means the hook looks where nothing was written and silently injects nothing, and the whole feature no-ops with no signal to anyone.
 
-Pass the project root explicitly, as above: with no argument the script falls back to the Bash tool's `$PWD`, which persists across calls and may sit in a different repository than the session.
+Pass the session's working directory — the one named in your environment context — as a literal absolute path. Do **not** substitute `$(pwd)` or `$(git rev-parse --show-toplevel)`: those evaluate in the Bash tool's cwd, which persists across calls and may have been moved into another repository. The hook resolves the path from the session's real cwd, so if the tool's cwd has drifted, a `pwd`-derived path is one the hook will never look at.
+
+If the script prints nothing or fails, **stop and tell the user the handoff path cannot be resolved.** Do not guess a path — a guessed path is a file nothing will ever inject.
 
 The file lives outside the project on purpose — it never reaches the project's git. If the path already exists (a second `/handoff` in one session), **read it first and update it** — carry forward still-valid content, especially What did NOT work. Otherwise the previous handoff is not there to read: the hook consumed it at session start and moved it to `handoffs/_archive/`; its content is already in your context, so carry it forward from there.
 
