@@ -99,16 +99,15 @@ Leave Bash for what `Read`/`Edit`/`Write` cannot do:
 
 Rule of thumb: if a specialised tool exists, use it. Bash is the last resort.
 
-## Long-running sub-agents — always in background
+## Sub-agents — background by default
 
-**Rule by agent list, not by timer.** Make the foreground/background decision per specific agent, not by a "how many seconds" heuristic.
+**The harness already defaults to background**: the `Agent` tool's `run_in_background` is true unless explicitly set to false. A blocked session is therefore always self-inflicted — never a property of the agent.
 
-- **Always background**: `code-reviewer`, `test-writer`, `document-agent`, `experiment-doc-agent`, `Explore` (thorough), `Plan`, `debugger`, `general-purpose` for multi-step tasks. Pre-merge triad (reviewer + test-writer + document-agent) — **always** three parallel background agents in one message.
-- **Foreground acceptable**: short targeted requests (Explore quick, targeted grep via general-purpose) where the result is needed for the next step *immediately*. `plan-reviewer` is typically short too — your call, but if the plan is large, launch in background. `handoff-reviewer` is cheap-checks-only and its report is needed immediately to fix the file — foreground.
+**Do not pass `run_in_background: false`.** Dispatch every agent in the background and keep working; the completion notification returns the result. This holds for short agents too — a "quick" `Explore` or a targeted `general-purpose` grep does not earn a blocked session.
 
-Rule of thumb for agents outside the list: if the expected work is longer than ~30 seconds — background.
+**The only exception**: I explicitly ask for a synchronous run. Nothing else qualifies — not "the result gates the next step" (a background agent returns the same result, and the notification re-invokes the session anyway), not "it takes only a few seconds".
 
-When in doubt — background.
+Independent agents — one message, multiple `Agent` calls, all in background. The pre-merge triad (`code-reviewer` + `test-writer` + `document-agent`) is the canonical case.
 
 ## Task Workflow
 
