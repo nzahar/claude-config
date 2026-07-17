@@ -101,13 +101,15 @@ Rule of thumb: if a specialised tool exists, use it. Bash is the last resort.
 
 ## Sub-agents — background by default
 
-**The harness already defaults to background**: the `Agent` tool's `run_in_background` is true unless explicitly set to false. A blocked session is therefore always self-inflicted — never a property of the agent.
+**The harness already defaults to background** (Claude Code 2.1.198+): the `Agent` tool's `run_in_background` is true unless explicitly set to false. A blocked session is therefore always self-inflicted — never a property of the agent.
 
 **Do not pass `run_in_background: false`.** Dispatch every agent in the background and keep working; the completion notification returns the result. This holds for short agents too — a "quick" `Explore` or a targeted `general-purpose` grep does not earn a blocked session.
 
-**The only exception**: I explicitly ask for a synchronous run. Nothing else qualifies — not "the result gates the next step" (a background agent returns the same result, and the notification re-invokes the session anyway), not "it takes only a few seconds".
+**Dispatch mode and gate semantics are separate axes.** "The result gates the next step" is a valid reason to *wait*; it is never a reason to run *foreground*. Where a rule gates an action on a report — [`rules/workflow.md`](rules/workflow.md) §4.5 pre-execution review, step 4→5 plan review, the pre-merge triad — dispatch in the background and end the turn; the notification re-invokes the session. **"Keep working" means other work, never the gated action.**
 
-Independent agents — one message, multiple `Agent` calls, all in background. The pre-merge triad (`code-reviewer` + `test-writer` + `document-agent`) is the canonical case.
+**The only exception**: I explicitly ask for a synchronous run.
+
+Independent agents — one message, multiple `Agent` calls, all in background. The pre-merge triad (`code-reviewer` + `test-writer` + `document-agent` / `experiment-doc-agent`) is the canonical case; a decomposed doc pass routinely launches more.
 
 ## Task Workflow
 
