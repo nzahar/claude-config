@@ -26,6 +26,12 @@ Rules:
 
 Similarly — when working outside workflow.md (debugging sessions, ad-hoc questions, refactoring without a formal plan), read `docs/CODEMAPS/<area>.md` and relevant ADRs from `docs/ADR/` if the work touches architectural decisions or recorded invariants. For trivial edits (typo, formatting, local bugfix) this is not needed.
 
+## Session Handoff
+
+When I ask for a handoff ("сделай handoff", `/handoff`), invoke the `handoff` skill. It writes one file per project, outside the project so it never reaches its git. The SessionStart hook injects that file into the next session and consumes it in the same move: it is read exactly once, then archived. Do not hand me a prompt to paste into the new session, and never construct the handoff path yourself — it comes from `"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/handoff-path.sh"`, which the hook calls too. Build the path by hand and the hook looks elsewhere and silently injects nothing.
+
+Handoff is not STATE.md and does not replace it. STATE.md is durable, merge-invariant, lives in the repo, and is owned by the documentation agent. A handoff is ephemeral and describes exactly what STATE.md must not: the working tree right now — uncommitted changes, dead ends hit this session, the next concrete step. Point to STATE.md from a handoff; never copy it in. When an injected handoff contradicts STATE.md or the branch plan, the handoff wins on working-tree facts (what is uncommitted, what just broke) and STATE.md wins on trajectory (what is blocked, what is planned next) — and I outrank both.
+
 ## Verification Before Claims
 
 **No completion claim without fresh verification evidence in the current message.**
@@ -98,7 +104,7 @@ Rule of thumb: if a specialised tool exists, use it. Bash is the last resort.
 **Rule by agent list, not by timer.** Make the foreground/background decision per specific agent, not by a "how many seconds" heuristic.
 
 - **Always background**: `code-reviewer`, `test-writer`, `document-agent`, `experiment-doc-agent`, `Explore` (thorough), `Plan`, `debugger`, `general-purpose` for multi-step tasks. Pre-merge triad (reviewer + test-writer + document-agent) — **always** three parallel background agents in one message.
-- **Foreground acceptable**: short targeted requests (Explore quick, targeted grep via general-purpose) where the result is needed for the next step *immediately*. `plan-reviewer` is typically short too — your call, but if the plan is large, launch in background.
+- **Foreground acceptable**: short targeted requests (Explore quick, targeted grep via general-purpose) where the result is needed for the next step *immediately*. `plan-reviewer` is typically short too — your call, but if the plan is large, launch in background. `handoff-reviewer` is cheap-checks-only and its report is needed immediately to fix the file — foreground.
 
 Rule of thumb for agents outside the list: if the expected work is longer than ~30 seconds — background.
 
@@ -114,7 +120,7 @@ Sub-agents run in isolated fresh contexts. The unit of review is the **branch** 
 
 ### Agent modes
 
-`plan-reviewer` and `code-reviewer` take `mode: engineering | research` in the invocation prompt. Selection: project's `default_agent_mode` (if declared) → structural inference (active `notebooks/<...>/*.ipynb` without `src/` → research; else engineering) → per-branch override (pass explicitly). If a project declares `default_agent_mode: research` and the call lacks `mode:` with no engineering override, the agent errors out — no silent fallback. Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`) have no modes; `experiment-doc-agent` is research-only.
+`plan-reviewer` and `code-reviewer` take `mode: engineering | research` in the invocation prompt. Selection: project's `default_agent_mode` (if declared) → structural inference (active `notebooks/<...>/*.ipynb` without `src/` → research; else engineering) → per-branch override (pass explicitly). If a project declares `default_agent_mode: research` and the call lacks `mode:` with no engineering override, the agent errors out — no silent fallback. Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`, `handoff-reviewer`) have no modes; `experiment-doc-agent` is research-only.
 
 ### Project-level `state_owner`
 
