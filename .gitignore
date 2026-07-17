@@ -23,6 +23,7 @@ docs/
 handoffs/
 plugins/
 downloads/
+uploads/
 settings.local.json
 security_warnings_state_*.json
 *.bak
