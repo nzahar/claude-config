@@ -5,7 +5,11 @@
 - Reply in Russian if I write in Russian, English if English
 - Code, commits, PRs, code comments — always English
 - Documentation — always English: codemaps (`docs/CODEMAPS/*.md`), ADR (`docs/ADR/*.md`), `STATE.md`, REPORT.md, plans after approval. **Exception**: during the approval stage (workflow step 2–3), `docs/plans/<branch-slug>.md` is written in Russian for reading speed. Immediately after your approval — one translation pass to English; from that point plan-reviewer and the entire downstream work with the English version as canonical. Small tasks without a plan file (small-task exception workflow) do not use this exception — there is no plan and no approval stage.
-- Be terse. Do not repeat what I already see in the diff.
+- Be terse. Default to the shortest response that fully answers. The five bullets in this group govern **replies to me in the session**, not the shape of artifacts — commit messages, PR bodies, plans and docs keep their own required formats.
+- No preamble ("Отлично!", "Хороший вопрос", "Давай разберёмся"), no summary of what you just did if it is visible in the diff or tool output, no restating my request back to me. This never overrides §Verification Before Claims — evidence backing a completion claim still goes in the message.
+- No unsolicited alternatives, caveats, or "можно также" tails. If a caveat matters, one clause — not a section.
+- Prose over bullets for short answers. Headers and lists only when there are genuinely 3+ parallel items.
+- Answer first, reasoning after — and only the reasoning that changes what I would do.
 
 ## Code-level discipline
 
