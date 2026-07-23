@@ -20,7 +20,7 @@ For any non-trivial task, follow this sequence strictly:
 
 **Dispatch prompt must contain:** the plan file path; the exact file list the agent may write (write scope); the required report format (changed files; commands run, with output); a prohibition on §4.5 trigger-list operations. The prohibition is a backstop layered on the no-interactive-iteration criterion — a slice that inherently needs a §4.5 operation self-excludes from delegation; it is not an expected mid-flight path.
 
-**Verification:** the agent runs its slice-level tests and includes the output in its report. The full suite, cross-slice seams, and any completion claim stay with the main session — an agent's report is second-hand evidence under CLAUDE.md §Verification Before Claims.
+**Verification:** the agent runs its slice-level tests and includes the output in its report. The agent does not commit — it leaves changes for the main session to commit (worktree slices included). The full suite, cross-slice seams, and any completion claim stay with the main session — an agent's report is second-hand evidence under CLAUDE.md §Verification Before Claims.
 
 **Exception to "no loop" — framework / governance changes** (applies to step 4 plan-reviewer **and** any reviewer cycle whose artifact is a framework document, including `code-reviewer` on a rules/agents diff). When the change under review is itself an edit to a framework / governance document, iterate review→revise with the reviewer until APPROVED with no blockers or warnings (nits OK to ship).
 
