@@ -1,11 +1,35 @@
 ## Task Workflow — Spec → Plan → Review → Code
 
-For any non-trivial task, follow this sequence strictly:
+Every task starts with track selection at intake. The numbered sequence below is the **full track**; tasks that pass the intake tests run on the **light track** instead.
+
+**Track selection (intake).** Two tests:
+
+- **Diff enumerability** — before starting, write out the files to be changed and one line per file on what changes. If the list cannot be enumerated confidently, the task is not small → full track.
+- **Blast radius** — a §4.5-trigger operation is expected, an irreversible write, a file in any ADR's Scope, or a public contract/schema change → full track regardless of diff size.
+
+Both tests pass → light track. When in doubt → light track: the cost of a false "small" is bounded by the tripwires below.
+
+**Light track.** Start with a declaration: one sentence of approach + the enumerated file list. Work starts immediately after publishing it — no waiting for confirmation; the user sees the declaration and can interrupt. The file list is the baseline for tripwire (b).
+
+Tripwires — any one fires → mandatory escalation to the full track:
+
+- (a) the first fix attempt failed;
+- (b) a file outside the declared list is needed;
+- (c) a fork surfaced that would have to be recorded in a plan;
+- (d) a file in some ADR's Scope was touched, missed at intake.
+
+The ratchet is one-way: light → full at any moment; full → light mid-task — never. Escalation keeps the working tree: write a plan for the remaining work, recording decisions already made, then continue on the full track from step 2.
+
+End of a light-track task: commit, then auto-dispatch the pre-merge triad in the background (`code-reviewer` + `test-writer` + `document-agent` / `experiment-doc-agent` per `state_owner`, usual decomposition per CLAUDE.md §Pre-merge triad). It does not block commit-push; its results must arrive and be triaged before merge.
+
+Unchanged on the light track: §4.5 pre-execution review, Verification Before Claims, PR/merge gates, conventional commits, one branch per feature. Tripwires and §4.5 are orthogonal axes: a §4.5 trigger fires the one-shot operation review, not a track switch. Exploratory notebook work fails the enumerability test ("try and see" is not enumerable) and follows the existing rules — no separate research variant.
+
+**Full track:**
 
 1. **Agree on the spec** — clarify requirements, constraints, edge cases with the user before planning
 2. **Write a visible implementation plan** — markdown file at `docs/plans/<branch-slug>.md` (where `<branch-slug>` is the branch name without the `feature/` or `fix/` prefix). The user can read and edit it; commit it to the repo so the user owns it. Before drafting: identify which modules/areas the work touches, then read `docs/CODEMAPS/<area>.md` for each (focus on meaning-layer blocks) and any ADR in `docs/ADR/` whose Scope covers the affected paths. The plan must reference relevant ADRs explicitly ("respects ADR-NNNN", "supersedes ADR-MMMM"), acknowledge invariants from meaning-layer blocks, and — if the work conflicts with an existing ADR — propose a superseding ADR rather than ignoring the existing one
 3. **Get explicit user approval** — wait for the user to confirm the plan before going further
-4. **Run `plan-reviewer` on the plan** — seven-dimension review (requirement coverage, task completeness, dependency correctness, schema/infra drift, ADR/CODEMAPS compliance, verification plan, documentation economy). The agent returns blockers and warnings; show them to the user. The user (with main session help if needed) decides what to fix. **A report with blockers never authorizes implementation. Fix them and run another round within the cap that applies; if the cap is exhausted with blockers still open, take one of that branch's scrap exits — which per "Counting" means `/clear` + cold-start — never implementation.** Hard cap: 2 reviewer invocations on the same draft for non-framework plans. After round 2 either accept-warnings or scrap-and-rewrite — never invoke for round 3 on the same draft. Skip this step only for small tasks (see exception below)
+4. **Run `plan-reviewer` on the plan** — seven-dimension review (requirement coverage, task completeness, dependency correctness, schema/infra drift, ADR/CODEMAPS compliance, verification plan, documentation economy). The agent returns blockers and warnings; show them to the user. The user (with main session help if needed) decides what to fix. **A report with blockers never authorizes implementation. Fix them and run another round within the cap that applies; if the cap is exhausted with blockers still open, take one of that branch's scrap exits — which per "Counting" means `/clear` + cold-start — never implementation.** Hard cap: 2 reviewer invocations on the same draft for non-framework plans. After round 2 either accept-warnings or scrap-and-rewrite — never invoke for round 3 on the same draft. Skip this step only on the light track (no plan file exists)
 5. **Implement step by step** — one logical chunk at a time, not a big-bang generation. With an approved plan, delegating delegable slices to background subagents is the default — criteria and contract in **Slice delegation** below
 
 **Slice delegation (step 5 default).** With an approved plan on file, decompose the work into vertical slices; a slice is dispatched to a background subagent by default when it passes all three criteria:
@@ -57,15 +81,13 @@ For any non-trivial task, follow this sequence strictly:
 
 **Re-running the same code.** A re-run is exempt if `code-reviewer` already APPROVED this code path on this branch and nothing relevant changed since (query, schema, parameters, dataset, dependency versions, environment variables affecting code path). The pre-merge triad catches later drift. Verification commands that themselves match a trigger (e.g. `alembic upgrade head` against remote DB) are **not** exempt — review first, then run.
 
-**Escape valve.** The user may explicitly override ("skip review, trivial") only for "long-running" and "external read of free/internal resources" categories. **Not applicable to** irreversible writes (DDL/DML on shared/prod, mass deletes, artifact uploads) or metered/paid budgets (rate-limited paid API, GPU-hour billing). **For small tasks without a plan file**, override applies only to the "long-running" category — external reads still require review.
+**Escape valve.** The user may explicitly override ("skip review, trivial") only for "long-running" and "external read of free/internal resources" categories. **Not applicable to** irreversible writes (DDL/DML on shared/prod, mass deletes, artifact uploads) or metered/paid budgets (rate-limited paid API, GPU-hour billing). **For light-track tasks**, override applies only to the "long-running" category — external reads still require review.
 
 **Mode selection.** Invoke `code-reviewer mode: research` if the code is an experiment notebook or training/eval pipeline (file uses `model.fit`, `optimizer.step`, `Trainer`, `--epochs`, or similar), regardless of project-level `default_agent_mode`. Otherwise invoke in default (engineering) mode.
 
 One report, then decide — §4.5 is one-shot per code path, not a 2-round mini-loop.
 
-For small tasks where a full plan would be overkill: state the approach in one sentence and confirm before coding. Steps 2 and 4 do not apply — there is no plan file to review. Step 4.5 still applies if the small task will perform any of the triggering operations above.
-
-Never jump straight to code.
+Never start code before the intake declaration (light track) or an approved plan that has cleared plan review (full track).
 
 ## Discipline within long design sessions
 
@@ -73,7 +95,7 @@ Long design sessions (multi-iteration plan-review, ADR drafting, multi-question 
 
 | # | Trigger | Action |
 |---|---|---|
-| 1. **Sub-plan = source of truth** | User confirms a design decision (`ok`, `согласен`, `accepted`, equivalent) on something that belongs in the plan, **and a plan file exists for the current branch** | **Immediately** Edit `docs/plans/<branch-slug>.md` to record the decision, before continuing the conversation. Do not "remember and continue" — written plan is durable, conversation is transient. For small tasks without a plan file (per the small-task exception above) this rule does not fire — do not create a plan file just to satisfy it |
+| 1. **Sub-plan = source of truth** | User confirms a design decision (`ok`, `согласен`, `accepted`, equivalent) on something that belongs in the plan, **and a plan file exists for the current branch** | **Immediately** Edit `docs/plans/<branch-slug>.md` to record the decision, before continuing the conversation. Do not "remember and continue" — written plan is durable, conversation is transient. On the light track this rule does not fire — a decision that would need recording in a plan is tripwire (c) and escalates to the full track |
 | 2. **Re-grounding at session start** | Start of any session in a git repo | Extends `CLAUDE.md` §"Project State Awareness" — in addition to `docs/STATE.md`, also read the current branch's plan file at `docs/plans/<branch-slug>.md` if it exists. The base rule's trivial-edits exception and the scope-known ADR/CODEMAPS rule continue to apply |
 | 3. **Discard alternatives in plan** | Editing a plan file, writing a decision section | Plan: **only the current decision**, zero rejected alternatives. ADR: brief mention of rejected approach (risk + revisit trigger), not a parallel implementation. If a rejected option is load-bearing enough to need long-form description — that goes into a future superseding ADR at the moment of revisit, not as preemptive bloat in the current ADR |
 | 4. **No branching across two substantive design questions** | User asks Q2 of design-substantive level (requires reasoning + plan record) while Q1 of the same level is unanswered | Close Q1 first by recording in plan, then move to Q2. **Short factual / clarification / yes-no questions batch as usual** — this rule is about parallel design-state, not about being terse |
@@ -82,7 +104,7 @@ Long design sessions (multi-iteration plan-review, ADR drafting, multi-question 
 
 **Session boundaries at phase transitions.** When the plan file marks a phase as done and the next phase is structurally different (design → implementation, implementation → synthesis, design → ADR write-up), suggest the user start a fresh session.
 
-These rules apply project-agnostically to any non-trivial task following the spec → plan → review → code workflow above.
+These rules apply project-agnostically to any full-track task following the spec → plan → review → code workflow above.
 
 ## Documentation economy
 

@@ -4,7 +4,7 @@
 
 - Reply in Russian if I write in Russian, English if English
 - Code, commits, PRs, code comments — always English
-- Documentation — always English: codemaps (`docs/CODEMAPS/*.md`), ADR (`docs/ADR/*.md`), `STATE.md`, REPORT.md, plans after approval. **Exception**: during the approval stage (workflow step 2–3), `docs/plans/<branch-slug>.md` is written in Russian for reading speed. Immediately after your approval — one translation pass to English; from that point plan-reviewer and the entire downstream work with the English version as canonical. Small tasks without a plan file (small-task exception workflow) do not use this exception — there is no plan and no approval stage.
+- Documentation — always English: codemaps (`docs/CODEMAPS/*.md`), ADR (`docs/ADR/*.md`), `STATE.md`, REPORT.md, plans after approval. **Exception**: during the approval stage (workflow step 2–3), `docs/plans/<branch-slug>.md` is written in Russian for reading speed. Immediately after your approval — one translation pass to English; from that point plan-reviewer and the entire downstream work with the English version as canonical. Light-track tasks do not use this exception — there is no plan and no approval stage.
 - Be terse. Default to the shortest response that fully answers. This bullet and the four below govern **replies to me in the session**, not the shape of artifacts — commit messages, PR bodies, plans, docs and sub-agent report formats keep their own required formats.
 - No preamble ("Отлично!", "Хороший вопрос", "Давай разберёмся"), no recap of edits you just made when they are visible in the diff, no restating my request back to me. This never overrides §Verification Before Claims — evidence backing a completion claim still goes in the message.
 - No unsolicited alternatives, caveats, or "можно также" tails. If a caveat matters, one clause — not a section.
@@ -68,7 +68,7 @@ If the verification reveals failure — report the failure, do not paper over it
 
 Putting a decision back on the user — via `AskUserQuestion` or plain-text "which should I do?" — is legitimate for exactly these: a preference, a priority trade-off, an external constraint you cannot derive, scope ambiguity that changes *what gets built*, or sign-off before an irreversible / outward-facing action. Nothing else.
 
-This governs choosing among design / methodology **options**. It does **not** touch `workflow.md`'s mandatory gates — spec clarification (step 1) and plan approval before coding (step 3) are always required and are never suppressed by this rule.
+This governs choosing among design / methodology **options**. It does **not** touch `workflow.md`'s mandatory gates — on the full track, spec clarification (step 1) and plan approval before coding (step 3); on the light track, publishing the intake declaration before coding. These are always required and are never suppressed by this rule.
 
 Before asking, run this gate. If any branch resolves it, **do not ask** — act:
 
@@ -133,13 +133,13 @@ Project's `CLAUDE.md` may declare `state_owner: document-agent | experiment-doc-
 
 ### Plan review (`plan-reviewer`)
 
-Trigger — step 4 of `workflow.md`, after the user approves the plan, before any code is written. Mandatory for non-trivial tasks with a plan file at `docs/plans/<branch-slug>.md`. **No loop with the agent** — one report per round, the user decides what to fix. Blockers are the exception: fix them and run another round (subject to the round cap that applies — see `workflow.md` step 4), since only a blocker-free report authorizes implementation. **Exception** for framework / governance changes (`rules/`, `CLAUDE.md`, `agents/`, ADRs auto-load every session; `commands/` and `skills/*` excluding `learned/` on contract changes only): iterate review→revise until clean (nits OK). See `rules/workflow.md` "Exception to \"no loop\"". The agent finds the plan automatically from the branch — pass an explicit path only if it lives elsewhere. Do not invoke for one-sentence "plans", mid-implementation, or replanning.
+Trigger — step 4 of `workflow.md`, after the user approves the plan, before any code is written. Mandatory for full-track tasks with a plan file at `docs/plans/<branch-slug>.md`. **No loop with the agent** — one report per round, the user decides what to fix. Blockers are the exception: fix them and run another round (subject to the round cap that applies — see `workflow.md` step 4), since only a blocker-free report authorizes implementation. **Exception** for framework / governance changes (`rules/`, `CLAUDE.md`, `agents/`, ADRs auto-load every session; `commands/` and `skills/*` excluding `learned/` on contract changes only): iterate review→revise until clean (nits OK). See `rules/workflow.md` "Exception to \"no loop\"". The agent finds the plan automatically from the branch — pass an explicit path only if it lives elsewhere. Do not invoke for light-track declarations, mid-implementation, or replanning.
 
 ### Pre-merge triad (`test-writer` + `code-reviewer` + `document-agent` or `experiment-doc-agent`)
 
 **Scope.** Branch-level gate before merge. Does **not** cover operation-level pre-execution review (`workflow.md` §4.5, auto-detected per-operation). Both gates can fire on the same branch — §4.5 keeps gating operations launched while preparing for merge.
 
-**Trigger — signal from the user**, not auto-detection. Triggers: explicit ("ready to merge", "готовлю к мержу", "прогони проверки"), implicit (the user requests one triad agent but not the others — ask whether to run all three), or `/merge-pr` without prior checks (pause, confirm).
+**Trigger — track-dependent.** Full track: **signal from the user**, not auto-detection — explicit ("ready to merge", "готовлю к мержу", "прогони проверки"), implicit (the user requests one triad agent but not the others — ask whether to run all three), or `/merge-pr` without prior checks (pause, confirm). Light track: auto-dispatch on work completion, after committing (see `rules/workflow.md` Light track).
 
 Run all agents in **parallel** in one message — disjoint write targets, no conflicts.
 
