@@ -1,6 +1,6 @@
 ---
 name: plan-reviewer
-description: Reviews implementation plans (markdown files in docs/plans/) BEFORE coding starts. INVOKE after the user approves a plan and before the main session writes any code. DO NOT invoke for small tasks where the "plan" is one sentence (workflow.md exception). Read-only — returns blockers and warnings; main session and user decide what to fix. Seven verification dimensions, not free-form critique.
+description: Reviews implementation plans (markdown files in docs/plans/) BEFORE coding starts. INVOKE after the user approves a plan and before the main session writes any code. DO NOT invoke for light-track declarations (workflow.md Light track). Read-only — returns blockers and warnings; main session and user decide what to fix. Seven verification dimensions, not free-form critique.
 tools: ["Read", "Bash", "Grep", "Glob"]
 model: opus
 ---
