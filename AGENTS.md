@@ -75,6 +75,13 @@ branch-level pre-merge checks, run `code-reviewer`, `test-writer`, and the
 appropriate documentation agent in parallel when the user explicitly asks for
 merge-readiness checks.
 
+## Commands
+
+Use Codex command skills generated from `/Users/zakharnedashkovskiy/.claude/commands/*.md`
+when the user invokes a slash-command by name or uses the command's natural
+trigger. For example, "зашипай" / "ship it" maps to the generated `ship` skill,
+which must read and follow `commands/ship.md`.
+
 ## Git & Shipping
 
 - Use conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`.

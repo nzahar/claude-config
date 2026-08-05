@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CODEX_HOME = Path.home() / ".codex"
 LOCAL_CODEX_DIR = ROOT / ".codex"
 LOCAL_AGENT_DIR = LOCAL_CODEX_DIR / "agents"
+LOCAL_COMMAND_SKILL_DIR = LOCAL_CODEX_DIR / "skills" / "commands"
 
 MANAGED_BEGIN = "# BEGIN managed by ~/.claude/scripts/sync-codex.py"
 MANAGED_END = "# END managed by ~/.claude/scripts/sync-codex.py"
@@ -81,8 +82,58 @@ def generate_agent_wrappers(dry_run: bool) -> list[tuple[str, str, Path, bool]]:
     return generated
 
 
+def command_description(source: Path, text: str) -> str:
+    meta = parse_frontmatter(text)
+    if "description" in meta:
+        return meta["description"]
+    first_line = next((line.strip() for line in text.splitlines() if line.strip()), "")
+    fallback = first_line.rstrip(".") if first_line else f"Run the {source.stem} workflow"
+    aliases = {
+        "commit-push": "Use when the user asks to commit and push, invokes /commit-push, or says commit-push.",
+        "learn": "Use when the user invokes /learn or asks to save a reusable learned pattern from the session.",
+        "merge-pr": "Use when the user invokes /merge-pr, asks to merge a PR, or gives a PR number to merge.",
+        "ship": "Use when the user invokes /ship, says ship, шипай, зашипай, or asks to commit, open a PR, and merge immediately.",
+    }
+    return aliases.get(source.stem, fallback)
+
+
+def generate_command_skill_wrappers(dry_run: bool) -> list[tuple[str, str, Path, bool]]:
+    generated: list[tuple[str, str, Path, bool]] = []
+    for source in sorted((ROOT / "commands").glob("*.md")):
+        text = read_text(source)
+        name = source.stem
+        description = command_description(source, text)
+        target = LOCAL_COMMAND_SKILL_DIR / name / "SKILL.md"
+        content = "\n".join(
+            [
+                "---",
+                f"name: {name}",
+                f"description: {description}",
+                "---",
+                "",
+                f"# {name}",
+                "",
+                f"This is the Codex adapter for `{source}`.",
+                "",
+                "When this skill is selected:",
+                "",
+                f"1. Read `{source}` completely before taking action.",
+                "2. Treat the user's text after the command name as `$ARGUMENTS`.",
+                "3. Follow the command contract as the source of truth.",
+                "4. Treat Claude-specific tool names as intent and use the closest available Codex tools.",
+                "5. If the command asks for a capability that is unavailable in Codex, stop and report the missing capability instead of reconstructing a weaker workflow silently.",
+                "",
+            ]
+        )
+        changed = write_if_changed(target, content, dry_run)
+        generated.append((name, description, target.parent, changed))
+    return generated
+
+
 def skill_dirs() -> list[Path]:
-    return sorted(path.parent for path in (ROOT / "skills").glob("*/SKILL.md"))
+    framework_skills = [path.parent for path in (ROOT / "skills").glob("*/SKILL.md")]
+    command_skills = [path.parent for path in LOCAL_COMMAND_SKILL_DIR.glob("*/SKILL.md")]
+    return sorted(framework_skills + command_skills)
 
 
 def managed_config_block(agents: list[tuple[str, str, Path, bool]]) -> str:
@@ -142,11 +193,15 @@ def main() -> int:
 
     dry_run = args.check
     agents = generate_agent_wrappers(dry_run=dry_run)
+    command_skills = generate_command_skill_wrappers(dry_run=dry_run)
     changed: list[str] = []
 
     for _, _, path, did_change in agents:
         if did_change:
             changed.append(str(path))
+    for _, _, path, did_change in command_skills:
+        if did_change:
+            changed.append(str(path / "SKILL.md"))
 
     if args.install:
         if install_global_agents(dry_run=dry_run):
@@ -161,6 +216,7 @@ def main() -> int:
 
     print(f"agents: {len(agents)}")
     print(f"skills: {len(skill_dirs())}")
+    print(f"command skills: {len(command_skills)}")
     if args.install:
         verb = "checked" if args.check else "installed"
         print(f"{verb}: {CODEX_HOME / 'AGENTS.md'}")
