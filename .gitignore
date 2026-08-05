@@ -34,3 +34,4 @@ jobs/
 chrome/
 claude-statusbar.json
 .last-update-result.json
+.claude/

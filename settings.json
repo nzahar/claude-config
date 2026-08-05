@@ -36,5 +36,6 @@
   "skipWorkflowUsageWarning": true,
   "theme": "dark-daltonized",
   "remoteControlAtStartup": true,
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "model": "opus[1m]"
 }
