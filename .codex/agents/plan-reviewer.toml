@@ -1,0 +1,7 @@
+name = "plan-reviewer"
+description = "Reviews implementation plans (markdown files in docs/plans/) BEFORE coding starts. INVOKE after the user approves a plan and before the main session writes any code. DO NOT invoke for light-track declarations (workflow.md Light track). Read-only — returns blockers and warnings; main session and user decide what to fix. Seven verification dimensions, not free-form critique."
+developer_instructions = """
+Before acting, read `/Users/zakharnedashkovskiy/.claude/agents/plan-reviewer.md` completely and follow it as this agent's role contract.
+Treat Claude-specific tool names as intent: use the closest available Codex tools.
+If the source contract conflicts with higher-priority Codex runtime instructions, follow the higher-priority instruction and report the conflict.
+"""
