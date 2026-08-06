@@ -9,7 +9,11 @@ from pathlib import Path
 import pytest
 
 SCRIPT_PATH = Path(__file__).resolve().parents[1] / "skills" / "learned" / "_gen-index.sh"
-BASH = "/bin/bash"
+
+requires_index_tools = pytest.mark.skipif(
+    shutil.which("jq") is None or shutil.which("awk") is None,
+    reason="without jq/awk the hook correctly emits nothing; there is no index to assert on",
+)
 
 
 def _make_learned_dir(tmp_path: Path) -> Path:
@@ -32,7 +36,7 @@ def _run(d: Path, path: str | None = None) -> subprocess.CompletedProcess[str]:
     if path is not None:
         env["PATH"] = path
     return subprocess.run(
-        [BASH, str(d / "_gen-index.sh")],
+        [str(d / "_gen-index.sh")],
         capture_output=True,
         text=True,
         env=env,
@@ -43,7 +47,7 @@ def _minimal_path(tmp_path: Path, tools: list[str]) -> str:
     bin_dir = tmp_path / "minbin"
     bin_dir.mkdir(exist_ok=True)
     for name in tools:
-        src = shutil.which(name, path="/usr/bin:/bin")
+        src = shutil.which(name)
         assert src is not None, f"required tool {name} not found on this system"
         link = bin_dir / name
         if not link.exists():
@@ -81,6 +85,7 @@ description: Native skill entry point, not a note
 
 
 class TestGenIndex:
+    @requires_index_tools
     def test_generates_index_json_for_note_with_frontmatter(self, tmp_path):
         d = _make_learned_dir(tmp_path)
         _write_note(d, "my-note.md", NOTE_WITH_FRONTMATTER)
@@ -95,6 +100,7 @@ class TestGenIndex:
         assert "A note about something useful" in ctx
         assert "learned/my-note.md" in ctx
 
+    @requires_index_tools
     def test_excludes_skill_md_from_index(self, tmp_path):
         d = _make_learned_dir(tmp_path)
         _write_note(d, "SKILL.md", SKILL_MD)
@@ -129,7 +135,7 @@ class TestGenIndex:
     def test_missing_jq_degrades_silently(self, tmp_path):
         d = _make_learned_dir(tmp_path)
         _write_note(d, "my-note.md", NOTE_WITH_FRONTMATTER)
-        path = _minimal_path(tmp_path, ["awk", "dirname", "basename"])
+        path = _minimal_path(tmp_path, ["bash", "awk", "dirname", "basename"])
 
         result = _run(d, path=path)
 
@@ -139,13 +145,14 @@ class TestGenIndex:
     def test_missing_awk_degrades_silently(self, tmp_path):
         d = _make_learned_dir(tmp_path)
         _write_note(d, "my-note.md", NOTE_WITH_FRONTMATTER)
-        path = _minimal_path(tmp_path, ["jq", "dirname", "basename"])
+        path = _minimal_path(tmp_path, ["bash", "jq", "dirname", "basename"])
 
         result = _run(d, path=path)
 
         assert result.returncode == 0
         assert result.stdout == ""
 
+    @requires_index_tools
     def test_note_without_frontmatter_falls_back_to_filename(self, tmp_path):
         d = _make_learned_dir(tmp_path)
         _write_note(d, "unnamed-note.md", NOTE_WITHOUT_FRONTMATTER)
@@ -155,9 +162,10 @@ class TestGenIndex:
         assert result.returncode == 0
         payload = json.loads(result.stdout)
         ctx = payload["hookSpecificOutput"]["additionalContext"]
-        assert "unnamed-note.md" in ctx
+        assert "**unnamed-note.md**" in ctx
         assert "(no description)" in ctx
 
+    @requires_index_tools
     def test_note_missing_description_uses_placeholder(self, tmp_path):
         d = _make_learned_dir(tmp_path)
         _write_note(d, "no-desc.md", NOTE_WITHOUT_DESCRIPTION)
@@ -170,6 +178,7 @@ class TestGenIndex:
         assert "No Description Note" in ctx
         assert "(no description)" in ctx
 
+    @requires_index_tools
     def test_output_is_valid_json_regardless_of_note_content(self, tmp_path):
         d = _make_learned_dir(tmp_path)
         _write_note(d, "tricky.md", '---\nname: "Quotes & \\"stuff\\""\ndescription: has, commas; and | pipes\n---\n')

@@ -2,7 +2,8 @@
 # SessionStart hook: inject an index of /learn-distilled skill notes so they are
 # discoverable in every session. The individual notes live as flat *.md files here
 # and are NOT picked up by the native skill loader (that needs <name>/SKILL.md), so
-# this hook is the only mechanism that surfaces them.
+# this hook is the only always-on mechanism that surfaces them (SKILL.md's keyword
+# search is the on-demand one).
 #
 # SKILL.md is the folder's native skill entry point (added for the Codex adapter;
 # Claude Code's personal-skill loader picks it up too), not a note — excluded here

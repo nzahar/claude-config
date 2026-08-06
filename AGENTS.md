@@ -89,7 +89,7 @@ which must read and follow `commands/ship.md`.
 - `git commit`, `git push` to a feature branch, and `docker push` are part of the normal implementation flow and do not need an explicit request.
 - Never open a PR or merge to `main` without an explicit user request. This covers `gh pr create`, `gh pr merge`, and their MCP analogs `mcp__github__create_pull_request` and `mcp__github__merge_pull_request`. Do not self-invoke the `ship` or `merge-pr` command skills either — the user invoking one is itself the explicit request.
 - Trigger words that authorize the PR/merge phase: «/ship» / «шипай», «/merge-pr <N>», «merge», «мерж(и)», «открой PR» / «open PR», «создай PR» / «create PR».
-- Ambiguous instructions ("сделай", "имплементируй", "продолжай", "implement", "continue") authorize commit and push, never PR or merge.
+- Ambiguous instructions ("сделай", "имплементируй", "продолжай", "do", "implement", "continue") authorize commit and push, never PR or merge.
 
 ## Stack Preferences
 
