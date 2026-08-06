@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # SessionStart hook: inject an index of /learn-distilled skill notes so they are
-# discoverable in every session. The notes live as flat *.md files here and are
-# NOT picked up by the native skill loader (that needs <name>/SKILL.md), so this
-# hook is the mechanism that makes the learned/ folder actually reach context.
+# discoverable in every session. The individual notes live as flat *.md files here
+# and are NOT picked up by the native skill loader (that needs <name>/SKILL.md), so
+# this hook is the only mechanism that surfaces them.
 #
-# SKILL.md is the native skill entry point for this folder (Codex adapter), not a
-# note, so it is excluded from the index.
+# SKILL.md is the folder's native skill entry point (added for the Codex adapter;
+# Claude Code's personal-skill loader picks it up too), not a note — excluded here
+# so it does not appear in the index as a self-referential pseudo-note.
 #
 # Emits SessionStart additionalContext JSON listing each note's name + description.
 # Exits 0 with no output when jq/awk are unavailable or the folder is empty, so a
