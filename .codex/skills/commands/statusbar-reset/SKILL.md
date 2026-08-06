@@ -5,11 +5,11 @@ description: Wipe the status-bar config back to defaults
 
 # statusbar-reset
 
-This is the Codex adapter for `/Users/zakharnedashkovskiy/.claude/commands/statusbar-reset.md`.
+This is the Codex adapter for `~/.claude/commands/statusbar-reset.md`.
 
 When this skill is selected:
 
-1. Read `/Users/zakharnedashkovskiy/.claude/commands/statusbar-reset.md` completely before taking action.
+1. Read `~/.claude/commands/statusbar-reset.md` completely before taking action.
 2. Treat the user's text after the command name as `$ARGUMENTS`.
 3. Follow the command contract as the source of truth.
 4. Treat Claude-specific tool names as intent and use the closest available Codex tools.

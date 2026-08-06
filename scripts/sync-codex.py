@@ -17,6 +17,7 @@ LOCAL_COMMAND_SKILL_DIR = LOCAL_CODEX_DIR / "skills" / "commands"
 
 MANAGED_BEGIN = "# BEGIN managed by ~/.claude/scripts/sync-codex.py"
 MANAGED_END = "# END managed by ~/.claude/scripts/sync-codex.py"
+FRAMEWORK_REFERENCE_ROOT = Path("~/.claude")
 
 
 def read_text(path: Path) -> str:
@@ -57,6 +58,10 @@ def toml_string(value: str) -> str:
     return f'"{escaped}"'
 
 
+def framework_reference(path: Path) -> str:
+    return str(FRAMEWORK_REFERENCE_ROOT / path.relative_to(ROOT))
+
+
 def generate_agent_wrappers(dry_run: bool) -> list[tuple[str, str, Path, bool]]:
     generated: list[tuple[str, str, Path, bool]] = []
     for source in sorted((ROOT / "agents").glob("*.md")):
@@ -65,12 +70,13 @@ def generate_agent_wrappers(dry_run: bool) -> list[tuple[str, str, Path, bool]]:
         name = meta.get("name", source.stem)
         description = meta.get("description", f"Codex wrapper for {source.name}")
         target = LOCAL_AGENT_DIR / f"{name}.toml"
+        source_reference = framework_reference(source)
         content = "\n".join(
             [
                 f"name = {toml_string(name)}",
                 f"description = {toml_string(description)}",
                 'developer_instructions = """',
-                f"Before acting, read `{source}` completely and follow it as this agent's role contract.",
+                f"Before acting, read `{source_reference}` completely and follow it as this agent's role contract.",
                 "Treat Claude-specific tool names as intent: use the closest available Codex tools.",
                 "If the source contract conflicts with higher-priority Codex runtime instructions, follow the higher-priority instruction and report the conflict.",
                 '"""',
@@ -104,6 +110,7 @@ def generate_command_skill_wrappers(dry_run: bool) -> list[tuple[str, str, Path,
         name = source.stem
         description = command_description(source, text)
         target = LOCAL_COMMAND_SKILL_DIR / name / "SKILL.md"
+        source_reference = framework_reference(source)
         content = "\n".join(
             [
                 "---",
@@ -113,11 +120,11 @@ def generate_command_skill_wrappers(dry_run: bool) -> list[tuple[str, str, Path,
                 "",
                 f"# {name}",
                 "",
-                f"This is the Codex adapter for `{source}`.",
+                f"This is the Codex adapter for `{source_reference}`.",
                 "",
                 "When this skill is selected:",
                 "",
-                f"1. Read `{source}` completely before taking action.",
+                f"1. Read `{source_reference}` completely before taking action.",
                 "2. Treat the user's text after the command name as `$ARGUMENTS`.",
                 "3. Follow the command contract as the source of truth.",
                 "4. Treat Claude-specific tool names as intent and use the closest available Codex tools.",

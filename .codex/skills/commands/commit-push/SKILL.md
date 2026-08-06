@@ -5,11 +5,11 @@ description: Use when the user asks to commit and push, invokes /commit-push, or
 
 # commit-push
 
-This is the Codex adapter for `/Users/zakharnedashkovskiy/.claude/commands/commit-push.md`.
+This is the Codex adapter for `~/.claude/commands/commit-push.md`.
 
 When this skill is selected:
 
-1. Read `/Users/zakharnedashkovskiy/.claude/commands/commit-push.md` completely before taking action.
+1. Read `~/.claude/commands/commit-push.md` completely before taking action.
 2. Treat the user's text after the command name as `$ARGUMENTS`.
 3. Follow the command contract as the source of truth.
 4. Treat Claude-specific tool names as intent and use the closest available Codex tools.

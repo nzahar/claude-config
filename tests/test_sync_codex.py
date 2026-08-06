@@ -91,7 +91,8 @@ class SyncCodexTests(unittest.TestCase):
         status_text = status_skill.read_text(encoding="utf-8")
         self.assertIn("name: ship", ship_text)
         self.assertIn("description: Use when the user invokes /ship, says ship, шипай, зашипай", ship_text)
-        self.assertIn(f"Read `{self.root / 'commands' / 'ship.md'}` completely", ship_text)
+        self.assertIn("Read `~/.claude/commands/ship.md` completely", ship_text)
+        self.assertNotIn(str(self.root), ship_text)
         self.assertIn("description: Show status details", status_text)
         self.assertEqual(
             self.sync_codex.generate_command_skill_wrappers(dry_run=False),
@@ -114,6 +115,19 @@ class SyncCodexTests(unittest.TestCase):
         self.assertEqual(result, 1)
         self.assertIn(f"stale: {expected_skill}", output.getvalue())
         self.assertFalse(expected_skill.exists())
+
+    def test_generate_agent_wrappers_uses_portable_framework_reference(self):
+        (self.root / "agents" / "reviewer.md").write_text(
+            "---\nname: reviewer\ndescription: Review changes\n---\n",
+            encoding="utf-8",
+        )
+
+        self.sync_codex.generate_agent_wrappers(dry_run=False)
+
+        wrapper = self.root / ".codex" / "agents" / "reviewer.toml"
+        text = wrapper.read_text(encoding="utf-8")
+        self.assertIn("read `~/.claude/agents/reviewer.md` completely", text)
+        self.assertNotIn(str(self.root), text)
 
     def test_managed_config_block_includes_generated_command_skill_dirs(self):
         (self.root / "commands" / "ship.md").write_text("Ship it.\n", encoding="utf-8")

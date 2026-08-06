@@ -55,7 +55,7 @@ If verification fails, report the failure instead of claiming completion.
 
 ## Workflow
 
-Use `/Users/zakharnedashkovskiy/.claude/rules/workflow.md` as the canonical task
+Use `~/.claude/rules/workflow.md` as the canonical task
 workflow. For full-track tasks, follow spec -> plan -> review -> code. For
 light-track tasks, publish the one-sentence approach and enumerated file list
 before editing.
@@ -66,7 +66,7 @@ They require reviewer iteration as described in `rules/workflow.md`.
 
 ## Subagents
 
-Use Codex custom agents generated from `/Users/zakharnedashkovskiy/.claude/agents/*.md`
+Use Codex custom agents generated from `~/.claude/agents/*.md`
 when the task matches their role. The Claude contracts remain the source of
 truth; the generated Codex agent files only point Codex at those contracts.
 
@@ -77,7 +77,7 @@ merge-readiness checks.
 
 ## Commands
 
-Use Codex command skills generated from `/Users/zakharnedashkovskiy/.claude/commands/*.md`
+Use Codex command skills generated from `~/.claude/commands/*.md`
 when the user invokes a slash-command by name or uses the command's natural
 trigger. For example, "зашипай" / "ship it" maps to the generated `ship` skill,
 which must read and follow `commands/ship.md`.
