@@ -40,6 +40,7 @@ def _run(d: Path, path: str | None = None) -> subprocess.CompletedProcess[str]:
         capture_output=True,
         text=True,
         env=env,
+        timeout=10,
     )
 
 
@@ -115,6 +116,7 @@ class TestGenIndex:
         assert "learned/SKILL.md" not in ctx
         assert "learned-skill-entry" not in ctx
 
+    @requires_index_tools
     def test_only_skill_md_present_prints_nothing_and_exits_zero(self, tmp_path):
         d = _make_learned_dir(tmp_path)
         _write_note(d, "SKILL.md", SKILL_MD)
