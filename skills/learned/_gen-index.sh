@@ -4,6 +4,9 @@
 # NOT picked up by the native skill loader (that needs <name>/SKILL.md), so this
 # hook is the mechanism that makes the learned/ folder actually reach context.
 #
+# SKILL.md is the native skill entry point for this folder (Codex adapter), not a
+# note, so it is excluded from the index.
+#
 # Emits SessionStart additionalContext JSON listing each note's name + description.
 # Exits 0 with no output when jq/awk are unavailable or the folder is empty, so a
 # tool-less box degrades to "no index" silently instead of erroring every session.
@@ -22,11 +25,14 @@ notes=("$DIR"/*.md)
 index=""
 for f in "${notes[@]}"; do
   base="$(basename "$f")"
+  [[ "$base" == "SKILL.md" ]] && continue
   name="$(awk 'NR==1&&/^---/{f=1;next} f&&/^---/{exit} f&&/^name:/{sub(/^name:[ \t]*/,"");print;exit}' "$f")" || continue
   desc="$(awk 'NR==1&&/^---/{f=1;next} f&&/^---/{exit} f&&/^description:/{sub(/^description:[ \t]*/,"");print;exit}' "$f")"
   [[ -z "$name" ]] && name="$base"
   index+="- **$name** — ${desc:-(no description)}  \`learned/$base\`"$'\n'
 done
+
+[[ -z "$index" ]] && exit 0
 
 context="# Learned skills index (distilled via /learn)
 

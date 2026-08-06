@@ -86,8 +86,9 @@ which must read and follow `commands/ship.md`.
 
 - Use conventional commits: `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`.
 - Use one branch per feature or fix.
-- Never run `git commit`, `git push`, create/open PRs, merge PRs, or push Docker images unless the user explicitly asks.
-- Local implementation does not imply commit, push, PR, or merge permission.
+- `git commit`, `git push` to a feature branch, and `docker push` are part of the normal implementation flow and do not need an explicit request.
+- Never open a PR or merge to `main` without an explicit user request. This covers `gh pr create`, `gh pr merge`, and the `/ship` and `/merge-pr` command skills.
+- Ambiguous instructions ("сделай", "имплементируй", "продолжай", "implement", "continue") authorize commit and push, never PR or merge.
 
 ## Stack Preferences
 
