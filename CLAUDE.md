@@ -139,7 +139,7 @@ Trigger — step 4 of `workflow.md`, after the user approves the plan, before an
 
 **Scope.** Branch-level gate before merge. Does **not** cover operation-level pre-execution review (`workflow.md` §4.5, auto-detected per-operation). Both gates can fire on the same branch — §4.5 keeps gating operations launched while preparing for merge.
 
-**Trigger — track-dependent.** Full track: **signal from the user**, not auto-detection — explicit ("ready to merge", "готовлю к мержу", "прогони проверки"), implicit (the user requests one triad agent but not the others — ask whether to run all three), or `/merge-pr` without prior checks (pause, confirm). Light track: auto-dispatch on work completion, after committing (see `rules/workflow.md` Light track).
+**Trigger — same on both tracks.** Signal from the user, not auto-detection — explicit ("ready to merge", "готовлю к мержу", "прогони проверки"), implicit (the user requests one triad agent but not the others — ask whether to run all three), or `/merge-pr` without prior checks (pause, confirm). Finishing a light-track task is not a trigger — see `rules/workflow.md` Light track.
 
 Run all agents in **parallel** in one message — disjoint write targets, no conflicts.
 

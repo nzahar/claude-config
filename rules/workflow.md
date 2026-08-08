@@ -20,7 +20,7 @@ Tripwires — any one fires → mandatory escalation to the full track:
 
 The ratchet is one-way: light → full at any moment; full → light mid-task — never. Escalation keeps the working tree: write a plan for the remaining work, recording decisions already made, then continue on the full track from step 2.
 
-End of a light-track task: commit, then auto-dispatch the pre-merge triad in the background (`code-reviewer` + `test-writer` + `document-agent` / `experiment-doc-agent` per `state_owner`, usual decomposition per CLAUDE.md §Pre-merge triad). It does not block commit-push; its results must arrive and be triaged before merge.
+End of a light-track task: commit and push. The pre-merge triad is **not** auto-dispatched — a light-track task routinely lands mid-session with no merge in sight, and the triad is a branch-level pre-merge gate, not a task-level one. It fires on the same trigger as on the full track: the one defined in CLAUDE.md §Pre-merge triad.
 
 Unchanged on the light track: §4.5 pre-execution review, Verification Before Claims, PR/merge gates, conventional commits, one branch per feature. Tripwires and §4.5 are orthogonal axes: a §4.5 trigger fires the one-shot operation review, not a track switch. Exploratory notebook work fails the enumerability test ("try and see" is not enumerable) and follows the existing rules — no separate research variant.
 
