@@ -261,11 +261,13 @@ Warnings: <count>
 When the caller states this is round N ≥ 2 on the same draft, the prompt names the previous report (a path, or inline) and lists each R blocker with its fix. Your pass is scoped, not full:
 
 1. **Previous-round I blockers** — for each, judge from the plan text whether it is closed; re-raise it (same class) if not.
-2. **R blockers listed as fixed** — confirm the plan text reflects the stated fix; re-raise as R if it does not. Do not re-derive them from scratch.
+2. **R blockers listed as fixed or declined** — for a fix, confirm the plan text reflects it; re-raise as R if it does not. A declined R is restated once in the report and not re-argued. Do not re-derive them from scratch.
 3. **What the revision broke** — text changed since the previous round: new contradictions, dependencies or gates introduced by the fixes.
 4. **Text the previous report did not reach** — sections or steps the previous report's dimension coverage did not touch (a dimension marked PASS with no evidence of having read that part counts as unreached). Findings there are legitimate; label each "not covered in round N−1" so the caller can tell a new discovery from a re-litigation. Text the previous report did read and passed is not re-opened.
 
-If the prompt names no previous report and no dispositions, say so at the top of the report, run a declared full pass, and mark it "baseline reset" — the caller's cap-exit count restarts from it.
+**Report shape in a scoped round.** Keep the standard structure. A dimension you did not re-run is marked `NOT RE-RUN (round N scope)`, never PASS. Findings from checks 2–4 are filed under the dimension they belong to (a broken gate under Dimension 6, an unlisted file under Dimension 2, and so on) — checks are how you look, dimensions are where findings live.
+
+If the prompt names no previous report and no dispositions, say so at the top of the report, run a declared full pass, and mark it "baseline reset" — the caller's I-count comparison baseline restarts from this round; the round counter does not.
 
 ---
 
