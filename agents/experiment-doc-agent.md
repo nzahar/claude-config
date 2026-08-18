@@ -244,7 +244,7 @@ Be terse. Every section should pay its way. If a section has nothing non-obvious
 
 ## Anti-bloat rules (symmetric with `rules/workflow.md` § Documentation economy)
 
-Per `rules/workflow.md` § Documentation economy, only the subset of D1–D7 that mechanically applies to REPORT.md / domain README / RESEARCH-STATE.md is in scope. The rest are N/A by artifact shape, not by exception:
+Per `rules/workflow.md` § Documentation economy, only the subset of D1–D9 that mechanically applies to REPORT.md / domain README / RESEARCH-STATE.md is in scope. The rest are N/A by artifact shape, not by exception:
 
 - **D1 (inline implementation > 5 lines): N/A.** REPORT.md contract is "never extract code" (Hard rules above). The artifact does not contain implementation code blocks; rule cannot fire.
 - **D2 (plan ↔ ADR-outline duplication): N/A.** REPORT.md has no ADR-outline section.
@@ -254,5 +254,6 @@ Per `rules/workflow.md` § Documentation economy, only the subset of D1–D7 tha
 - **D6 (cross-ref ratio): N/A.** REPORT.md cross-refs to notebooks, sibling REPORT.md, and BACKLOG entries are primary anchoring, not bloat. Symmetric with codemap scope exclusion in workflow.md D6.
 - **D7 (table cell length): applies.** Markdown tables in REPORT.md (e.g. metrics matrices, config snapshots) and in `experiments/<domain>/README.md` (Active/Abandoned tables) follow the ≤ 3 statements per cell rule, plus the ≤ 200-char primary cell budget (D7 in workflow.md). Cells that need more belong in the prose of `## Result` / `## Caveats`, not in the table.
 - **D8 (doc size hard-cap): applies.** REPORT.md is subject to the size-triggered compaction in [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md); the Phase 1 size step above carries the REPORT.md workflow wiring. Compaction never deletes a REPORT.md section.
+- **D9 (risk plausibility): N/A.** Plans only (`docs/plans/*.md`).
 
 The existing **Output budget** section above is the prose-level rule; the points above are the table-level rule. Both stay in effect.
