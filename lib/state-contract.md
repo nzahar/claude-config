@@ -127,7 +127,7 @@ STATE.md is descriptive, not graded. Drift comments use `<!-- DRIFT: ... -->` ma
 Severity vocabularies are **agent-local** and do not transfer across agents. They live in each agent's own output, not in STATE.md:
 
 - `CRITICAL` / `HIGH` / `MEDIUM` / `LOW` / `NEEDS VERIFICATION` — `code-reviewer`, in review reports
-- `blocker` / `warning` — `plan-reviewer`, in plan-review reports
+- `blocker` (class `R` | `I`) / `warning` — `plan-reviewer`, in plan-review reports
 - `TODO` / `WARNING` — `experiment-doc-agent` Phases 1–3, in REPORT.md and the domain README
 - `debugger` has no severity vocabulary by design — findings are root-cause statements, not graded issues
 

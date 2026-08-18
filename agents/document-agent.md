@@ -184,12 +184,13 @@ Wrap in `<!-- MEANING LAYER -->` ... `<!-- /MEANING LAYER -->`. Add footer: `_Me
 
 ### ADR economy (per `rules/workflow.md` § Documentation economy)
 
-When creating ADRs in Phase 2, apply the subset of D1–D7 that fits the artifact:
+When creating ADRs in Phase 2, apply the subset of D1–D9 that fits the artifact:
 
 - **D3 applies.** One ADR = one thematically coherent cluster of decisions. If revisit-triggers for sub-decisions are independent, split into multiple ADRs at creation time rather than writing one omnibus ADR.
 - **D4 applies.** "Alternatives considered" lists only alternatives genuinely weighed. Do not pad with strawman options to look thorough.
 - **D6 applies.** Scope, threshold, and detection (cap value, exclusions, table-row carve-out) are SSOT'd in `rules/workflow.md` D6. Anchoring inside compact `## Decisions` / `## Scope` tables is exempt by that scope rule's table-row carve-out — flagged here only because ADR tables are a common location for ADR-to-ADR pointers.
 - **D7 applies.** Markdown tables inside an ADR (Scope, Decisions matrix, D-debt closures) follow the ≤ 3 statements per cell rule.
+- **D8, D9 — N/A.** D8 caps codemap / REPORT.md size, D9 is plans-only.
 - **D1, D2, D5 — N/A.** These rules are plan-specific (inline implementation, ADR-outline duplication inside a plan, open questions inside a plan's `## Decisions`).
 
 ---
