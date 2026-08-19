@@ -5,18 +5,18 @@
 # rules/*.md, via rulesync), $KIMI_HOME/agents/*.md (agents/*.md, via rulesync,
 # stale files removed), and the symlink $KIMI_HOME/lib -> ~/.claude/lib so the
 # agents' ../lib/ links resolve. Skills need no sync: Kimi reads ~/.claude/skills
-# natively. config.toml is never touched — its two static SessionStart hooks are
-# installed by hand (see CLAUDE.md §Kimi Code).
+# natively. config.toml is never touched. Sync is manual: the user runs /sync-kimi
+# (skills/sync-kimi/SKILL.md) from either CLI, which calls this script.
 #
-# Runs from Kimi's SessionStart hook, so every failure path exits 0 with a line on
-# stderr (same degradation as skills/learned/_gen-index.sh): missing npx, a slow or
-# offline registry, a non-zero rulesync exit. Non-default CLAUDE_CONFIG_DIR is
+# Kept hook-safe anyway — every failure path exits 0 with a line on stderr (same
+# degradation as skills/learned/_gen-index.sh): missing npx, a slow or offline
+# registry, a non-zero rulesync exit. Non-default CLAUDE_CONFIG_DIR is
 # refused rather than half-honoured — rulesync resolves the Claude tree from the
 # home directory regardless, so the symlink and the generated text would point at
 # different trees.
 #
 #   sync-kimi.sh          sync, print what rulesync wrote
-#   sync-kimi.sh --quiet  sync, print nothing on success (hook mode)
+#   sync-kimi.sh --quiet  sync, print nothing on success
 #   sync-kimi.sh --check  render into a temp profile and diff against the live one;
 #                         writes nothing, exits 1 on differences
 set -euo pipefail
