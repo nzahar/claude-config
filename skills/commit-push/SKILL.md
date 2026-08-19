@@ -1,3 +1,8 @@
+---
+name: commit-push
+description: "Commit the current changes and push the branch, nothing more — no PR, no merge, no review agents. Invoke when the user types /commit-push or asks to commit and push (закоммить и запушь). Local mode uses gh/git, cloud mode the GitHub MCP on the single session branch."
+---
+
 Run the following steps:
 
 **Mode detection.** At the very start, determine the mode by the `origin` URL:
@@ -8,7 +13,7 @@ git remote get-url origin | grep -qE '127\.0\.0\.1|localhost|local_proxy' && ech
 
 If the result is `cloud` — we work via the GitHub MCP in the single permitted session branch. If `local` — `gh` CLI and push to any branch. Steps common to both modes appear without a prefix; mode-specific steps are marked **Local:** / **Cloud:**.
 
-**Atomicity.** This command does only commit and push. Review, tests, documentation updates — separate steps before or after. Full policy — `CLAUDE.md` §"Atomicity of commands".
+**Atomicity.** This skill does only commit and push. Review, tests, documentation updates — separate steps before or after. Full policy — `CLAUDE.md` §"Atomicity of action skills".
 
 1. Show `git status` — understand what changed and what is untracked.
 2. Verify there are no secrets among the changed files (.env, credentials, private keys, *.pem). If there are — stop and warn.
@@ -21,4 +26,4 @@ If the result is `cloud` — we work via the GitHub MCP in the single permitted 
    - **Local:** `git push -u origin <branch>`.
    - **Cloud:** `git push -u origin HEAD` (push is allowed only to the current session branch; any other gets 403 from the proxy).
 
-This command stops after push. It does **not** open a Pull Request — that is a separate, explicitly-requested step (`/ship`, or ask to open a PR). See `CLAUDE.md` §Git & Workflow (PR / merge gate).
+This skill stops after push. It does **not** open a Pull Request — that is a separate, explicitly-requested step (`/ship`, or ask to open a PR). See `CLAUDE.md` §Git & Workflow (PR / merge gate).

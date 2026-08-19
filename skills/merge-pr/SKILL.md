@@ -1,3 +1,9 @@
+---
+name: merge-pr
+description: "Merge the pull request with the given number as a squash merge, delete the branch, switch to main and pull. Invoke when the user types /merge-pr <N> or explicitly asks to merge a PR (мержи PR N). Does not run review/test/doc agents — those are separate steps before. Requires an explicit merge request; never invoke on ambiguous wording."
+argument-hint: "<pr-number>"
+---
+
 Find the PR with number $ARGUMENTS and merge it.
 
 **Mode detection.** At the start determine the mode by the `origin` URL:

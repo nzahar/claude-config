@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: "Write a session handoff file so a fresh session can cold-start the current work, and have it reviewed by handoff-reviewer. Invoke when the user types /handoff [fast] [optional focus], or asks to prepare a handoff for a new session (context nearly full, wrapping up with continuation expected). The file is single-use: the SessionStart hook injects it into the next session and consumes it. NOT a commit/push command — it never touches git state."
+description: "Write a session handoff file so a fresh session can cold-start the current work, and have it reviewed by handoff-reviewer. Invoke when the user types /handoff [fast] [optional focus], or asks to prepare a handoff for a new session (context nearly full, wrapping up with continuation expected). The next session reads it explicitly with /pickup-handoff; nothing injects it automatically. NOT a commit/push command — it never touches git state."
 argument-hint: "[fast] [focus]"
 ---
 
@@ -23,13 +23,24 @@ One file per project. Ask the script — it prints the full path and nothing els
 "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/handoff-path.sh" "<session's working directory>"
 ```
 
-Write to exactly the path it printed. **Never construct that path yourself** — not the directory, not the filename. The hook that injects the handoff calls this same script; a path that differs by one character means the hook looks where nothing was written and silently injects nothing, and the whole feature no-ops with no signal to anyone.
+Write to exactly the path it printed. **Never construct that path yourself** — not the directory, not the filename. `/pickup-handoff` calls this same script; a path that differs by one character means the next session looks where nothing was written and reports "no handoff", and the whole feature no-ops.
 
-Pass the session's working directory — the one named in your environment context — as a literal absolute path. Do **not** substitute `$(pwd)` or `$(git rev-parse --show-toplevel)`: those evaluate in the Bash tool's cwd, which persists across calls and may have been moved into another repository. The hook resolves the path from the session's real cwd, so if the tool's cwd has drifted, a `pwd`-derived path is one the hook will never look at.
+Pass the session's working directory — the one named in your environment context — as a literal absolute path. Do **not** substitute `$(pwd)` or `$(git rev-parse --show-toplevel)`: those evaluate in the Bash tool's cwd, which persists across calls and may have been moved into another repository. `/pickup-handoff` resolves the path from the next session's real cwd, so if the tool's cwd has drifted, a `pwd`-derived path is one nobody will ever look at.
 
-If the script prints nothing or fails, **stop and tell the user the handoff path cannot be resolved.** Do not guess a path — a guessed path is a file nothing will ever inject.
+If the script prints nothing or fails, **stop and tell the user the handoff path cannot be resolved.** Do not guess a path — a guessed path is a file nothing will ever read.
 
-The file lives outside the project on purpose — it never reaches the project's git. If the path already exists (a second `/handoff` in one session), **read it first and update it** — carry forward still-valid content, especially What did NOT work. Otherwise the previous handoff is not there to read: the hook consumed it at session start and moved it to `handoffs/_archive/`; its content is already in your context, so carry it forward from there.
+The file lives outside the project on purpose — it never reaches the project's git. One live file per project; history lives in `handoffs/_archive/` and is managed here, at write time — reading (`/pickup-handoff`) never moves or deletes anything.
+
+**If the path already exists**, read it first: carry forward still-valid content, especially What did NOT work. If it was written earlier in this same session, update it in place. If it came from an earlier session (its § Git snapshot predates this session's work), archive it before writing the new one:
+
+```
+ARCHIVE="$(dirname "<path>")/_archive"; mkdir -p "$ARCHIVE"
+archived="$ARCHIVE/$(basename "<path>" .md)-$(date -u +%Y-%m-%dT%H-%M-%SZ).md"
+mv "<path>" "$archived" && touch "$archived"
+find "$ARCHIVE" -maxdepth 1 -name '*.md' -mtime +7 -delete
+```
+
+The `find` is the retention policy: archived handoffs older than 7 days are swept, and this is the only place that sweeps. The `touch` makes retention count from archiving, not from when the old handoff was authored — `mv` preserves mtime, and without it a week-old handoff would be swept the moment it was archived.
 
 ## 3. Collect the git snapshot mechanically
 
@@ -115,8 +126,6 @@ One run, no loop: fix every blocker and warning it returns, then stop. Surface i
 
 Final message (in the user's language): the handoff path, the reviewer verdict (or that review was skipped in `fast` mode), and the uncommitted-work reminder when the tree is dirty.
 
-**Do not hand the user a prompt for the new session** — the SessionStart hook injects the handoff automatically and consumes it, so the next session starts with it already in context. Just say where the file is.
-
-The hook needs `jq`. If `command -v jq` finds nothing, say so plainly: the file is written but nothing will inject it, and the user must read it into the next session themselves.
+**Do not hand the user a prompt for the new session** — tell them to open the next session in the same project and run `/pickup-handoff`. Nothing injects the file automatically, and it is not consumed on read: the user can pick it up twice, or in a session that was accidentally closed and reopened.
 
 Do not start the new session's work yourself; the handoff is the deliverable.

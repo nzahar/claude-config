@@ -1,3 +1,8 @@
+---
+name: learn
+description: "Extract reusable patterns from the current session into ~/.claude/skills/learned/ notes (error resolutions, debugging techniques, non-obvious fixes). Invoke when the user types /learn or asks to save a lesson / pattern from this session (сохрани как skill, запомни паттерн)."
+---
+
 # /learn - Extract Reusable Patterns
 
 Analyze the current session and extract any patterns worth saving as skills.
