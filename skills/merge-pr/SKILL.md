@@ -6,6 +6,8 @@ argument-hint: "<pr-number>"
 
 Find the PR with number $ARGUMENTS and merge it.
 
+**PR number guard.** Before anything else, resolve the PR number to a literal integer — from `$ARGUMENTS` or from the user's explicit request. If there is none, stop and ask. Never run `gh pr merge` or `merge_pull_request` without one: `gh pr merge` with no number silently targets the current branch's PR.
+
 **Mode detection.** At the start determine the mode by the `origin` URL:
 
 ```bash

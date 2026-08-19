@@ -29,7 +29,7 @@ If it does not exist, say so in one line: **there is no handoff for this project
 
 In the user's language, in a few lines:
 
-- the file path and its modification time (`stat -c %y` or `ls -l`) — the user decides whether it is stale;
+- the file path and its modification time (`ls -l`) — the user decides whether it is stale;
 - § Goal in one sentence and the first item of § Next steps;
 - anything in § Verification status marked UNVERIFIED, and the uncommitted-work note if § Git snapshot showed a dirty tree — re-check `git status` now and say whether it still matches.
 

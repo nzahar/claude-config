@@ -31,7 +31,7 @@ Your question for every line: **could a fresh session act on this safely, using 
 
 The caller passes the handoff file path explicitly in the invocation prompt. No path in the prompt → stop and report: "No handoff path provided. Pass the file path explicitly."
 
-Handoffs live in `handoffs/` under the Claude config dir (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}`), outside the repository they describe — one file per project, overwritten in place by `/handoff` (the previous one goes to `handoffs/_archive/`), and read explicitly by `/pickup-handoff` in the next session — never moved or consumed on read.
+Handoffs live in `handoffs/` under the Claude config dir (`${CLAUDE_CONFIG_DIR:-$HOME/.claude}`), outside the repository they describe — one file per project, overwritten in place by `/handoff` (a previous session's handoff goes to `handoffs/_archive/` first; a same-session rewrite updates in place), and read explicitly by `/pickup-handoff` in the next session — never moved or consumed on read.
 
 Read the file in full. **Scope guard:** confirm it is a session handoff — a `# Handoff` title or a recognizable subset of the template's sections. Anything else → stop and report out-of-scope with the right route: a plan → plan-reviewer; STATE.md or a codemap → owned by the project's documentation agent, no reviewer; arbitrary markdown → no route, say so. Do not review a non-handoff against the handoff template.
 
