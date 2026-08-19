@@ -117,7 +117,7 @@ Independent agents — one message, multiple `Agent` calls, all in background. T
 
 ## Kimi Code
 
-This framework also drives Kimi Code CLI (`~/.kimi-code`). `~/.claude` is the only place it is edited; `scripts/sync-kimi.sh` generates the Kimi side — `~/.kimi-code/AGENTS.md` (this file + `rules/*.md`), `~/.kimi-code/agents/*.md` (from `agents/`, stale files removed) and the symlink `~/.kimi-code/lib → ~/.claude/lib` — via rulesync, and Kimi reads `~/.claude/skills/` natively. Sync is manual and mine to trigger: `/sync-kimi` (the `sync-kimi` skill, visible to both CLIs) runs the script; `/sync-kimi --check` shows the pending diff without writing. No Kimi hooks; nothing ever touches `~/.kimi-code/config.toml`. Do not edit the generated files; never hand-write a Kimi-specific copy of a rule (the Codex adapter drifted that way, #33/#36).
+This framework also drives Kimi Code CLI (`~/.kimi-code`). `~/.claude` is the only place it is edited; `scripts/sync-kimi.sh` generates the Kimi side — `~/.kimi-code/AGENTS.md` (this file + `rules/*.md`), `~/.kimi-code/agents/*.md` (from `agents/`, stale files removed) and the symlinks `~/.kimi-code/lib → ~/.claude/lib`, `~/.kimi-code/skills → ~/.claude/skills` (Kimi 0.37 does not scan `~/.claude/skills` on its own) — via rulesync. Sync is manual and mine to trigger: `/sync-kimi` (the `sync-kimi` skill, visible to both CLIs) runs the script; `/sync-kimi --check` shows the pending diff without writing. No Kimi hooks; nothing ever touches `~/.kimi-code/config.toml`. Do not edit the generated files; never hand-write a Kimi-specific copy of a rule (the Codex adapter drifted that way, #33/#36).
 
 ## Task Workflow
 

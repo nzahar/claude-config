@@ -28,7 +28,7 @@ def sandbox(tmp_path: Path) -> dict[str, Path]:
     claude = home / ".claude"
     claude.mkdir(parents=True)
     shutil.copy(ROOT / "CLAUDE.md", claude / "CLAUDE.md")
-    for d in ("rules", "agents", "lib"):
+    for d in ("rules", "agents", "lib", "skills"):
         shutil.copytree(ROOT / d, claude / d)
     kimi = tmp_path / "kimi"
     kimi.mkdir()
@@ -69,6 +69,10 @@ def test_sync_generates_agents_md_rules_agents_and_lib(sandbox):
         src_body = _frontmatter_body((sandbox["claude"] / "agents" / name).read_text(encoding="utf-8"))
         out_body = _frontmatter_body((sandbox["kimi"] / "agents" / name).read_text(encoding="utf-8"))
         assert out_body == src_body, name
+
+    skills = sandbox["kimi"] / "skills"
+    assert skills.is_symlink()
+    assert (skills / "sync-kimi" / "SKILL.md").exists()
 
     lib = sandbox["kimi"] / "lib"
     assert lib.is_symlink()
