@@ -1,0 +1,1743 @@
+{
+ "lead_brief": {
+  "id": "9f706f0c-b05b-4d63-bcad-4bfd3214e65f",
+  "schema_version": "1.0",
+  "version_id": "v1",
+  "predecessor_ref": null,
+  "lifecycle_status": "draft",
+  "created_at": "2026-08-11T08:30:34.559585Z",
+  "created_by": "pipeline",
+  "source_refs": [
+   {
+    "artifact_type": "transcript",
+    "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+    "version_id": "v1"
+   }
+  ],
+  "artifact_type": "lead_brief",
+  "facts": [
+   {
+    "claim_id": "facts-1",
+    "text": "Основной объем заказов поступает по телефону; часть государственных заказчиков присылает заказы по электронной почте, а записки встречаются редко.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-a6fa2a065ae5bdfb03cdc471fa979b0f6095f9ed76234d7e37d6c4d8627c1bf5",
+      "evidence-span-65326c06b73ee88c5117a7a447e23276d1f4d23413a9ba5e3d4a24cb9f2a285a"
+     ]
+    }
+   },
+   {
+    "claim_id": "facts-2",
+    "text": "Операторы сразу вводят заказы покупателей в 1С, после чего существующая программа формирует производственную заявку.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-6f5aa7868939f8c2b7d4096baa5d2b89cb4511e2c284b8d7e995243e5f5b3b3b",
+      "evidence-span-2b727458b9d8c721aa61d8ed9e82efccb9ad63d9a32f8ec3eb9b2432f5cfbb84"
+     ]
+    }
+   },
+   {
+    "claim_id": "facts-3",
+    "text": "Сейчас операторы каждый раз спрашивают, кто звонит, вместо автоматического определения контрагента.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-06c7d2d89a167dd78870e646242427e7d2ea3d555dd1f60a33e1f311c1274a12",
+      "evidence-span-f672cceec034126bc1116000a0c18d287546292b511b7ea5147afc401c506f2b"
+     ]
+    }
+   },
+   {
+    "claim_id": "facts-4",
+    "text": "Клиентам уже предлагают электронную подачу через EDI, но не все готовы ею пользоваться.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-96a10065bc6b881ae65b5fe67e8be61797b89f326f3a6ce8bf8f263f994551e4"
+     ]
+    }
+   }
+  ],
+  "pain_points": [
+   {
+    "claim_id": "pain_points-1",
+    "text": "Текущий процесс требует много времени, сопровождается ошибками, и подходящего способа оптимизации пока нет.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-fc8d7a1eda12029b314ff45ff4fad83da22246d01fe0dee95d37e6a47d6040ce"
+     ]
+    }
+   },
+   {
+    "claim_id": "pain_points-2",
+    "text": "Разговорные названия продукции неоднозначны: один вид изделия может иметь варианты нарезки, упаковки и формата.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-298a6739ab80aa8616e5e9be75e5e4652e007d2eb20cccc2f4e613ab390ba171"
+     ]
+    }
+   },
+   {
+    "claim_id": "pain_points-3",
+    "text": "Даже опыт операторов и знание привычных заказов контрагента не исключают ошибки и возвраты из-за неверно понятой позиции.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-7148587b31d5ca87f119f216aafcd2be93545c891c0cc6ad7bf132ae5a8d53d5",
+      "evidence-span-b865002cd4ca7a3052746f25700e9bc148cf7e0f5822a9040232139475e7a5d7"
+     ]
+    }
+   },
+   {
+    "claim_id": "pain_points-4",
+    "text": "Клиент сомневается в надежности распознавания телефонных заказов.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-13b54d86437fc81ec89c37f602d494f971af1b7d617d1c799f9ad77640c54f03"
+     ]
+    }
+   },
+   {
+    "claim_id": "pain_points-5",
+    "text": "Переходу на электронную подачу мешает привычка клиентов заказывать по телефону.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-b0cb4d81f7975c880f692cd2de2104a77a7e55080af14026d8a87941e5d618f0"
+     ]
+    }
+   }
+  ],
+  "desired_outcomes": [
+   {
+    "claim_id": "desired_outcomes-1",
+    "text": "Перевести прием заказов в электронный вид, чтобы уменьшить путаницу.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-e788d9a70bd6d2e28796267226005d98dc62060655a81a90902376ed70423e28"
+     ]
+    }
+   },
+   {
+    "claim_id": "desired_outcomes-2",
+    "text": "Получать созданный роботом заказ с контрагентом, кодами номенклатуры и количеством.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-65b301f0a57745337a8c26dc669da031f901acd96440e2b9b27e6d4f2b68d169"
+     ]
+    }
+   },
+   {
+    "claim_id": "desired_outcomes-3",
+    "text": "На первоначальном этапе просматривать, тестировать и настраивать результат до ввода в рабочую систему.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-952ac18b408bc58aae21cf7429405b63389b012deb3cb6a12ce9abf53eed95ae"
+     ]
+    }
+   },
+   {
+    "claim_id": "desired_outcomes-4",
+    "text": "После проверки создавать заказ покупателя в 1С, оставляя дальнейший расчет производственных заявок существующей программе.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-9d230741cf1bfd45e474d5c833a03618f268002847d1aafe1bafb95363643488",
+      "evidence-span-4518cc6cac6457643bf3d8143d84e3726d9941074bdd368be87da1f4668aff84"
+     ]
+    }
+   }
+  ],
+  "stakeholders": [
+   {
+    "claim_id": "stakeholders-1",
+    "text": "Операторы первой линии принимают телефонные заказы и сразу вводят их в 1С; они являются основными пользователями будущего процесса проверки.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-b102513d0ae67a2912b40777beb837ea3f8ee2440faedeec5479aca46883ce5e",
+      "evidence-span-2b727458b9d8c721aa61d8ed9e82efccb9ad63d9a32f8ec3eb9b2432f5cfbb84"
+     ]
+    }
+   },
+   {
+    "claim_id": "stakeholders-2",
+    "text": "Мнение операционного представителя важно для оценки пригодности решения, а генеральный директор оценивает приемлемость цены.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-d07041b2862a36ba7fffe524b77e127aaf25dedc5dcc0d555f38d3f64f744bbd",
+      "evidence-span-6abcb676e642c16ae10c6a2044f4c5146a7110fee9c0c4d394430156620adefb",
+      "evidence-span-a65d95571735585ad8c1ff619522e777dc68a26547ffdc01fb02fd6b4a869152"
+     ]
+    }
+   },
+   {
+    "claim_id": "stakeholders-3",
+    "text": "Производство является downstream-пользователем данных: производственная заявка формируется на основании заказов покупателей.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-29049805604523f95ab2a295dd8e767dc5ad3fcb0cae886294008283f9a4afe3"
+     ]
+    }
+   }
+  ],
+  "commercial_signals": [
+   {
+    "claim_id": "commercial_signals-1",
+    "text": "Клиент прямо запросил стоимость решения.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-f1124f158a563fc324e869af1b86ea09c0924443ad054176eb9ee570b1c61758"
+     ]
+    }
+   },
+   {
+    "claim_id": "commercial_signals-2",
+    "text": "Решение будет оцениваться по экономической целесообразности относительно возвратов и списаний; цена является существенным фактором согласования.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-e07bfc8cc66e936335d5f70d865dcd87979eca45ef2a0fd950e76d07df01687f"
+     ]
+    }
+   },
+   {
+    "claim_id": "commercial_signals-3",
+    "text": "Продавец пообещал вернуться с ценой и сроком выполнения.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-94567b83afacf9def7941dbd6b8acc71f8603c6e0b912eea767e3a971564aa47"
+     ]
+    }
+   }
+  ],
+  "contradictions": [
+   {
+    "claim_id": "contradictions-1",
+    "text": "Клиент считает распознавание телефонных заказов потенциально ненадежным, тогда как продавец заявил о достижимости 99% попадания.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-13b54d86437fc81ec89c37f602d494f971af1b7d617d1c799f9ad77640c54f03",
+      "evidence-span-847f2b32ba95696bf39d587488b54e5c141b010644c4649d774aaf913e4fcdac"
+     ]
+    }
+   },
+   {
+    "claim_id": "contradictions-2",
+    "text": "Продавец первоначально описал автоматическое создание производственной заявки, но клиент уточнил, что робот должен создавать заказ покупателя, а производственные заявки рассчитает существующая программа.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-22a6b32d5ad4b2bdf52f6293dbf49b4889d98de24b1ae1ca85738786d5e39375",
+      "evidence-span-4518cc6cac6457643bf3d8143d84e3726d9941074bdd368be87da1f4668aff84"
+     ]
+    }
+   }
+  ],
+  "exclusions": [
+   {
+    "claim_id": "exclusions-1",
+    "text": "Обработка записок и заявок, привезенных с выездов, не является приоритетным сценарием из-за их крайне малой доли.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-e015ea53c51af4773556a4e6bea088f5b6b15a5fac3d8063db42d8daabd30b6d",
+      "evidence-span-65326c06b73ee88c5117a7a447e23276d1f4d23413a9ba5e3d4a24cb9f2a285a"
+     ]
+    }
+   },
+   {
+    "claim_id": "exclusions-2",
+    "text": "Робот не должен самостоятельно формировать производственную заявку; это остается функцией существующей программы.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-4518cc6cac6457643bf3d8143d84e3726d9941074bdd368be87da1f4668aff84"
+     ]
+    }
+   },
+   {
+    "claim_id": "exclusions-3",
+    "text": "На первоначальном этапе исключается ввод результата в рабочую систему без предварительного просмотра и тестирования человеком.",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-8dc1720861f1f7acc62b3096d7a1d7087ae85669e1ddf2f10b0103a203a6b7d2"
+     ]
+    }
+   }
+  ],
+  "assumptions": [
+   {
+    "claim_id": "assumptions-1",
+    "text": "Первая версия обрабатывает только телефонные заказы; остальные каналы в оценку не входят.",
+    "provenance": {
+     "kind": "generated_copy",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-a6fa2a065ae5bdfb03cdc471fa979b0f6095f9ed76234d7e37d6c4d8627c1bf5"
+     ]
+    }
+   },
+   {
+    "claim_id": "assumptions-2",
+    "text": "Перед отправкой в 1С каждый распознанный заказ подтверждается человеком.",
+    "provenance": {
+     "kind": "generated_copy",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-8dc1720861f1f7acc62b3096d7a1d7087ae85669e1ddf2f10b0103a203a6b7d2"
+     ]
+    }
+   },
+   {
+    "claim_id": "assumptions-3",
+    "text": "Оценка предполагает одну инсталляцию 1С и один доступный программный интерфейс обмена.",
+    "provenance": {
+     "kind": "generated_copy",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-4b0e1c75ce15542ae0efe7cc1cbacd5339f4cbdfb18df7127a7cf5cfbdaa018b"
+     ]
+    }
+   },
+   {
+    "claim_id": "assumptions-4",
+    "text": "Клиент предоставляет справочники контрагентов и номенклатуры с кодами, примеры звонков и известные правила привычных заказов.",
+    "provenance": {
+     "kind": "generated_copy",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-7148587b31d5ca87f119f216aafcd2be93545c891c0cc6ad7bf132ae5a8d53d5",
+      "evidence-span-65b301f0a57745337a8c26dc669da031f901acd96440e2b9b27e6d4f2b68d169"
+     ]
+    }
+   },
+   {
+    "claim_id": "assumptions-5",
+    "text": "Числовой порог точности не фиксируется; приемка проводится на согласованных примерах с участием клиента.",
+    "provenance": {
+     "kind": "generated_copy",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-e4a60de4acc0c10973a9def97fd3061db4ec2ffb0db05a9aec47f4281eced057"
+     ]
+    }
+   }
+  ],
+  "questions": [],
+  "policy_contradictions": [
+   {
+    "contradiction_id": "PC1",
+    "text": "Продавец назвал ориентировочную ежемесячную стоимость внешней модели без утвержденного основания для такой оценки.",
+    "seller_evidence_span_id": "evidence-span-ec170e3107aa4eaaddbb36e25ff831163660be271308dbc1d37a480c21078a48",
+    "policy_path": "/project/ownership/unapproved_cost_estimates_are_forbidden",
+    "blocking": true,
+    "resolution": null,
+    "override_reason": null
+   }
+  ]
+ },
+ "task_spec": {
+  "id": "686ebb42-1a18-42bd-8c6a-3932e0ccea83",
+  "schema_version": "1.0",
+  "version_id": "v1",
+  "predecessor_ref": null,
+  "lifecycle_status": "draft",
+  "created_at": "2026-08-11T08:30:34.559585Z",
+  "created_by": "pipeline",
+  "source_refs": [
+   {
+    "artifact_type": "transcript",
+    "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+    "version_id": "v1"
+   },
+   {
+    "artifact_type": "lead_brief",
+    "artifact_id": "9f706f0c-b05b-4d63-bcad-4bfd3214e65f",
+    "version_id": "v1"
+   }
+  ],
+  "artifact_type": "task_spec",
+  "context": "Черновая задача — автоматизировать обработку основного потока телефонных заказов, который сейчас вручную вводится в 1С и сопровождается затратами времени и ошибками.",
+  "scope": [
+   "Получать содержание телефонного заказа и преобразовывать речь в машинно-обрабатываемый текст.",
+   "Формировать структурированный черновик заказа покупателя с контрагентом, кодами номенклатуры и количеством.",
+   "Предоставить оператору возможность просмотреть, проверить и настроить результат до передачи в 1С.",
+   "После подтверждения создавать в 1С заказ покупателя, который существующая программа использует для дальнейшего расчета заявок.",
+   "Провести первоначальное тестирование и настройку распознавания на клиентских примерах."
+  ],
+  "exclusions": [
+   "Автоматическое формирование производственной заявки роботом не входит в задачу.",
+   "Автоматическая передача результата в рабочую систему без человеческой проверки исключена на первоначальном этапе.",
+   "Прием редких бумажных записок и заявок с выездов не включается в первоочередной сценарий."
+  ],
+  "requirements": [
+   "Черновик должен содержать определенного контрагента, коды выбранной номенклатуры и количество каждой позиции.",
+   "Обработка должна учитывать неоднозначность разговорных названий, включая варианты формата, нарезки и упаковки.",
+   "Оператор должен иметь возможность проверить и скорректировать распознанный заказ до ввода в 1С.",
+   "Интеграция должна создавать именно заказ покупателя в 1С, а не производственную заявку.",
+   "Передача заказа в 1С предполагается через доступный API."
+  ],
+  "acceptance_criteria": [
+   "Для согласованного тестового телефонного заказа система формирует черновик с контрагентом, кодами номенклатуры и количествами.",
+   "Оператор может просмотреть и исправить черновик до его передачи в 1С.",
+   "После подтверждения в 1С создается заказ покупателя, доступный существующей программе для дальнейшего формирования заявок.",
+   "После клиентского тестирования внесенные корректировки отражаются при повторной обработке примеров."
+  ],
+  "dependencies": [
+   "Необходим доступ к источнику аудио телефонных заказов для транскрибации.",
+   "Необходимы справочники контрагентов и номенклатуры с кодами, а также данные о привычных заказах для разрешения неоднозначностей.",
+   "Для создания заказов требуется доступ к программному интерфейсу 1С.",
+   "Для первоначальной настройки нужны клиентские примеры и участие представителей клиента в проверке результатов."
+  ],
+  "assumptions": [
+   "Первая версия обрабатывает только телефонные заказы; остальные каналы в оценку не входят.",
+   "Перед отправкой в 1С каждый распознанный заказ подтверждается человеком.",
+   "Оценка предполагает одну инсталляцию 1С и один доступный программный интерфейс обмена.",
+   "Клиент предоставляет справочники контрагентов и номенклатуры с кодами, примеры звонков и известные правила привычных заказов.",
+   "Числовой порог точности не фиксируется; приемка проводится на согласованных примерах с участием клиента."
+  ],
+  "unresolved_questions": [],
+  "field_provenance": [
+   {
+    "field_path": "/context",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-a6fa2a065ae5bdfb03cdc471fa979b0f6095f9ed76234d7e37d6c4d8627c1bf5",
+      "evidence-span-6d598f6b3dc66e0936215346f79c9c9189ed6af410513f15dd2bb9045443390c",
+      "evidence-span-6f5aa7868939f8c2b7d4096baa5d2b89cb4511e2c284b8d7e995243e5f5b3b3b"
+     ]
+    }
+   },
+   {
+    "field_path": "/scope/0",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-df5354ca42de0d35700d9e6753750bd31ac074a5fbf6db0721ff337009e576e7",
+      "evidence-span-2c733cc5f81988bacc7eb33a8e9e5c09f2f8dd5bbe62d303af93af50eb6a75cf"
+     ]
+    }
+   },
+   {
+    "field_path": "/scope/1",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-65b301f0a57745337a8c26dc669da031f901acd96440e2b9b27e6d4f2b68d169"
+     ]
+    }
+   },
+   {
+    "field_path": "/scope/2",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-8dc1720861f1f7acc62b3096d7a1d7087ae85669e1ddf2f10b0103a203a6b7d2"
+     ]
+    }
+   },
+   {
+    "field_path": "/scope/3",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-9d230741cf1bfd45e474d5c833a03618f268002847d1aafe1bafb95363643488",
+      "evidence-span-4518cc6cac6457643bf3d8143d84e3726d9941074bdd368be87da1f4668aff84"
+     ]
+    }
+   },
+   {
+    "field_path": "/scope/4",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-e4a60de4acc0c10973a9def97fd3061db4ec2ffb0db05a9aec47f4281eced057"
+     ]
+    }
+   },
+   {
+    "field_path": "/exclusions/0",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-4518cc6cac6457643bf3d8143d84e3726d9941074bdd368be87da1f4668aff84"
+     ]
+    }
+   },
+   {
+    "field_path": "/exclusions/1",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-8dc1720861f1f7acc62b3096d7a1d7087ae85669e1ddf2f10b0103a203a6b7d2"
+     ]
+    }
+   },
+   {
+    "field_path": "/exclusions/2",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-e015ea53c51af4773556a4e6bea088f5b6b15a5fac3d8063db42d8daabd30b6d",
+      "evidence-span-65326c06b73ee88c5117a7a447e23276d1f4d23413a9ba5e3d4a24cb9f2a285a"
+     ]
+    }
+   },
+   {
+    "field_path": "/requirements/0",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-65b301f0a57745337a8c26dc669da031f901acd96440e2b9b27e6d4f2b68d169"
+     ]
+    }
+   },
+   {
+    "field_path": "/requirements/1",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-a5d00866c6b30c4d07078983a5be4fac9787f8e2775281de9bf1f2eecf41e6a8"
+     ]
+    }
+   },
+   {
+    "field_path": "/requirements/2",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-8dc1720861f1f7acc62b3096d7a1d7087ae85669e1ddf2f10b0103a203a6b7d2"
+     ]
+    }
+   },
+   {
+    "field_path": "/requirements/3",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-4518cc6cac6457643bf3d8143d84e3726d9941074bdd368be87da1f4668aff84"
+     ]
+    }
+   },
+   {
+    "field_path": "/requirements/4",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-328fe35c7ad9a422ee03a882b9fe7c15235f48a49877a5f57cce4ce3865b2054"
+     ]
+    }
+   },
+   {
+    "field_path": "/acceptance_criteria/0",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-65b301f0a57745337a8c26dc669da031f901acd96440e2b9b27e6d4f2b68d169"
+     ]
+    }
+   },
+   {
+    "field_path": "/acceptance_criteria/1",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-8dc1720861f1f7acc62b3096d7a1d7087ae85669e1ddf2f10b0103a203a6b7d2"
+     ]
+    }
+   },
+   {
+    "field_path": "/acceptance_criteria/2",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-4518cc6cac6457643bf3d8143d84e3726d9941074bdd368be87da1f4668aff84"
+     ]
+    }
+   },
+   {
+    "field_path": "/acceptance_criteria/3",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-e4a60de4acc0c10973a9def97fd3061db4ec2ffb0db05a9aec47f4281eced057"
+     ]
+    }
+   },
+   {
+    "field_path": "/dependencies/0",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-df5354ca42de0d35700d9e6753750bd31ac074a5fbf6db0721ff337009e576e7"
+     ]
+    }
+   },
+   {
+    "field_path": "/dependencies/1",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-7148587b31d5ca87f119f216aafcd2be93545c891c0cc6ad7bf132ae5a8d53d5",
+      "evidence-span-65b301f0a57745337a8c26dc669da031f901acd96440e2b9b27e6d4f2b68d169"
+     ]
+    }
+   },
+   {
+    "field_path": "/dependencies/2",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-4b0e1c75ce15542ae0efe7cc1cbacd5339f4cbdfb18df7127a7cf5cfbdaa018b"
+     ]
+    }
+   },
+   {
+    "field_path": "/dependencies/3",
+    "provenance": {
+     "kind": "client_input",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-952ac18b408bc58aae21cf7429405b63389b012deb3cb6a12ce9abf53eed95ae"
+     ]
+    }
+   },
+   {
+    "field_path": "/assumptions/0",
+    "provenance": {
+     "kind": "generated_copy",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-a6fa2a065ae5bdfb03cdc471fa979b0f6095f9ed76234d7e37d6c4d8627c1bf5"
+     ]
+    }
+   },
+   {
+    "field_path": "/assumptions/1",
+    "provenance": {
+     "kind": "generated_copy",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-8dc1720861f1f7acc62b3096d7a1d7087ae85669e1ddf2f10b0103a203a6b7d2"
+     ]
+    }
+   },
+   {
+    "field_path": "/assumptions/2",
+    "provenance": {
+     "kind": "generated_copy",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-4b0e1c75ce15542ae0efe7cc1cbacd5339f4cbdfb18df7127a7cf5cfbdaa018b"
+     ]
+    }
+   },
+   {
+    "field_path": "/assumptions/3",
+    "provenance": {
+     "kind": "generated_copy",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-7148587b31d5ca87f119f216aafcd2be93545c891c0cc6ad7bf132ae5a8d53d5",
+      "evidence-span-65b301f0a57745337a8c26dc669da031f901acd96440e2b9b27e6d4f2b68d169"
+     ]
+    }
+   },
+   {
+    "field_path": "/assumptions/4",
+    "provenance": {
+     "kind": "generated_copy",
+     "source_refs": [
+      {
+       "artifact_type": "transcript",
+       "artifact_id": "abef57bf-e552-41b7-8fd5-c9eb36e46aa4",
+       "version_id": "v1"
+      }
+     ],
+     "evidence_span_ids": [
+      "evidence-span-e4a60de4acc0c10973a9def97fd3061db4ec2ffb0db05a9aec47f4281eced057"
+     ]
+    }
+   }
+  ]
+ },
+ "work_units": [
+  {
+   "unit_id": "U1",
+   "criterion": "Поддерживаемый телефонный звонок принимается системой, а его транскрипт формируется и связывается с исходным звонком для дальнейшей обработки.",
+   "integration_count": 1,
+   "surface_count": 1,
+   "entity_count": 2,
+   "class": "io",
+   "hours": "4",
+   "precedents": [
+    {
+     "task_id": "lidogeneraciya-po-vakansiyam",
+     "why": "Есть внешнее получение данных и конвейерная обработка, но в новой единице добавлены передача аудио и распознавание речи; precedent измерен только целиком."
+    }
+   ],
+   "confidence": "low"
+  },
+  {
+   "unit_id": "U2",
+   "criterion": "По транскрипту формируется черновик заказа с контрагентом, кодами номенклатуры и количествами, а неоднозначные позиции выделяются для проверки.",
+   "integration_count": 0,
+   "surface_count": 1,
+   "entity_count": 4,
+   "class": "logic",
+   "hours": "6",
+   "precedents": [
+    {
+     "task_id": "lidogeneraciya-po-vakansiyam",
+     "why": "Сходны сочетание правил и LLM для классификации неструктурированного текста; здесь дополнительно требуется сопоставление контрагента и товарных кодов."
+    }
+   ],
+   "confidence": "low"
+  },
+  {
+   "unit_id": "U3",
+   "criterion": "Оператор может открыть один черновик заказа, исправить контрагента, позиции и количества и явно подтвердить его передачу.",
+   "integration_count": 0,
+   "surface_count": 1,
+   "entity_count": 1,
+   "class": "crud",
+   "hours": "3",
+   "precedents": [
+    {
+     "task_id": "lk-ot-master-zakaza-profriskov",
+     "why": "Сходная редактируемая форма с выбором данных, валидацией и согласованием фронтенда с бэкендом; здесь используется один экран заказа."
+    },
+    {
+     "task_id": "lidogeneraciya-po-vakansiyam",
+     "why": "Есть близкий сценарий человеческого просмотра, правки и подтверждения результата, но он был частью более широкого конвейера."
+    }
+   ],
+   "confidence": "medium"
+  },
+  {
+   "unit_id": "U4",
+   "criterion": "После подтверждения черновика в 1С создается заказ покупателя с тем же контрагентом, кодами позиций и количествами.",
+   "integration_count": 1,
+   "surface_count": 1,
+   "entity_count": 2,
+   "class": "integration",
+   "hours": "4.5",
+   "precedents": [
+    {
+     "task_id": "lidogeneraciya-po-vakansiyam",
+     "why": "В precedent есть авторизованный внешний обмен и отправка подтвержденного результата, но транзакционное создание заказа в учетной системе существенно отличается."
+    }
+   ],
+   "confidence": "low"
+  },
+  {
+   "unit_id": "U5",
+   "criterion": "На согласованном наборе примеров клиент проверяет результаты, выявленные ошибки сопоставления исправляются, а повторный прогон использует обновленные правила и настройки.",
+   "integration_count": 0,
+   "surface_count": 1,
+   "entity_count": 3,
+   "class": "logic",
+   "hours": "3",
+   "precedents": [
+    {
+     "task_id": "lidogeneraciya-po-vakansiyam",
+     "why": "Сходна настройка LLM-классификатора на реальной выборке до проверяемого результата; здесь нет согласованного числового порога и требуется предметная корректировка справочников."
+    }
+   ],
+   "confidence": "low"
+  }
+ ],
+ "turns": [
+  {
+   "turn_id": "turn-1",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 1465,
+   "end_ms": 42526,
+   "text": "Здравствуйте, Анапский хлебокомбинат приветствует вас. Для соединения с отделом кадров нажмите 1. Для соединения с отделом закупок нажмите 2. Для соединения с отделом продаж нажмите 3. Для соединения со специалистом по охране труда нажмите 4. Для соединения с... Алло, хлебокомбинат, здравствуйте. Добрый день. Меня зовут Виктор. Как могу к вам обращаться? Очень приятно. Елена, говорите, пожалуйста. Очень приятно, Елена. Я хотел, честно говоря, переговорить с руководителем отдела продаж, если это не вы."
+  },
+  {
+   "turn_id": "turn-2",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 42766,
+   "end_ms": 43206,
+   "text": "Вы кто?"
+  },
+  {
+   "turn_id": "turn-3",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 44226,
+   "end_ms": 54846,
+   "text": "Меня еще раз призовут Виктор. Занимаемся разработкой продажного обеспечения. И вот хотел по этому поводу пообщаться для начала с вашим руководителем отдела продаж. Одну секунду. Сейчас, одну секунду."
+  },
+  {
+   "turn_id": "turn-4",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 75783,
+   "end_ms": 77543,
+   "text": "Алло. Добрый день."
+  },
+  {
+   "turn_id": "turn-5",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 78783,
+   "end_ms": 95603,
+   "text": "Меня Виктор зовут. Компания Cortex. Имя? Владимир. Отлично. Владимир, по какому поводу попросил вас связаться с Аркадием Главпродаж? Я сейчас звонил в вашу службу приемки. Хотел пообщаться насчет автоматизации. Нашими там ответили, что нет времени слова совсем разговаривать."
+  },
+  {
+   "turn_id": "turn-6",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 96743,
+   "end_ms": 98303,
+   "text": "Ну да, сейчас принимают."
+  },
+  {
+   "turn_id": "turn-7",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 98623,
+   "end_ms": 127768,
+   "text": "Да, уже чувствую, что мы вам можем пригодиться. В двух словах так, мы и занимаемся автоматизацией. Разрабатываем программное обеспечение с помощью там в том числе и внедряем и агентов всевозможных и так далее. Почему к вам? Потому что в отделе продаж это время-деньги, соответственно, можем как-то обсудить, что мы могли бы для вас сделать. Ну, допустим, в частности, автоматический прием заявок, например, обработка всего этого дела, распределение."
+  },
+  {
+   "turn_id": "turn-8",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 128602,
+   "end_ms": 140282,
+   "text": "А что именно там автоматизируется? Это нужно, чтобы через какой-то сайт подавали заявки или у вас есть обработчики звонков или в каком виде?"
+  },
+  {
+   "turn_id": "turn-9",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 141382,
+   "end_ms": 153522,
+   "text": "Вот смотрите, для нас, честно говоря, сказать нерешаемую задачу не бывает. Наверное, соврать, но мы с ними еще пока не сталкивались. Можно сделать все, что угодно. Можно сделать работу, которая собирает..."
+  },
+  {
+   "turn_id": "turn-10",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 159584,
+   "end_ms": 159884,
+   "text": "Алло."
+  },
+  {
+   "turn_id": "turn-11",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 160964,
+   "end_ms": 161284,
+   "text": "Алло."
+  },
+  {
+   "turn_id": "turn-12",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 161964,
+   "end_ms": 163844,
+   "text": "Да-да, что-то связь плохая."
+  },
+  {
+   "turn_id": "turn-13",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 164044,
+   "end_ms": 219285,
+   "text": "Я говорю, можем сделать так, что и телефонные звонки раскладываются на речь, да, ну, транспредируется, называется, да, оттуда обученивается сам заказ, и агент анализирует то, что там заказчик наговорил, ну, не знаю, говорит, там, батон какой-нибудь, да, там, нестандартно, и агент обучен его, он будет понимать, что батон бревной или там какой-нибудь клейтный, еще что-нибудь. Ну, то есть такое. специфическая терминология может быть разложена и уже сформулирована какую-то заявку конкретно. Дальше мы ее можем обработать с помощью еще агентов, как-то под вашу CRM-ку подстроить, интегрировать в конце концов в CRM-систему и получим по итогу автоматический сбор заявок. Очень грубо, да, так не погружаясь пока еще, то есть если уж говорить, то А вы спросили насчет телефонных звонков. Я думаю, что у вас еще и пишут, правильно? И могут там на листочке написать каким-нибудь корявым почерком, прислать, правильно?"
+  },
+  {
+   "turn_id": "turn-14",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 220685,
+   "end_ms": 290288,
+   "text": "Да. У нас сейчас сети через ИДИА это все подают. А есть, да, такие клиенты, которые по электронной почте присылают, мессенджер присылает. телефонные звонки, заявочные листы, также есть какие-то правила, например, нам, пожалуйста, продублировать. Ну, в общем, много всяких способов, и то, что вы рассказываете про телефонные звонки, я думаю, это будет не совсем надежно. Мы сейчас все-таки думаем о том, чтобы все это в электронный вид перевести, чтобы путаницы не было, потому что много таких случаев, когда вот, как вы говорите, батон, а там этих батонов куча целых, еще они в разном формате и резаны, и не резаны, и упакованы. И там уже, допустим, оператор знает, что это этот клиент, он постоянно вот это берет, значит, скорее всего, наверное, вот так. Ну, то есть, вот такие нюансы. И то, все равно у нас периодические ошибки возникают, потому что клиент, я думал одно, а вы мне привезли другое."
+  },
+  {
+   "turn_id": "turn-15",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 290308,
+   "end_ms": 291308,
+   "text": "А вы мне привезли, да."
+  },
+  {
+   "turn_id": "turn-16",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 292390,
+   "end_ms": 320830,
+   "text": "Да, поэтому за звонками тут сложнее. Я уже размышлял, тут надо двигаться в том направлении, чтобы все-таки это было в электронном виде. И нам в рамках системы EDI, вот у нас консор, предлагают тоже такой функционал, но у нас, к сожалению, не все клиенты хотят подавать. Им удобно звонить, они так привыкли. То есть, для этого время нужно."
+  },
+  {
+   "turn_id": "turn-17",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 322681,
+   "end_ms": 325681,
+   "text": "Мы"
+  },
+  {
+   "turn_id": "turn-18",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 329461,
+   "end_ms": 346661,
+   "text": "думаем о том, чтобы этот момент оптимизировать, как-то улучшить, потому что много ошибок и прочее. Временно это тратится много. Пока подходящего способа нет у нас в процессе."
+  },
+  {
+   "turn_id": "turn-19",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 347369,
+   "end_ms": 372109,
+   "text": "Скажите, а вот у вас на сайте есть каталог, есть кнопка «заказать». Пользуется вообще? Не идёт через сайт? Не идёт. Соответственно, если какую-либо систему поставить, то что вы говорите, то опять же маловероятно, что не будет. Потому что у вас на сайте довольно комфортно всё это делать. Зашёл в каталог, пожалуйста, выбирай и накидывай в корзину всё, что хочешь. Но это же не происходит."
+  },
+  {
+   "turn_id": "turn-20",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 373171,
+   "end_ms": 379591,
+   "text": "Да, потому что, я же говорю, клиенты привыкают к удобным для них способам подавать эту заявку."
+  },
+  {
+   "turn_id": "turn-21",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 380551,
+   "end_ms": 509005,
+   "text": "Скажите, Владимир, насколько я понял, у вас есть сомнения по поводу того, что будут распознавать так, как нужно, чтобы исключить ошибки. Смотрите, здесь на самом деле вся эта штука обучаемая. Если уж по-простому, все, что делает ваш оператор, может делать агент. А еще он может делать больше, чем оператор. Я сейчас не умоляю за слуг операторов. Конечно, они так и останутся при работе, но, возможно, часть придется там как-то и рассмотреть в существии интимизации. Но если у вас есть, а они точно есть, какие-то типичные ошибки, это точно так же может и агент подсвечивать, что вот смотри, там из 48 позиций одна там красненькая. Говорит, я же условно говорю, понятно, что вопросы такие организационные, да, и выводить это все можно как угодно. Обычно в этой позиции бывает ошибка. Обратим это внимание. Переуточни у клиента, спроси. Он может сам написать бот, что вы это имели в виду или не это вы имели в виду. Такие уточняющие моменты. И все это обучается, это все можно довести. Понятно, что совершенство, с точки зрения речи, наверное, никогда не будет достигнута. Видите, русский язык, но в 99% ему попадать сможем. Поэтому, видишь, рассомнение понятное, потому что не пробовали, никогда с этим не сталкивались. Но, тем не менее, об этом можно рассуждать. Ну и, честно говоря, вот если мы сейчас разговариваем, то это только единственный возможный вариант, да, там, телефонные звонки, только это раз максимум. Но я думаю, что у вас там еще внутри документации всяко-разно много, которые можно упростить, скажем так, взаимоотношения с этими документами. Упростить, автоматизировать, систематизировать и так далее. Потому что у вас, наверное, плотная связка между, ну вот смотрите, насколько я понимаю, да, если я не прав, то не поправ. у вас, получается, девочки на линии общаются с клиентом. Это первое касание, где есть ошибки бывают и тратится большое количество времени на набивание заявок. Есть еще точно так же входящие, наверное, привозят менеджеры с полей. То есть что-то они там на бумажках, на рисочках привезли, если они там не в планшете работают. Кто-то сразу заявку набил."
+  },
+  {
+   "turn_id": "turn-22",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 509325,
+   "end_ms": 510365,
+   "text": "Такого у нас почти нет."
+  },
+  {
+   "turn_id": "turn-23",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 510905,
+   "end_ms": 512285,
+   "text": "То есть с полей не привозят, да?"
+  },
+  {
+   "turn_id": "turn-24",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 512645,
+   "end_ms": 529296,
+   "text": "Нет, нет. У нас, я говорю, основной объем это телефонные звонки, Какая-то часть есть, например, госзаказчики какие-то, они по электронной почте присылают. А то, что там вот эти записки или прочее, это там очень редко и"
+  },
+  {
+   "turn_id": "turn-25",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 529296,
+   "end_ms": 534476,
+   "text": "доля... Боль именно в телефоны к переговору?"
+  },
+  {
+   "turn_id": "turn-26",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 534636,
+   "end_ms": 534776,
+   "text": "Да."
+  },
+  {
+   "turn_id": "turn-27",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 535456,
+   "end_ms": 540056,
+   "text": "А в дальнейшем, как вы потом на производство это подаете? Вы аккумулируете это все в какой-то CRM-ке или как?"
+  },
+  {
+   "turn_id": "turn-28",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 540335,
+   "end_ms": 551815,
+   "text": "У нас в 1С набиваются заявки, потом на основании всех этих заказов покупателей и на основании всех этих заказов формируется заявка на производство."
+  },
+  {
+   "turn_id": "turn-29",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 552955,
+   "end_ms": 558915,
+   "text": "А вот операторы, которые на первой линии в телефонном разговоре, они сразу в 1С-ку набивают это все или это промежуточно?"
+  },
+  {
+   "turn_id": "turn-30",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 559295,
+   "end_ms": 560015,
+   "text": "Нет, сразу."
+  },
+  {
+   "turn_id": "turn-31",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 560215,
+   "end_ms": 569295,
+   "text": "Сразу в 1С-ку и пошло на производство. И доставка, это уже получается, вас не касается, потому что служба логистики самостоятельно всем этим занимается, развозом."
+  },
+  {
+   "turn_id": "turn-32",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 570170,
+   "end_ms": 573370,
+   "text": "Ну, каждая точка закреплена за определенным маршрутом."
+  },
+  {
+   "turn_id": "turn-33",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 574130,
+   "end_ms": 583650,
+   "text": "Ну, менеджер ведет вообще этот учет или нет? Какой учет? Ну, какие точки на маршруте как-то, нет?"
+  },
+  {
+   "turn_id": "turn-34",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 583870,
+   "end_ms": 596850,
+   "text": "Ну, периодически мы там что-то просматриваем, а так у нас они привязаны к конкретному маршруту и все, то есть каждый день мы его не ставим вот на этот маршрут, на вот этот, то есть есть закрепленные. По мере необходимости мы корректируем."
+  },
+  {
+   "turn_id": "turn-35",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 597950,
+   "end_ms": 610981,
+   "text": "Я понял. Так, с этим понял. То есть единственное, что мы могли бы быть так в теории полезно для вас, да, да и в практике тоже, это вот если мы смогли бы автоматизировать прием заявок. Именно при звонках. Да."
+  },
+  {
+   "turn_id": "turn-36",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 611021,
+   "end_ms": 624741,
+   "text": "И например, вот и как это, в каком виде у нас информация будет? То есть он нам просто выдаст, там, документ, что такой-то контрагент заказал такой-то шифр, ну, код, например, номенклатуры или как, в каком виде это будет?"
+  },
+  {
+   "turn_id": "turn-37",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 625641,
+   "end_ms": 698187,
+   "text": "Ну, смотрите. Как вот сейчас из разговора пока представляется? Вообще, конечно, в идеале нам бы по видеосвязи связаться, там, на полчаса, и, возможно, обсудить уже более детально. Может быть, вы покажете, в каком виде это у вас получается, а я вам выскажу свою точку зрения, как это может быть. Ну, смотрите, что это может быть. Вот по телефону поступает заявка, она анализируется, и вам можно сразу сделать, ну, миграцию, да, там, через IP-адрес, интеграцию, чтобы сразу в 1С-ке набивалась заявка. Можно и так сделать. Но если есть сомнения и нужен человеческий контроль, да, это можно справочно выводить в каком-либо документе. Это будет Excel таблица, если она комфортна для просмотра. Посмотрели, да, согласен. Нажали на кнопку, он ушел туда в 1С. Подгрузился в заказ. Чтобы не перебивать руками все это дело, не выбирать. Он будет интегрироваться с 1С через API. И там набиваться будет заказ. Можно по-другому все это настраивать. То есть здесь вопрос как поставить задачу, то есть от вас, заказчика. Если вам нужно, необходимо где-то отдельно это анализировать, можно сделать такую микроаналитическую систему."
+  },
+  {
+   "turn_id": "turn-38",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 698807,
+   "end_ms": 703627,
+   "text": "Технически возможно, чтобы этот робот сам сдавал этот заказ в 1С."
+  },
+  {
+   "turn_id": "turn-39",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 704387,
+   "end_ms": 708907,
+   "text": "Возможно, да. В 1С есть API, и поэтому здесь это можно сделать."
+  },
+  {
+   "turn_id": "turn-40",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 709540,
+   "end_ms": 720760,
+   "text": "Ну понятно, что на первоначальном этапе нам это все нужно будет просмотреть, протестировать, прежде чем это в систему вводить. Посмотреть, насколько точно, настроить, заработать."
+  },
+  {
+   "turn_id": "turn-41",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 721680,
+   "end_ms": 866288,
+   "text": "Смотри, мы технически работаем. Вообще, откровенно, мы ищем партнеров, чтобы долго играть. Ну, не уверяю, а практически уверен в том, что у вас есть еще какие-то процессы, в которых мы тоже можем быть полезны, не только вот про сбор заявок. И поэтому мы обычно работаем под сопровождением, то есть берем клиента, находим точки автоматизации, обсуждаем, что в первую очередь нужно, и потом по одной внедряем, ну, интегрируем, скажем, в бизнес, сокращая себе стоимость, увеличивая маржу. Вот сейчас, по факту, получается, ваша точка нашлась. Как это может выглядеть? Свяжемся с вами, обсудим, ну, возможно, предварительно я еще с вами свяжусь, обсудим как-то более детально. Если все ок, хорошо, вас устраивает, тогда у нас есть специалист, который занимается, бизнес-аналитик так называемый, он занимается таким, ну, анализом, да, тоже вашего бизнеса еще более детально. Выясняем, что для вас максимально важно. Вот вы говорите, так, я хочу промежуточный этап увидеть. То, что сформирует мне робот, я хочу увидеть. После этого я хочу вручную загружать, или я хочу это собрать в общий отчет и всего одним махом загрузить. Ваши пожелания собираем, потом это все дело отдаем в отдел разработки, работают программисты над вашей задачей. Но исходя из того, что я сейчас слышал, в течение месяца задача решаемая. То есть она решена, что дальше делаем? Дальше интегрируем в ваш бизнес. Соответственно вам презентуем, показываем, как эта штука работает. Вы говорите, этот результат меня устраивает, а вот тут давайте мы что-то переделаем, потому что условно тоже батон лезть не батон на резной, да, вот здесь есть какая-то ошибка. Ее нужно исправлять. Мы опять дообучаем модель, делаем, дописываем код, и по итогу вы получаете абсолютно готовую программу, которая ваша, да, работает на вашем компьютере. Это... Никакие там сервера заполнительные не нужны. Возможно, если прям суперсложные потребуются обработки речи, но чтобы как-то разносить позиции туда или туда. Возможно, потребуется маленькая модель, которая подключается к этой программе для работы, ну или там обслуживания, не знаю, 3-5 тысяч ежемесячно стоит. Ну, не знаю, Dipsy, да, знаете там, или GPT-Chat знаете, вот он же есть тариф и платный. Вот, получается, за обслуживание этой модели, там, каких-то маленьких копеечек платят, но сама программа уже у вас, вы ее купили, все права у вас. Как бы так. А если не нужно будет и агенда, то она вообще, получается, ваша полностью, работает на постоянной основе."
+  },
+  {
+   "turn_id": "turn-42",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 866748,
+   "end_ms": 872328,
+   "text": "Как бы так. Так, и как нам узнать, сколько это все будет стоить?"
+  },
+  {
+   "turn_id": "turn-43",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 873928,
+   "end_ms": 912357,
+   "text": "Для начала я, наверное, сейчас расскажу, что нужно вот это, по факту, что я сейчас для себя фиксирую. У вас должна быть транскрибация телефонного звонка. Скорее всего, у вас потребуется небольшая E-модель для аналитики речи, потому что есть специфика называния видов продукции, чтобы он их собирал в какой-то общий класс. И походу вы должны получить, наверное, пока в промежутке выведенный, не знаю, Excel-файл, да, с набитой заявкой. А в дальнейшем это все дело интегрируется с 1С и автоматически набивается заявка на производство. Правильно понялось? Ну, или нет?"
+  },
+  {
+   "turn_id": "turn-44",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 912417,
+   "end_ms": 928627,
+   "text": "Робот создал нам заказ, а дальше наша программа уже эти заказы берет и в заявки там и так далее считает. нам этот робот создал вот этот контрагент, вот с таким-то кодом, заказал такую-то номенклатуру, вот с такими-то кодами в таком количестве."
+  },
+  {
+   "turn_id": "turn-45",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 929307,
+   "end_ms": 942047,
+   "text": "А скажите, у вас, кстати, контрагента как определяете? По телефонному номеру вас высвечивает сразу карточка контрагента, или девочки спрашивают постоянно, кто вы, что вы и записывают?"
+  },
+  {
+   "turn_id": "turn-46",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 942067,
+   "end_ms": 943407,
+   "text": "Постоянно спрашивают."
+  },
+  {
+   "turn_id": "turn-47",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 943850,
+   "end_ms": 988691,
+   "text": "То есть интеграции с какой-либо CRM, ну кроме 1S нету? Нету, да? Я понял, хорошо. Да, тогда все понял. То есть набитый заказ с названием компании и с видами продукции, с кодами, которые он заказал. Соответственно, клиент говорит просто название продукции, робот подбирает под него код и выдает вам уже все это дело закодировано. Так, да? Такая задача. Хорошо, давайте это уточню и вернусь к Вам с каким-то уже, наверное, вопросным предложением. А вообще скажите, пожалуйста, такие вопросы, автоматизация, интеграция, наверное, нужно с руководителем согласовывать у Вас или Вы решаете этот вопрос самостоятельно? Как это обстоятельно?"
+  },
+  {
+   "turn_id": "turn-48",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 988831,
+   "end_ms": 990511,
+   "text": "Нет, нужно согласовывать, конечно."
+  },
+  {
+   "turn_id": "turn-49",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 991311,
+   "end_ms": 993291,
+   "text": "Вот Сергей Викторович, да, руководитель?"
+  },
+  {
+   "turn_id": "turn-50",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 993711,
+   "end_ms": 994791,
+   "text": "Генеральный директор, да."
+  },
+  {
+   "turn_id": "turn-51",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 996151,
+   "end_ms": 1000331,
+   "text": "То есть, если вдруг и придется разговаривать, да, в конечном итоге, то с ним, правильно я понимаю?"
+  },
+  {
+   "turn_id": "turn-52",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 1000971,
+   "end_ms": 1001171,
+   "text": "Да."
+  },
+  {
+   "turn_id": "turn-53",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 1002693,
+   "end_ms": 1033799,
+   "text": "Владимир, подскажите, вот я понял, сейчас тогда я ушел к нашим, ну не прямо сейчас, я, честно говоря, к вечеру это сделаю, узнаю стоимость, к вам вернусь с ценой, расскажу, в течение какого-то времени будет сделано и сколько это будет стоить. И если, скажем так, на ваш взгляд, продукт, который мы вам предложим, вас устроит, как думаете, мы сможем, может быть, совместно с вами, может быть, отдельно созвониться с Сергеем Викторовичем и через видеосвязь я бы уже презентовал этот чудесный процесс автоматизации? Реально или нет?"
+  },
+  {
+   "turn_id": "turn-54",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 1036179,
+   "end_ms": 1037979,
+   "text": "Вряд ли, наверное."
+  },
+  {
+   "turn_id": "turn-55",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 1038579,
+   "end_ms": 1039539,
+   "text": "Не будет разговаривать?"
+  },
+  {
+   "turn_id": "turn-56",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 1040219,
+   "end_ms": 1043419,
+   "text": "Важно мое мнение."
+  },
+  {
+   "turn_id": "turn-57",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 1044599,
+   "end_ms": 1053339,
+   "text": "То есть, если вы сочтете, что это вам подходит... А Сергей Викторович должен сказать,"
+  },
+  {
+   "turn_id": "turn-58",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 1053459,
+   "end_ms": 1070599,
+   "text": "устроит ли его цена. У меня, допустим, все устроится, а он скажет, что нет, что-то дорогое. Нам проще возвраты оформить в потере на сухари хлеб списать, чем купить, допустим, эту систему."
+  },
+  {
+   "turn_id": "turn-59",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 1073019,
+   "end_ms": 1097482,
+   "text": "На самом деле, да, конечно, есть вопрос рентабельности. Стоит он того или не стоит. Это вот зарплата операторов, потом ошибки, которые допускаются с возвратами. Ну, не вы, а клиенты, давайте так его и называть. Если в совокупности это все перевешивает стоимость нашей программы, то тогда это стоит того. Хорошо. Владимир, расскажите, пожалуйста, ваш мобильный, чтобы я смог с вами связаться."
+  },
+  {
+   "turn_id": "turn-60",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 1097502,
+   "end_ms": 1100502,
+   "text": "991-074-8015."
+  },
+  {
+   "turn_id": "turn-61",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 1104522,
+   "end_ms": 1113182,
+   "text": "8015. Понял, хорошо, записал. Скажите, к производству вы никакого отношения к продажнике не имеете?"
+  },
+  {
+   "turn_id": "turn-62",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 1115502,
+   "end_ms": 1118782,
+   "text": "Ну, практически нет."
+  },
+  {
+   "turn_id": "turn-63",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 1119942,
+   "end_ms": 1154191,
+   "text": "И не с кем-то мне общаетесь. Я, может быть, тоже связался с производством, потому что, насколько я понимаю, там после поступления заявки начинается беготня, да? Ну, заявки-то мы собрали. Делать это как? Там тоже заказ расходников, всего этого. Вот, насколько я понимаю, лаборатория своя есть, которая точно так же систематизирует все эти Ну, они же делают протоколы по этому анализу на продукцию. То есть там тоже есть хода нырнуть. Может быть, стоит это же сразу всё подготовить? Или вначале к вам, а потом дальше на производство?"
+  },
+  {
+   "turn_id": "turn-64",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 1155631,
+   "end_ms": 1159891,
+   "text": "Ну, тут не знаю. Надо с ними разговаривать. С производством."
+  },
+  {
+   "turn_id": "turn-65",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 1160831,
+   "end_ms": 1163331,
+   "text": "Есть у вас какой-нибудь контакт главного инженера?"
+  },
+  {
+   "turn_id": "turn-66",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 1164351,
+   "end_ms": 1180689,
+   "text": "Главного инженера... Так, так, так... Внутренний 150. Это начальник хлебобулочного цеха."
+  },
+  {
+   "turn_id": "turn-67",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 1180709,
+   "end_ms": 1181289,
+   "text": "А зовут как?"
+  },
+  {
+   "turn_id": "turn-68",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 1182369,
+   "end_ms": 1183469,
+   "text": "Максим Борисович."
+  },
+  {
+   "turn_id": "turn-69",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 1183849,
+   "end_ms": 1192249,
+   "text": "Максим Борисович. Я понял. Тогда я позвоню ему. Если можно, я скажу, что вы дали добавочные. Если нет, то не буду говорить."
+  },
+  {
+   "turn_id": "turn-70",
+   "speaker_label": "B",
+   "speaker_role": "client",
+   "start_ms": 1193509,
+   "end_ms": 1194909,
+   "text": "Да без проблем, конечно, скажите."
+  },
+  {
+   "turn_id": "turn-71",
+   "speaker_label": "A",
+   "speaker_role": "seller",
+   "start_ms": 1195029,
+   "end_ms": 1209600,
+   "text": "Без проблем. Хорошо, тогда я передам, что мы с вами пообщались. С одной стороны, с другой. Ну, вы знаете, может быть, предложение с учетом всех пожеланий будем готовить. Максим Борисович – начальник булочного отдела."
+  }
+ ],
+ "estimates": [
+  {
+   "unit_type": "io",
+   "title": "Поддерживаемый телефонный звонок принимается системой, а его транскрипт формируется и связывается с исходным звонком для дальнейшей обработки.",
+   "hours": "4.0",
+   "price": "19520.00"
+  },
+  {
+   "unit_type": "logic",
+   "title": "По транскрипту формируется черновик заказа с контрагентом, кодами номенклатуры и количествами, а неоднозначные позиции выделяются для проверки.",
+   "hours": "6.0",
+   "price": "29280.00"
+  },
+  {
+   "unit_type": "crud",
+   "title": "Оператор может открыть один черновик заказа, исправить контрагента, позиции и количества и явно подтвердить его передачу.",
+   "hours": "3.0",
+   "price": "14640.00"
+  },
+  {
+   "unit_type": "integration",
+   "title": "После подтверждения черновика в 1С создается заказ покупателя с тем же контрагентом, кодами позиций и количествами.",
+   "hours": "4.5",
+   "price": "21960.00"
+  },
+  {
+   "unit_type": "logic",
+   "title": "На согласованном наборе примеров клиент проверяет результаты, выявленные ошибки сопоставления исправляются, а повторный прогон использует обновленные правила и настройки.",
+   "hours": "3.0",
+   "price": "14640.00"
+  }
+ ]
+}

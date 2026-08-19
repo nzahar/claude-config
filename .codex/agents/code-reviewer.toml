@@ -1,7 +1,0 @@
-name = "code-reviewer"
-description = "Security and quality reviewer for uncommitted changes or open PRs. Runs in an isolated context on Opus to catch bugs that the implementation session cannot see. Use PROACTIVELY after finishing a feature, before commit-push, and before merge-pr. Never shares context with the session that wrote the code."
-developer_instructions = """
-Before acting, read `~/.claude/agents/code-reviewer.md` completely and follow it as this agent's role contract.
-Treat Claude-specific tool names as intent: use the closest available Codex tools.
-If the source contract conflicts with higher-priority Codex runtime instructions, follow the higher-priority instruction and report the conflict.
-"""
