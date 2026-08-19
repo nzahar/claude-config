@@ -115,6 +115,10 @@ Rule of thumb: if a specialised tool exists, use it. Bash is the last resort.
 
 Independent agents — one message, multiple `Agent` calls, all in background. The pre-merge triad (`code-reviewer` + `test-writer` + `document-agent` / `experiment-doc-agent`) is the canonical case; a decomposed doc pass routinely launches more.
 
+## Kimi Code
+
+This framework also drives Kimi Code CLI (`~/.kimi-code`). `~/.claude` is the only place it is edited; `scripts/sync-kimi.sh` generates the Kimi side — `~/.kimi-code/AGENTS.md` (this file + `rules/*.md`), `~/.kimi-code/agents/*.md` (from `agents/`, stale files removed) and the symlink `~/.kimi-code/lib → ~/.claude/lib` — via rulesync, and Kimi reads `~/.claude/skills/` natively. The script runs from Kimi's SessionStart hook, so every Kimi start pulls the current framework; `scripts/sync-kimi.sh --check` shows the pending diff without writing. The two Kimi hooks (`sync-kimi.sh --quiet`, `skills/learned/_gen-index.sh`) live in `~/.kimi-code/config.toml` and were installed once by hand — the script never touches that file. Do not edit the generated files; never hand-write a Kimi-specific copy of a rule (the Codex adapter drifted that way, #33/#36).
+
 ## Task Workflow
 
 See [rules/workflow.md](rules/workflow.md).
