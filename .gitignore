@@ -24,6 +24,7 @@ handoffs/
 plugins/
 downloads/
 uploads/
+settings.json
 settings.local.json
 security_warnings_state_*.json
 *.bak
