@@ -1,86 +1,22 @@
 ---
 name: learn
-description: "Extract reusable patterns from the current session into ~/.claude/skills/learned/ notes (error resolutions, debugging techniques, non-obvious fixes). Invoke when the user types /learn or asks to save a lesson / pattern from this session (сохрани как skill, запомни паттерн)."
+description: "Save a reusable lesson from the current session as a proper skill under ~/.claude/skills/<topic>/SKILL.md — or extend an existing topic skill — so the native skill loader surfaces it by description in future sessions. Invoke when the user types /learn or asks to save a lesson / pattern from this session (сохрани как skill, запомни паттерн). Never invoke unasked."
 ---
 
-# /learn - Extract Reusable Patterns
+# /learn — save a lesson as a skill
 
-Analyze the current session and extract any patterns worth saving as skills.
+Bar: would this save a future session real time, and is it non-obvious — an empirical finding, a quirk of a tool or library, a trap that already cost this session? Generic knowledge, one-off project facts and trivial fixes do not qualify; if nothing in the session clears the bar, say so and write nothing.
 
-## Trigger
+## 1. Topic first, then file
 
-Run `/learn` at any point during a session when you've solved a non-trivial problem.
+Skills are per **topic**, not per incident — `skills/clickhouse/`, `skills/ghcr-actions/`, `skills/pytorch-seed-ablation/`. List `~/.claude/skills/*/SKILL.md` descriptions; if the lesson belongs to an existing topic, **append a section** to that skill and extend its `description` so the new trigger is discoverable. Only create a new `skills/<topic>/SKILL.md` when no topic fits. Two lessons on one tool go in one skill.
 
-## What to Extract
+## 2. Write it
 
-Look for:
+Frontmatter: `name: <topic>` (kebab-case, equals the directory) and `description` — the only thing future sessions see before loading the skill, so it must name the **trigger situation** and the **gist of the answer** ("X happens; fix is Y"), under ~450 chars. No other frontmatter fields.
 
-1. **Error Resolution Patterns**
-    - What error occurred?
-    - What was the root cause?
-    - What fixed it?
-    - Is this reusable for similar errors?
+Body per lesson: a heading, **Context** (one sentence: when this applies), **Problem**, **Solution** (with a tight code example when code is the point), **When to use** (the trigger conditions, concretely). Verbatim error strings, real numbers from measurements. Keep it to what a future session needs to act — history and narrative are cut.
 
-2. **Debugging Techniques**
-    - Non-obvious debugging steps
-    - Tool combinations that worked
-    - Diagnostic patterns
+## 3. Report
 
-3. **Workarounds**
-    - Library quirks
-    - API limitations
-    - Version-specific fixes
-
-4. **Project-Specific Patterns**
-    - Codebase conventions discovered
-    - Architecture decisions made
-    - Integration patterns
-
-## Output Format
-
-Create a skill file at `~/.claude/skills/learned/[pattern-name].md` using this exact template:
-
-```markdown
----
-name: <Descriptive Pattern Name in Title Case>
-description: <one-line summary, ~120 chars max — used to decide relevance in future sessions>
-type: feedback
----
-
-# <Descriptive Pattern Name>
-
-**Extracted:** YYYY-MM-DD
-**Context:** <one-sentence description of when this applies>
-
-## Problem
-<What problem this solves — be specific>
-
-## Solution
-<The pattern/technique/workaround>
-
-## Example
-<Code example if applicable — keep tight, link out for long code>
-
-## When to Use
-<Trigger conditions — what should activate this skill>
-```
-
-The YAML frontmatter is mandatory. It has three required fields:
-
-- `name` — pretty title in Title Case, mirrors the H1 heading below
-- `description` — one-line summary that future sessions read to decide whether the skill is relevant. Be specific: "X happens, fix is Y" beats "tips for X"
-- `type: feedback` — fixed value for learned-skills
-
-## Process
-
-1. Review the session for extractable patterns
-2. Identify the most valuable/reusable insight
-3. Draft the skill file with the YAML frontmatter and save it to `~/.claude/skills/learned/`
-4. Inform the user what was saved
-
-## Notes
-
-- Don't extract trivial fixes (typos, simple syntax errors)
-- Don't extract one-time issues
-- Focus on patterns that will save time in future sessions
-- Keep skills focused — one pattern per skill
+Tell the user the path and whether it was a new skill or an extension, in one or two lines. Do not commit.

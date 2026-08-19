@@ -8,9 +8,8 @@
 # natively. config.toml is never touched. Sync is manual: the user runs /sync-kimi
 # (skills/sync-kimi/SKILL.md) from either CLI, which calls this script.
 #
-# Kept hook-safe anyway — every failure path exits 0 with a line on stderr (same
-# degradation as skills/learned/_gen-index.sh): missing npx, a slow or offline
-# registry, a non-zero rulesync exit. Non-default CLAUDE_CONFIG_DIR is
+# Kept hook-safe anyway — every failure path exits 0 with a line on stderr:
+# missing npx, a slow or offline registry, a non-zero rulesync exit. Non-default CLAUDE_CONFIG_DIR is
 # refused rather than half-honoured — rulesync resolves the Claude tree from the
 # home directory regardless, so the symlink and the generated text would point at
 # different trees.

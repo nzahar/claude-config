@@ -60,8 +60,8 @@ Unchanged on the light track: §4.5 pre-execution review, Verification Before Cl
 **Operational test for "framework-level"** (a change qualifies if a flawed version reliably propagates into future sessions whenever its trigger fires — base-prompt load, agent invocation, slash-command, etc.):
 
 - **Always in scope** (full content loaded every time the trigger fires, trigger fires frequently): `rules/`, `CLAUDE.md`, `agents/`, ADRs — base-prompt auto-load every session for `rules/` and `CLAUDE.md`; full prompt load on every agent invocation for `agents/`
-- **In scope on contract changes only** (invoke-on-demand, trigger fires rarely, many edits are prose tweaks): `skills/*` (excluding `learned/`) — iterate when changing **what** the artifact takes/returns or **when** it triggers (description, arguments, output shape, trigger phrasing). Skip iteration for prose tightening, added examples, rationale rewrites
-- **Excluded**: `skills/learned/*` (knowledge base, not governance), regular feature work, bugfixes, `workflow.md` §4.5 (operation-level pre-execution review — that gate stays one-shot per code path)
+- **In scope on contract changes only** (invoke-on-demand, trigger fires rarely, many edits are prose tweaks): `skills/*` — iterate when changing **what** the artifact takes/returns or **when** it triggers (description, arguments, output shape, trigger phrasing). Skip iteration for prose tightening, added examples, rationale rewrites
+- **Excluded**: regular feature work, bugfixes, `workflow.md` §4.5 (operation-level pre-execution review — that gate stays one-shot per code path)
 
 **Loop hygiene.** If iteration extends beyond ~3 cycles, stops converging (each new cycle introduces new warnings from previous fixes — a regression loop, not progress), or context becomes heavy, suggest `/clear` + cold-start from the plan file plus the latest reviewer report. Consistent with design-discipline rule #5 (`/compact` ban during design work).
 

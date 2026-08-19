@@ -3,20 +3,6 @@
     "defaultMode": "auto"
   },
   "model": "opus[1m]",
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/learned/_gen-index.sh\"",
-            "timeout": 10,
-            "statusMessage": "Loading learned-skills index"
-          }
-        ]
-      }
-    ]
-  },
   "statusLine": {
     "type": "command",
     "command": "/root/miniconda3/bin/cs",
