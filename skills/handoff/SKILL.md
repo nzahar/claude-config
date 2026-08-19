@@ -31,7 +31,7 @@ If the script prints nothing or fails, **stop and tell the user the handoff path
 
 The file lives outside the project on purpose — it never reaches the project's git. One live file per project; history lives in `handoffs/_archive/` and is managed here, at write time — reading (`/pickup-handoff`) never moves or deletes anything.
 
-Retention runs on every `/handoff`, before anything else in this step — this is the only place that sweeps, so it must not depend on whether there is something to archive:
+Retention runs on every `/handoff`, as soon as the path is resolved — this is the only place that sweeps, so it must not depend on whether there is something to archive:
 
 ```
 ARCHIVE="$(dirname "<path>")/_archive"; mkdir -p "$ARCHIVE"
@@ -41,9 +41,11 @@ find "$ARCHIVE" -maxdepth 1 -name '*.md' -mtime +7 -delete
 **If the path already exists**, read it first: carry forward still-valid content, especially What did NOT work. Then one test, answered from your own context: **did you write this file in this session?** Yes → update it in place. No → it is a previous session's handoff; archive it before writing the new one:
 
 ```
-archived="$ARCHIVE/$(basename "<path>" .md)-$(date -u +%Y-%m-%dT%H-%M-%SZ).md"
+archived="$(dirname "<path>")/_archive/$(basename "<path>" .md)-$(date -u +%Y-%m-%dT%H-%M-%SZ).md"
 mv "<path>" "$archived" && touch "$archived"
 ```
+
+Each block above is one Bash call and self-contained on purpose — shell variables do not survive between tool calls, so never read `$ARCHIVE` from the earlier block.
 
 If `mv` fails, stop and tell the user — do not write over the live file. The `touch` makes retention count from archiving, not from when the old handoff was authored — `mv` preserves mtime, and without it a week-old handoff would be swept the moment it was archived.
 
