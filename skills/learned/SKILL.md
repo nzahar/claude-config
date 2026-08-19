@@ -5,7 +5,8 @@ description: Use this when a task resembles a recurring failure mode or technica
 
 # Learned Patterns
 
-This skill exposes the local learned-pattern knowledge base to Codex.
+This skill exposes the local learned-pattern knowledge base for on-demand
+keyword search (the SessionStart index in `_gen-index.sh` is the always-on half).
 
 Use it when the user asks about a known pitfall, debugging pattern, deployment
 pattern, data-processing gotcha, or when the current task resembles one of the

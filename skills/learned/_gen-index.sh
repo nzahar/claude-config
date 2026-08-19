@@ -5,9 +5,9 @@
 # this hook is the only always-on mechanism that surfaces them (SKILL.md's keyword
 # search is the on-demand one).
 #
-# SKILL.md is the folder's native skill entry point (added for the Codex adapter;
-# Claude Code's personal-skill loader picks it up too), not a note — excluded here
-# so it does not appear in the index as a self-referential pseudo-note.
+# SKILL.md is the folder's native skill entry point (Claude Code's personal-skill
+# loader picks it up), not a note — excluded here so it does not appear in the
+# index as a self-referential pseudo-note.
 #
 # Emits SessionStart additionalContext JSON listing each note's name + description.
 # Exits 0 with no output when jq/awk are unavailable or the folder is empty, so a
