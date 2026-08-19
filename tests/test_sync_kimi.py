@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "sync-kimi.sh"
 
 requires_npx = pytest.mark.skipif(
-    shutil.which("npx") is None or shutil.which("timeout") is None,
+    shutil.which("npx") is None or shutil.which("timeout") is None or shutil.which("flock") is None,
     reason="without npx/timeout the script correctly refuses to sync; nothing to assert on",
 )
 
@@ -180,6 +180,7 @@ def test_check_exits_3_when_tooling_is_missing(sandbox):
     assert "not syncing" in result.stderr
 
 
+@requires_npx
 def test_missing_agents_dir_bails_and_check_exits_3(sandbox):
     shutil.rmtree(sandbox["claude"] / "agents")
     result = _run(sandbox, "--quiet")
@@ -190,6 +191,7 @@ def test_missing_agents_dir_bails_and_check_exits_3(sandbox):
     assert check.returncode == 3
 
 
+@requires_npx
 def test_bogus_kimi_home_is_refused(sandbox):
     env = os.environ.copy()
     env["HOME"] = str(sandbox["home"])
