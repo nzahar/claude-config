@@ -1,4 +1,12 @@
+---
+name: merge-pr
+description: "Merge the pull request with the given number as a squash merge, delete the branch, switch to main and pull. Invoke when the user types /merge-pr <N> or explicitly asks to merge a PR (мержи PR N). Does not run review/test/doc agents — those are separate steps before. Requires an explicit merge request; never invoke on ambiguous wording."
+argument-hint: "<pr-number>"
+---
+
 Find the PR with number $ARGUMENTS and merge it.
+
+**PR number guard.** Before anything else, resolve the PR number to a literal integer — from `$ARGUMENTS` or from the user's explicit request. If there is none, stop and ask. Substitute that integer for `$ARGUMENTS` in every command below, `gh pr view` included: `gh` with no number silently targets the current branch's PR — wrong status report first, wrong merge after.
 
 **Mode detection.** At the start determine the mode by the `origin` URL:
 

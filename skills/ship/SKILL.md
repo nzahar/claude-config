@@ -1,10 +1,15 @@
+---
+name: ship
+description: "Commit, open a PR and merge it immediately, after checking the pre-merge gates are fresh. Invoke when the user types /ship or says ship / шипай / зашипай. Requires an explicit request — PR creation and merge are gated actions; never invoke on 'continue' / 'implement' / 'сделай'."
+---
+
 Commit changes, open a PR, and merge it immediately.
 
 **Pre-merge gates check.** For each of the three gates, answer: (a) does it apply to the branch diff? (b) if it applies — did it return APPROVED for the current state (not a stale snapshot)?
 
 Applicability criteria:
 
-- **`code-reviewer`** — there is code, configuration, or framework artifacts (`rules/`, `agents/`, `CLAUDE.md`, `commands/`, `skills/` except `learned/`, `docs/ADR/`, `lib/`) — including edits to existing ADRs and `lib/` documents, not only new ones. **Not** applicable: micro doc edits (≲10 lines of prose — heuristic; edits that change contract or semantics require review regardless of size), typos, rephrasings.
+- **`code-reviewer`** — there is code, configuration, or framework artifacts (`rules/`, `agents/`, `CLAUDE.md`, `skills/` except `learned/`, `docs/ADR/`, `lib/`) — including edits to existing ADRs and `lib/` documents, not only new ones. **Not** applicable: micro doc edits (≲10 lines of prose — heuristic; edits that change contract or semantics require review regardless of size), typos, rephrasings.
 - **`test-writer`** — there are changes to code with testable logic. **Not** applicable: pure documentation, configuration without behavioural effects, renames.
 - **`document-agent` / `experiment-doc-agent`** — the repo has `docs/CODEMAPS/`, `docs/STATE.md`, or `experiments/` with REPORT.md. **Not** applicable: repos without these artifacts (e.g., the framework itself in `~/.claude/`).
 
@@ -69,4 +74,4 @@ Steps below are common to both modes; mode-specific steps are marked **Local:** 
 
 ---
 
-_Canonical single-step versions — `commands/commit-push.md` and `commands/merge-pr.md`. When changing them (a new safety check, MCP schema change, proxy rule update), verify that `/ship` is still correct._
+_Canonical single-step versions — `skills/commit-push/SKILL.md` and `skills/merge-pr/SKILL.md`. When changing them (a new safety check, MCP schema change, proxy rule update), verify that `/ship` is still correct._

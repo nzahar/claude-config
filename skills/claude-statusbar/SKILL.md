@@ -8,8 +8,9 @@ description: Manage `cs` (claude-statusbar) — switch theme/style/density, over
 Use this skill any time the user wants to inspect, change, customize, or
 diagnose the `cs` status bar. Replaces the older individual slash commands
 (`/statusbar`, `/statusbar-theme`, `/statusbar-style`, `/statusbar-preview`,
-`/statusbar-doctor`, `/statusbar-reset`) — they still work but this skill
-covers all of them with conversational intent.
+`/statusbar-doctor`, `/statusbar-reset`) — those were removed from this config;
+this skill covers all of them with conversational intent (`cs install-commands`
+regenerates them if ever wanted).
 
 ## Decision tree
 
