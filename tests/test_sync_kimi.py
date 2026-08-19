@@ -83,6 +83,7 @@ def test_second_run_is_idempotent_and_check_reports_drift(sandbox):
     check = _run(sandbox, "--check")
     assert check.returncode == 0, check.stdout + check.stderr
     assert check.stdout == ""
+    assert check.stderr == ""
 
     with (sandbox["claude"] / "rules" / "security.md").open("a", encoding="utf-8") as fh:
         fh.write("\n- Sync-kimi drift marker\n")
@@ -122,9 +123,54 @@ def test_same_claude_config_dir_is_accepted_as_default(sandbox):
     result = subprocess.run(["/bin/bash", str(SCRIPT), "--quiet"], capture_output=True, text=True, env=env, timeout=30)
     assert result.returncode == 0
     assert "CLAUDE_CONFIG_DIR" not in result.stderr
-    assert "npx not found" in result.stderr
+    assert "not syncing" in result.stderr
 
 
 def test_unknown_argument_is_rejected(sandbox):
     result = _run(sandbox, "--bogus")
     assert result.returncode == 2
+
+
+@requires_npx
+def test_only_declared_targets_are_touched(sandbox):
+    kimi = sandbox["kimi"]
+    (kimi / "config.toml").write_text("default_model = \"kimi-code/k3\"\n", encoding="utf-8")
+    (kimi / "sessions").mkdir()
+    (kimi / "sessions" / "x.jsonl").write_text("{}\n", encoding="utf-8")
+    (kimi / "notes.md").write_text("mine\n", encoding="utf-8")
+    (kimi / "agents").mkdir()
+    (kimi / "agents" / "hand-written.md").write_text("---\nname: hand-written\ndescription: x\n---\n", encoding="utf-8")
+
+    assert _run(sandbox, "--quiet").returncode == 0
+
+    assert (kimi / "config.toml").read_text(encoding="utf-8") == "default_model = \"kimi-code/k3\"\n"
+    assert (kimi / "sessions" / "x.jsonl").read_text(encoding="utf-8") == "{}\n"
+    assert (kimi / "notes.md").read_text(encoding="utf-8") == "mine\n"
+    assert not (kimi / "agents" / "hand-written.md").exists()
+
+
+@requires_npx
+def test_broken_agent_bails_without_touching_live_profile(sandbox):
+    assert _run(sandbox, "--quiet").returncode == 0
+    before = sorted(p.name for p in (sandbox["kimi"] / "agents").glob("*.md"))
+    (sandbox["claude"] / "agents" / "debugger.md").write_text(
+        "---\nname: debugger\ndescription: broken: colon\n---\nbody\n", encoding="utf-8"
+    )
+    result = _run(sandbox, "--quiet")
+    assert result.returncode == 0
+    assert "not syncing" in result.stderr
+    after = sorted(p.name for p in (sandbox["kimi"] / "agents").glob("*.md"))
+    assert after == before
+    check = _run(sandbox, "--check")
+    assert check.returncode == 3
+
+
+def test_check_exits_3_when_tooling_is_missing(sandbox):
+    env = os.environ.copy()
+    env["HOME"] = str(sandbox["home"])
+    env["KIMI_CODE_HOME"] = str(sandbox["kimi"])
+    env.pop("CLAUDE_CONFIG_DIR", None)
+    env["PATH"] = "/nonexistent"
+    result = subprocess.run(["/bin/bash", str(SCRIPT), "--check"], capture_output=True, text=True, env=env, timeout=30)
+    assert result.returncode == 3
+    assert "not syncing" in result.stderr

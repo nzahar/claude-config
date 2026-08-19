@@ -8,16 +8,19 @@
 # natively. config.toml is never touched. Sync is manual: the user runs /sync-kimi
 # (skills/sync-kimi/SKILL.md) from either CLI, which calls this script.
 #
-# Kept hook-safe anyway — every failure path exits 0 with a line on stderr:
-# missing npx, a slow or offline registry, a non-zero rulesync exit. Non-default CLAUDE_CONFIG_DIR is
+# Kept hook-safe anyway — the tooling failure paths exit 0 with a line on stderr
+# (missing npx, a slow or offline registry, a non-zero rulesync exit); in --check
+# mode the same paths exit 3 so a broken run is never read as "no drift". Non-default CLAUDE_CONFIG_DIR is
 # refused rather than half-honoured — rulesync resolves the Claude tree from the
 # home directory regardless, so the symlink and the generated text would point at
 # different trees.
 #
-#   sync-kimi.sh          sync, print what rulesync wrote
+#   sync-kimi.sh          sync
 #   sync-kimi.sh --quiet  sync, print nothing on success
 #   sync-kimi.sh --check  render into a temp profile and diff against the live one;
-#                         writes nothing, exits 1 on differences
+#                         writes nothing under $KIMI_HOME (the ~/.rulesync scratch
+#                         tree is still rebuilt), exits 1 on differences, 3 if the
+#                         tooling failed and nothing could be compared
 set -euo pipefail
 
 RULESYNC_PKG="rulesync@16.14.0"
@@ -33,7 +36,11 @@ for arg in "$@"; do
   esac
 done
 
-bail() { echo "sync-kimi: $*" >&2; exit 0; }
+bail() {
+  echo "sync-kimi: $*" >&2
+  [[ $check -eq 1 ]] && exit 3
+  exit 0
+}
 
 claude_dir="$HOME/.claude"
 if [[ -n "${CLAUDE_CONFIG_DIR:-}" ]]; then
@@ -56,9 +63,14 @@ rulesync() {
   [[ $quiet -eq 1 || -z "$out" ]] || echo "$out"
 }
 
+expected_agents=$(find "$claude_dir/agents" -maxdepth 1 -name '*.md' | wc -l)
+
 # rulesync resolves ~/.rulesync from HOME for the import side and ./.rulesync from
 # cwd for subagents; cd'ing to HOME collapses both into one intermediate tree.
 cd "$HOME"
+mkdir -p "$HOME/.rulesync"
+exec 9>"$HOME/.rulesync/.sync-kimi.lock"
+flock -w 30 9 || bail "another sync-kimi run holds the lock — not syncing"
 rm -rf "$HOME/.rulesync/rules" "$HOME/.rulesync/subagents"
 rulesync import --global --targets claudecode --features rules,subagents --silent
 
@@ -67,13 +79,19 @@ generate_into() {
   # land at its root), which matches the KIMI_HOME definition above.
   KIMI_CODE_HOME="$1" rulesync generate --global --targets kimi-code \
     --features rules,subagents --delete --silent
-  ln -sfn "$claude_dir/lib" "$1/lib"
+  local got
+  got=$(find "$1/agents" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l)
+  [[ "$got" -eq "$expected_agents" ]] || bail "rulesync emitted $got agents, expected $expected_agents — an agent failed its strict frontmatter parse; fix it in $claude_dir/agents and re-run"
+  [[ -s "$1/AGENTS.md" ]] || bail "rulesync emitted no AGENTS.md"
 }
 
+# Always render into a scratch profile first, so a partial or empty rulesync result
+# is caught above before anything under $KIMI_HOME is replaced.
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+generate_into "$tmp"
+
 if [[ $check -eq 1 ]]; then
-  tmp="$(mktemp -d)"
-  trap 'rm -rf "$tmp"' EXIT
-  generate_into "$tmp"
   status=0
   diff -u "$KIMI_HOME/AGENTS.md" "$tmp/AGENTS.md" 2>&1 || status=1
   diff -ru "$KIMI_HOME/agents" "$tmp/agents" 2>&1 || status=1
@@ -82,5 +100,9 @@ if [[ $check -eq 1 ]]; then
 fi
 
 mkdir -p "$KIMI_HOME"
-generate_into "$KIMI_HOME"
-[[ $quiet -eq 1 ]] || echo "sync-kimi: wrote $KIMI_HOME/AGENTS.md, $KIMI_HOME/agents/, $KIMI_HOME/lib -> $claude_dir/lib"
+[[ -e "$KIMI_HOME/lib" && ! -L "$KIMI_HOME/lib" ]] && bail "$KIMI_HOME/lib exists and is not a symlink — not replacing it"
+rm -rf "$KIMI_HOME/agents"
+cp -R "$tmp/agents" "$KIMI_HOME/agents"
+cp "$tmp/AGENTS.md" "$KIMI_HOME/AGENTS.md"
+ln -sfn "$claude_dir/lib" "$KIMI_HOME/lib"
+[[ $quiet -eq 1 ]] || echo "sync-kimi: wrote $KIMI_HOME/AGENTS.md, $KIMI_HOME/agents/ ($expected_agents agents), $KIMI_HOME/lib -> $claude_dir/lib"
