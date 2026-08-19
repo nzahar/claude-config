@@ -178,3 +178,23 @@ def test_check_exits_3_when_tooling_is_missing(sandbox):
     result = subprocess.run(["/bin/bash", str(SCRIPT), "--check"], capture_output=True, text=True, env=env, timeout=30)
     assert result.returncode == 3
     assert "not syncing" in result.stderr
+
+
+def test_missing_agents_dir_bails_and_check_exits_3(sandbox):
+    shutil.rmtree(sandbox["claude"] / "agents")
+    result = _run(sandbox, "--quiet")
+    assert result.returncode == 0
+    assert "no agents found" in result.stderr
+    assert not (sandbox["kimi"] / "AGENTS.md").exists()
+    check = _run(sandbox, "--check")
+    assert check.returncode == 3
+
+
+def test_bogus_kimi_home_is_refused(sandbox):
+    env = os.environ.copy()
+    env["HOME"] = str(sandbox["home"])
+    env["KIMI_CODE_HOME"] = "/"
+    env.pop("CLAUDE_CONFIG_DIR", None)
+    result = subprocess.run([str(SCRIPT), "--quiet"], capture_output=True, text=True, env=env, timeout=30)
+    assert result.returncode == 0
+    assert "KIMI_CODE_HOME" in result.stderr

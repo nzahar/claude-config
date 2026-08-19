@@ -52,8 +52,11 @@ fi
 [[ -d "$claude_dir" ]] || bail "$claude_dir does not exist — nothing to sync"
 command -v npx >/dev/null 2>&1 || bail "npx not found — not syncing"
 command -v timeout >/dev/null 2>&1 || bail "timeout not found — not syncing"
+command -v flock >/dev/null 2>&1 || bail "flock not found — not syncing"
 
 KIMI_HOME="${KIMI_CODE_HOME:-$HOME/.kimi-code}"
+[[ "$KIMI_HOME" == /* && "$KIMI_HOME" != / ]] || bail "KIMI_CODE_HOME must be an absolute path other than / (got '$KIMI_HOME') — not syncing"
+[[ ! -e "$KIMI_HOME" || -d "$KIMI_HOME" ]] || bail "$KIMI_HOME exists and is not a directory — not syncing"
 
 rulesync() {
   local out
@@ -64,7 +67,9 @@ rulesync() {
   [[ $quiet -eq 1 || -z "$out" ]] || echo "$out"
 }
 
-expected_agents=$(find "$claude_dir/agents" -maxdepth 1 -name '*.md' | wc -l)
+count_agents() { local n=0; [[ -d "$1" ]] && n=$(find "$1" -maxdepth 1 -name '*.md' | wc -l); echo "$n"; }
+expected_agents=$(count_agents "$claude_dir/agents")
+[[ "$expected_agents" -gt 0 ]] || bail "no agents found in $claude_dir/agents — not syncing"
 
 # rulesync resolves ~/.rulesync from HOME for the import side and ./.rulesync from
 # cwd for subagents; cd'ing to HOME collapses both into one intermediate tree.
@@ -81,7 +86,7 @@ generate_into() {
   KIMI_CODE_HOME="$1" rulesync generate --global --targets kimi-code \
     --features rules,subagents --delete --silent
   local got
-  got=$(find "$1/agents" -maxdepth 1 -name '*.md' 2>/dev/null | wc -l)
+  got=$(count_agents "$1/agents")
   [[ "$got" -eq "$expected_agents" ]] || bail "rulesync emitted $got agents, expected $expected_agents — an agent failed its strict frontmatter parse; fix it in $claude_dir/agents and re-run"
   [[ -s "$1/AGENTS.md" ]] || bail "rulesync emitted no AGENTS.md"
 }
@@ -110,5 +115,7 @@ rm -rf "$KIMI_HOME/agents"
 cp -R "$tmp/agents" "$KIMI_HOME/agents"
 cp "$tmp/AGENTS.md" "$KIMI_HOME/AGENTS.md"
 ln -sfn "$claude_dir/lib" "$KIMI_HOME/lib"
+# skills points at the framework source tree: never add "skills" to the rulesync
+# --features lists above, or generate would write into ~/.claude/skills.
 ln -sfn "$claude_dir/skills" "$KIMI_HOME/skills"
 [[ $quiet -eq 1 ]] || echo "sync-kimi: wrote $KIMI_HOME/AGENTS.md, $KIMI_HOME/agents/ ($expected_agents agents), $KIMI_HOME/{lib,skills} -> $claude_dir/{lib,skills}"
