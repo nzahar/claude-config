@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "model": "opus[1m]",
+  "statusLine": {
+    "type": "command",
+    "command": "cs",
+    "refreshInterval": 1
+  },
+  "enabledPlugins": {
+    "context7@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true
+  },
+  "language": "Russian",
+  "tui": "fullscreen",
+  "skipWorkflowUsageWarning": true,
+  "theme": "dark-daltonized",
+  "switchModelsOnFlag": true,
+  "remoteControlAtStartup": true,
+  "agentPushNotifEnabled": true
+}
