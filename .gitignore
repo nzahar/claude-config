@@ -35,3 +35,4 @@ chrome/
 claude-statusbar.json
 .last-update-result.json
 .claude/
+__pycache__/

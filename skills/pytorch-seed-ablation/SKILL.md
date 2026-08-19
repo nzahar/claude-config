@@ -1,12 +1,12 @@
 ---
-name: PyTorch Ablation Init RNG Shift
-description: Adding a submodule (even "last") before self.apply() shifts the shared-param init RNG — breaks same-seed comparability across model variants; construct axis modules AFTER apply().
-type: feedback
+name: pytorch-seed-ablation
+description: "Same-seed comparability across PyTorch model variants — use when building ablations / architecture variants that must share identical init for the common parameters: adding a submodule before self.apply(init) shifts the shared RNG stream; construct variant-specific modules after apply() and init them explicitly."
 ---
+
+# PyTorch ablations: keep shared init byte-identical across variants
 
 # PyTorch Ablation Init RNG Shift
 
-**Extracted:** 2026-07-08
 **Context:** Comparing model variants at the same seed (ablations, single-axis experiments) where one variant adds an extra module — e.g. a new conditioning embedding/head.
 
 ## Problem
