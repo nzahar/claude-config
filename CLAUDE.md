@@ -103,7 +103,11 @@ Leave Bash for what `Read`/`Edit`/`Write` cannot do:
 
 Rule of thumb: if a specialised tool exists, use it. Bash is the last resort.
 
-## Sub-agents — background by default
+## Delegation by default
+
+The main session is an orchestrator: dialogue with the user, task statements, integration of results, commits. The work itself happens in background agents.
+
+Any self-contained chunk of work — research, exploration, a plan draft, an implementation slice, a doc pass — is dispatched to a background agent by default. A task statement in the dispatch prompt is sufficient; written artifacts (plan, codemaps, ADRs) are pointers to include when they exist, not a prerequisite. Stays in the main session: conversation with the user, integration of agent results, commits, small edits with context already loaded.
 
 **The harness already defaults to background** (Claude Code 2.1.198+): the `Agent` tool's `run_in_background` is true unless explicitly set to false. A blocked session is therefore always self-inflicted — never a property of the agent.
 
@@ -125,7 +129,7 @@ See [rules/workflow.md](rules/workflow.md).
 
 ## Sub-agent Invocation Policy
 
-Sub-agents run in isolated fresh contexts. The unit of review is the **branch** (PR), not the individual commit. Use them fully; full agent contracts live in `agents/*.md`. Implementation-slice delegation (default under an approved plan) — see `rules/workflow.md` step 5 / Slice delegation.
+Sub-agents run in isolated fresh contexts. The unit of review is the **branch** (PR), not the individual commit. Use them fully; full agent contracts live in `agents/*.md`. Implementation-slice delegation — see `rules/workflow.md` step 5 / Slice delegation.
 
 ### Agent modes
 
