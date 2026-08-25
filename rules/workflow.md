@@ -10,13 +10,13 @@ Every task starts with track selection at intake. The numbered sequence below is
 4. the user asks for a plan;
 5. the work is still not enumerable after scouting — open-ended exploration, exploratory notebook work ("try and see").
 
-Otherwise light track, regardless of diff size — file count and module count are not criteria. Framework edits (`rules/`, `CLAUDE.md`, `agents/`, `skills/`) use the same test: clarifying an existing rule with no fork → light; a new rule, gate, agent or skill contract is almost always a fork → full, with the framework review loop below.
+Otherwise light track, regardless of diff size — file count and module count are not criteria. Framework edits (`rules/`, `CLAUDE.md`, `agents/`, `skills/`) use the same test: clarifying an existing rule with no fork → light; a new rule, gate, agent or skill contract is almost always a fork → full; the framework review loop below still applies on either track.
 
 **Light track.** Publish a declaration: one sentence of approach + the file list from scouting + optionally a 3–7-line mini-plan of steps, inline in the message. No plan file, no `plan-reviewer`. Work starts immediately — the user sees the declaration and can interrupt. The file list is for transparency: a file discovered later is appended to it — not by itself an escalation.
 
 Tripwires — either one fires → mandatory escalation to the full track:
 
-- (a) the second fix attempt failed, or the root cause cannot be stated in one mechanistic sentence (the `debugger` trigger);
+- (a) the second fix attempt failed, or `debugger` — invoked after the first failure, still on the light track — cannot state the root cause in one mechanistic sentence;
 - (b) a fork surfaced that one exchange with the user did not close, or an intake trigger turns out to hold after all.
 
 The ratchet is one-way: light → full at any moment; full → light mid-task — never. Escalation keeps the working tree: write a plan for the remaining work, recording decisions already made, then continue on the full track from step 2.
@@ -40,7 +40,7 @@ Unchanged on the light track: §4.5 pre-execution review, Verification Before Cl
 
 **Model:** implementation agents run on Opus by default (`general-purpose` agent type, `model: opus` — no dedicated contract file). Escalate a slice to Fable only on explicit user request or when the slice is architecture-core; justify the escalation in one line at dispatch.
 
-**Dispatch prompt must contain:** the plan file path; the exact file list the agent may write (write scope); the required report format (changed files; commands run, with output); a prohibition on §4.5 trigger-list operations. An agent that hits a §4.5-trigger operation stops and reports; the main session runs it after §4.5 review. A decision the plan does not fix also comes back in the report — the agent names it, never settles it. Concurrent slices keep disjoint write scopes; if overlap is unavoidable, dispatch with the Agent tool's `isolation: worktree` and resolve the seams in the main session.
+**Dispatch prompt must contain:** the plan file path (on the light track, the declaration's file list — the rest of this contract is unchanged); the exact file list the agent may write (write scope); the required report format (changed files; commands run, with output); a prohibition on §4.5 trigger-list operations. An agent that hits a §4.5-trigger operation stops and reports; the main session runs it after §4.5 review. A decision the plan does not fix also comes back in the report — the agent names it, never settles it. Concurrent slices keep disjoint write scopes; if overlap is unavoidable, dispatch with the Agent tool's `isolation: worktree` and resolve the seams in the main session.
 
 **Verification:** the agent runs its slice-level tests and includes the output in its report. The agent does not commit — it leaves changes for the main session to commit (worktree slices included). The full suite, cross-slice seams, and any completion claim stay with the main session — an agent's report is second-hand evidence under CLAUDE.md §Verification Before Claims.
 
@@ -93,7 +93,7 @@ Long design sessions (multi-iteration plan-review, ADR drafting, multi-question 
 
 | # | Trigger | Action |
 |---|---|---|
-| 1. **Sub-plan = source of truth** | User confirms a design decision (`ok`, `согласен`, `accepted`, equivalent) on something that belongs in the plan, **and a plan file exists for the current branch** | **Immediately** Edit `docs/plans/<branch-slug>.md` to record the decision, before continuing the conversation. Do not "remember and continue" — written plan is durable, conversation is transient. On the light track this rule does not fire — a decision that would need recording in a plan is intake trigger 3 / tripwire (b) and escalates to the full track |
+| 1. **Sub-plan = source of truth** | User confirms a design decision (`ok`, `согласен`, `accepted`, equivalent) on something that belongs in the plan, **and a plan file exists for the current branch** | **Immediately** Edit `docs/plans/<branch-slug>.md` to record the decision, before continuing the conversation. Do not "remember and continue" — written plan is durable, conversation is transient. On the light track a decision closed by one exchange with the user stays light and is recorded in the commit body; a fork that one exchange did not close is intake trigger 3 / tripwire (b) and escalates to the full track |
 | 2. **Re-grounding at session start** | Start of any session in a git repo | Extends `CLAUDE.md` §"Project State Awareness" — in addition to `docs/STATE.md`, also read the current branch's plan file at `docs/plans/<branch-slug>.md` if it exists. The base rule's trivial-edits exception and the scope-known ADR/CODEMAPS rule continue to apply |
 | 3. **Discard alternatives in plan** | Editing a plan file, writing a decision section | Plan: **only the current decision**, zero rejected alternatives. ADR: brief mention of rejected approach (risk + revisit trigger), not a parallel implementation. If a rejected option is load-bearing enough to need long-form description — that goes into a future superseding ADR at the moment of revisit, not as preemptive bloat in the current ADR |
 | 4. **No branching across two substantive design questions** | User asks Q2 of design-substantive level (requires reasoning + plan record) while Q1 of the same level is unanswered | Close Q1 first by recording in plan, then move to Q2. **Short factual / clarification / yes-no questions batch as usual** — this rule is about parallel design-state, not about being terse |
