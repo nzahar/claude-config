@@ -1,28 +1,29 @@
 ## Task Workflow — Spec → Plan → Review → Code
 
-Every task starts with track selection at intake. The numbered sequence below is the **full track**; tasks that pass the intake tests run on the **light track** instead.
+Every task starts with track selection at intake. The numbered sequence below is the **full track**; the **light track** is the default.
 
-**Track selection (intake).** Two tests:
+**Track selection (intake).** Cheap read-only scouting first — grep, Read, an `Explore` agent — until the change is enumerable; if a `docs/ADR/*` Scope covers a touched path, read that ADR before judging trigger 3. Then full track iff at least one positive trigger holds:
 
-- **Diff enumerability** — before starting, write out the files to be changed and one line per file on what changes. If the list cannot be enumerated confidently, the task is not small → full track.
-- **Blast radius** — a §4.5-trigger operation is expected, an irreversible write, a file in any ADR's Scope, or a public contract/schema change → full track regardless of diff size.
+1. a §4.5-class operation (irreversible write, external resource, expensive run) is part of the task itself, not of its verification;
+2. a public contract change — DB schema / migration, API endpoint, wire format, CLI arguments;
+3. a design fork that one question to the user cannot close — anything Discipline rule 1 would require recording in a plan, including a change that violates or supersedes an ADR invariant (→ superseding ADR, step 2);
+4. the user asks for a plan;
+5. the work is still not enumerable after scouting — open-ended exploration, exploratory notebook work ("try and see").
 
-Both tests pass → light track. When in doubt → light track: the cost of a false "small" is bounded by the tripwires below.
+Otherwise light track, regardless of diff size — file count and module count are not criteria. Framework edits (`rules/`, `CLAUDE.md`, `agents/`, `skills/`) use the same test: clarifying an existing rule with no fork → light; a new rule, gate, agent or skill contract is almost always a fork → full; the framework review loop below still applies on either track.
 
-**Light track.** Start with a declaration: one sentence of approach + the enumerated file list. Work starts immediately after publishing it — no waiting for confirmation; the user sees the declaration and can interrupt. The file list is the baseline for tripwire (b).
+**Light track.** Publish a declaration: one sentence of approach + the file list from scouting + optionally a 3–7-line mini-plan of steps, inline in the message. No plan file, no `plan-reviewer`; a decision closed by one exchange with the user is recorded in the commit body. Work starts immediately — the user sees the declaration and can interrupt. The file list is for transparency: a file discovered later is appended to it — not by itself an escalation.
 
-Tripwires — any one fires → mandatory escalation to the full track:
+Tripwires — either one fires → mandatory escalation to the full track:
 
-- (a) the first fix attempt failed;
-- (b) a file outside the declared list is needed;
-- (c) a fork surfaced that would have to be recorded in a plan;
-- (d) a file in some ADR's Scope was touched, missed at intake.
+- (a) the second fix attempt failed, or `debugger` — invoked after the first failure, still on the light track — cannot state the root cause in one mechanistic sentence;
+- (b) a fork surfaced that one exchange with the user did not close, or an intake trigger turns out to hold after all.
 
 The ratchet is one-way: light → full at any moment; full → light mid-task — never. Escalation keeps the working tree: write a plan for the remaining work, recording decisions already made, then continue on the full track from step 2.
 
 End of a light-track task: commit and push. The pre-merge triad is **not** auto-dispatched — a light-track task routinely lands mid-session with no merge in sight, and the triad is a branch-level pre-merge gate, not a task-level one. It fires on the same trigger as on the full track: the one defined in CLAUDE.md §Pre-merge triad.
 
-Unchanged on the light track: §4.5 pre-execution review, Verification Before Claims, PR/merge gates, conventional commits, one branch per feature. Tripwires and §4.5 are orthogonal axes: a §4.5 trigger fires the one-shot operation review, not a track switch. Exploratory notebook work fails the enumerability test ("try and see" is not enumerable) and follows the existing rules — no separate research variant.
+Unchanged on the light track: §4.5 pre-execution review, Verification Before Claims, PR/merge gates, conventional commits, one branch per feature. Tripwires and §4.5 are orthogonal axes: a §4.5 trigger fires the one-shot operation review, not a track switch. Exploratory notebook work is trigger 5 — no separate research variant.
 
 **Full track:**
 
@@ -39,7 +40,7 @@ Unchanged on the light track: §4.5 pre-execution review, Verification Before Cl
 
 **Model:** implementation agents run on Opus by default (`general-purpose` agent type, `model: opus` — no dedicated contract file). Escalate a slice to Fable only on explicit user request or when the slice is architecture-core; justify the escalation in one line at dispatch.
 
-**Dispatch prompt must contain:** the plan file path; the exact file list the agent may write (write scope); the required report format (changed files; commands run, with output); a prohibition on §4.5 trigger-list operations. An agent that hits a §4.5-trigger operation stops and reports; the main session runs it after §4.5 review. A decision the plan does not fix also comes back in the report — the agent names it, never settles it. Concurrent slices keep disjoint write scopes; if overlap is unavoidable, dispatch with the Agent tool's `isolation: worktree` and resolve the seams in the main session.
+**Dispatch prompt must contain:** the plan file path (on the light track, the declaration — approach sentence plus mini-plan if present; the rest of this contract is unchanged); the exact file list the agent may write (write scope); the required report format (changed files; commands run, with output); a prohibition on §4.5 trigger-list operations. An agent that hits a §4.5-trigger operation stops and reports; the main session runs it after §4.5 review. A decision the plan does not fix also comes back in the report — the agent names it, never settles it. Concurrent slices keep disjoint write scopes; if overlap is unavoidable, dispatch with the Agent tool's `isolation: worktree` and resolve the seams in the main session.
 
 **Verification:** the agent runs its slice-level tests and includes the output in its report. The agent does not commit — it leaves changes for the main session to commit (worktree slices included). The full suite, cross-slice seams, and any completion claim stay with the main session — an agent's report is second-hand evidence under CLAUDE.md §Verification Before Claims.
 
@@ -51,7 +52,7 @@ Unchanged on the light track: §4.5 pre-execution review, Verification Before Cl
 
 **Smoke beats review on data work.** This applies to the step 4 / framework `plan-reviewer` loops above — not to §4.5 pre-execution review (which is one-shot per code path). For changes that touch data per the §4.5 trigger list (principle and examples there — wide reading on purpose, includes operations that match the principle but no enumerated trigger): when the cap is exhausted with remaining warnings (and no I blockers open), running smoke against real data is an additional exit option alongside the listed alternatives in each cap branch (non-framework: step 4 "Cap and exits"; framework cap=3: ship-with-warnings, scrap-and-cold-start, decompose).
 
-**Operational test for "framework-level"** (a change qualifies if a flawed version reliably propagates into future sessions whenever its trigger fires — base-prompt load, agent invocation, slash-command, etc.):
+**Operational test for "framework-level"** (a change qualifies if a flawed version reliably propagates into future sessions whenever its trigger fires — base-prompt load, agent invocation, slash-command, etc.). This test scopes the review loop, not track selection — framework edits pick a track by the intake triggers above:
 
 - **Always in scope** (full content loaded every time the trigger fires, trigger fires frequently): `rules/`, `CLAUDE.md`, `agents/`, ADRs — base-prompt auto-load every session for `rules/` and `CLAUDE.md`; full prompt load on every agent invocation for `agents/`
 - **In scope on contract changes only** (invoke-on-demand, trigger fires rarely, many edits are prose tweaks): `skills/*` — iterate when changing **what** the artifact takes/returns or **when** it triggers (description, arguments, output shape, trigger phrasing). Skip iteration for prose tightening, added examples, rationale rewrites
@@ -92,7 +93,7 @@ Long design sessions (multi-iteration plan-review, ADR drafting, multi-question 
 
 | # | Trigger | Action |
 |---|---|---|
-| 1. **Sub-plan = source of truth** | User confirms a design decision (`ok`, `согласен`, `accepted`, equivalent) on something that belongs in the plan, **and a plan file exists for the current branch** | **Immediately** Edit `docs/plans/<branch-slug>.md` to record the decision, before continuing the conversation. Do not "remember and continue" — written plan is durable, conversation is transient. On the light track this rule does not fire — a decision that would need recording in a plan is tripwire (c) and escalates to the full track |
+| 1. **Sub-plan = source of truth** | User confirms a design decision (`ok`, `согласен`, `accepted`, equivalent) on something that belongs in the plan, **and a plan file exists for the current branch** | **Immediately** Edit `docs/plans/<branch-slug>.md` to record the decision, before continuing the conversation. Do not "remember and continue" — written plan is durable, conversation is transient. On the light track this rule does not fire — a fork that one exchange with the user did not close is intake trigger 3 / tripwire (b) and escalates to the full track |
 | 2. **Re-grounding at session start** | Start of any session in a git repo | Extends `CLAUDE.md` §"Project State Awareness" — in addition to `docs/STATE.md`, also read the current branch's plan file at `docs/plans/<branch-slug>.md` if it exists. The base rule's trivial-edits exception and the scope-known ADR/CODEMAPS rule continue to apply |
 | 3. **Discard alternatives in plan** | Editing a plan file, writing a decision section | Plan: **only the current decision**, zero rejected alternatives. ADR: brief mention of rejected approach (risk + revisit trigger), not a parallel implementation. If a rejected option is load-bearing enough to need long-form description — that goes into a future superseding ADR at the moment of revisit, not as preemptive bloat in the current ADR |
 | 4. **No branching across two substantive design questions** | User asks Q2 of design-substantive level (requires reasoning + plan record) while Q1 of the same level is unanswered | Close Q1 first by recording in plan, then move to Q2. **Short factual / clarification / yes-no questions batch as usual** — this rule is about parallel design-state, not about being terse |
