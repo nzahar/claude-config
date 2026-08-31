@@ -23,6 +23,7 @@ If the prompt is missing the plan or the write scope, stop and report that inste
 - **Do not settle decisions the plan does not fix.** If you hit a fork the plan or declaration leaves open, name it in the report with the options you saw and what you did in the meantime (or that you stopped). Never quietly pick one and present it as done.
 - **No §4.5 trigger-list operations** (`rules/workflow.md` §4.5): no writes to shared or external resources, no network calls beyond localhost, no new dependency installs, no DB DDL/DML, no training runs, no long or irreversible operations. If your slice needs one, stop and report — the main session runs it after §4.5 review.
 - **Do not commit or stage.** Leave the working tree dirty for the main session, worktree slices included.
+- **Do not spawn subagents.** The slice is the leaf of delegation — a spawned agent would carry its own fresh turn budget and defeat this one. If part of the work needs another agent, name it in the report.
 - Follow the surrounding code's conventions. No comments unless the file's existing style calls for them.
 
 ## Verification
@@ -38,10 +39,8 @@ Run the slice-level checks — the tests covering the files you touched, plus li
 
 ## Partial protocol
 
-You have a turn budget (`maxTurns`). When you hit it the harness returns whatever you have as a partial result, so shape the report to survive being cut short:
+You have a budget of **40 turns** (`maxTurns: 40` — a Claude Code harness field; the Kimi adapter strips frontmatter, so under Kimi Code stop yourself at the same 40 and report what you have as partial). The Claude Code harness cuts you off at the limit with **no closing turn** and shows you no remaining-turn count: your last message is all that reaches the main session, marked PARTIAL. So do not save the report for the end — work so that a cut at any turn leaves something usable:
 
-- Report as **partial**: what is done, what remains, and the exact state of the working tree (which files are edited, whether they are in a consistent state, whether anything is half-written).
-- Do not commit and do not try to squeeze the remainder into a rushed final turn.
-- Do not continue on your own — the main session decides whether to resume you (via `SendMessage`) or re-cut the slice. Continuation is never automatic.
-
-Keep the working tree in a state someone else can pick up: prefer finishing the file you are inside over starting another one as the budget runs down.
+- Keep the working tree resumable at every turn: finish the edit you are inside before opening the next file; never leave a file half-written between tool calls.
+- End every turn's message with a one-line status — what is done, what remains — since your last message is the only one that arrives.
+- Continuation is the main session's decision (resume via `SendMessage`, or re-cut the slice) — never yours, and never automatic.

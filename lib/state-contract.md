@@ -43,9 +43,9 @@ Prepend the compressed entry to `## History` (newest on top). Do not edit existi
 
 ### History window
 
-`## History` keeps only the **last N entries**, N = **10** by default. A project may declare a different N in its own `CLAUDE.md`; this file is the SSOT for the default — agents reference it, they do not restate the number.
+`## History` keeps only the **last N entries**, N = **10** by default. A project may override it with `state_history_window: <N>` in its own `CLAUDE.md` — the agent reads that key before the state phase and falls back to the default when absent. This file is the SSOT for the default — agents reference it, they do not restate the number.
 
-After prepending a demoted entry, delete every entry beyond the newest N. Deletion is whole-entry — never a trim or rewrite of an entry's body, so `## History is sacred` still holds for everything the window keeps. A dropped entry is not lost: the file's git history is the archive, reachable with `git log -p` / `git show` on the STATE file.
+After prepending a demoted entry, delete every entry beyond the newest N. Deletion is whole-entry — never a trim or rewrite of an entry's body, so `## History is sacred` still holds for everything the window keeps. A dropped entry survives only in git: the file's history is the archive (`git log -p` / `git show`), which requires the STATE file to be tracked and its pre-drop state committed — the agent leaves changes unstaged, so committing STATE updates is what preserves droppable entries; an untracked STATE file loses them outright. The first pass under this rule on a long pre-window History drops everything beyond N at once — commit the file before that pass if the tail matters.
 
 **Pre-existing History entries** may include a `**Last shipped:** <PR ...>` line — that line reflects an earlier version of this contract. Per `## History is sacred`, leave such entries intact: do not rewrite, do not flag as drift, do not strip the line. New entries written under this contract omit the line.
 
@@ -101,13 +101,9 @@ Exceptions worth keeping inline are snapshot operational facts not recorded else
 
 Do not write a "Read order for cold-start" list in Current or in any History entry. If a project genuinely needs a stable onboarding pointer list, it lives in `docs/ONBOARDING.md`, not inside STATE.md.
 
-## File size
-
-History is bounded by the History window, Current by the hard limit below — there is no whole-file cap and no archive target.
-
 ## Hard limit on Current size
 
-Current ≤ **30 lines total**, including the Notes subsection. If it doesn't fit, the overflow belongs in an ADR, codemap, REPORT.md, findings/, or fresh `docs/ONBOARDING.md` (if read-order) — not in STATE.md.
+History is bounded by the History window; there is no whole-file cap and no archive target. Current ≤ **30 lines total**, including the Notes subsection. If it doesn't fit, the overflow belongs in an ADR, codemap, REPORT.md, findings/, or fresh `docs/ONBOARDING.md` (if read-order) — not in STATE.md.
 
 ## Pre-merge gates are never project state
 
@@ -141,7 +137,7 @@ Never edit a compressed History entry once it has been written by a past pass. C
 ## Cadence
 
 The STATE update phase (`document-agent` Phase 3, `experiment-doc-agent` Phase 4) runs only:
-- As the final phase of a full pass
+- As the final phase of a full pass **when the dispatch prompt declares a session boundary** (e.g. «session boundary: yes») — the agent cannot observe session events from inside its isolated context, so the dispatcher states the fact; the agent's «Invocation triggers» section tells the dispatcher when it holds. A full-pass prompt with no such declaration — the pre-merge triad is the common case — skips the state phase, and CLAUDE.md §End-of-session `--state-only` remains the refresh path. This bullet is the SSOT for that gating
 - On explicit `--state-only` invocation
 
 Skip the STATE update phase entirely if the session was purely exploratory and produced no decisions, no blockers, and no plan changes — nothing has happened that needs to be picked up.

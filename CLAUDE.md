@@ -137,7 +137,7 @@ Sub-agents run in isolated fresh contexts. The unit of review is the **branch** 
 
 ### Project-level `state_owner`
 
-Project's `CLAUDE.md` may declare `state_owner: document-agent | experiment-doc-agent | split`. Default: `document-agent` for engineering (`src/` present, no `notebooks/`), `experiment-doc-agent` for research-only. `split` is for hybrid projects and uses two files: `docs/STATE.md` (engineering, owned by `document-agent`) + `docs/RESEARCH-STATE.md` (research, owned by `experiment-doc-agent`). Never two owners on one file.
+Project's `CLAUDE.md` may declare `state_owner: document-agent | experiment-doc-agent | split`, and optionally `state_history_window: <N>` (STATE `## History` window; default and semantics in `lib/state-contract.md` §History window). Default: `document-agent` for engineering (`src/` present, no `notebooks/`), `experiment-doc-agent` for research-only. `split` is for hybrid projects and uses two files: `docs/STATE.md` (engineering, owned by `document-agent`) + `docs/RESEARCH-STATE.md` (research, owned by `experiment-doc-agent`). Never two owners on one file.
 
 ### Plan review (`plan-reviewer`)
 
@@ -151,7 +151,7 @@ Trigger — step 4 of `workflow.md`, after the user approves the plan, before an
 
 Run all agents in **parallel** in one message — disjoint write targets, no conflicts.
 
-**The doc agent runs as one full pass.** One `document-agent` invocation (engineering) or one `experiment-doc-agent` invocation (research), with no scope in the prompt and **no parallel `--state-only`** — a `--state-only` alongside a full pass is a second Phase 3 writer on the same STATE file, and the last writer silently wins. The full pass runs its state phase itself on its own session-boundary trigger (`agents/document-agent.md:43–46`); when that trigger does not fire and state still needs a refresh, §End-of-session `--state-only` is the path, separately. In `state_owner: split` mode, one full pass of each agent in the same message — their write targets are disjoint by construction (`docs/CODEMAPS/*` + `docs/STATE.md` vs `experiments/*/*/REPORT.md` + `docs/RESEARCH-STATE.md`). If `git diff main...HEAD` is empty, or holds no changes the doc agent documents, no doc pass is launched.
+**The doc agent runs as one full pass.** One `document-agent` invocation (engineering) or one `experiment-doc-agent` invocation (research), with no scope in the prompt and **no parallel `--state-only`** — a `--state-only` alongside a full pass is a second Phase 3 writer on the same STATE file, and the last writer silently wins. The full pass runs its state phase only when the dispatch prompt declares a session boundary (SSOT: `lib/state-contract.md` §Cadence) — a triad dispatch declares none, so the pass skips it; when state still needs a refresh, §End-of-session `--state-only` is the path, separately. In `state_owner: split` mode, one full pass of each agent in the same message — their write targets are disjoint by construction (`docs/CODEMAPS/*` + `docs/STATE.md` vs `experiments/*/*/REPORT.md` + `docs/RESEARCH-STATE.md`). If `git diff main...HEAD` is empty, or holds no changes the doc agent documents, no doc pass is launched — the gate reads committed changes only, so commit working-tree changes that belong to the branch before deciding.
 
 Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files unstaged, doc/ADR/STATE.md updates unstaged. The user decides how to commit.
 
