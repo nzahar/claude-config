@@ -35,7 +35,7 @@ If the invocation prompt names a specific subset of experiments (e.g., "Run on `
 - **Phase 1**: drift detect and (if drifted) refresh only the named experiments. Do not touch other `REPORT.md` files; do not update their `last_reviewed`.
 - **Phase 2**: read only the listed notebooks. Fill template only for the named experiments.
 - **Phase 3**: regenerate `experiments/<domain>/README.md` only for domains covered by the named experiments. Leave indexes of other domains untouched.
-- **Phase 4**: do not run. A narrow invocation is notebook-triggered, and the state phase is session-boundary-triggered (see Invocation triggers below) — the state file is owned exclusively by the `--state-only` invocation. This holds for **every** narrow invocation, not just triad-spawned ones.
+- **Phase 4**: do not run. A narrow invocation is notebook-triggered, and the state phase is session-boundary-triggered (see Invocation triggers below).
 
 Default — no subset named: run full pass over every `experiments/<domain>/<NN_slug>/REPORT.md` (current behaviour, as in Phase 1 step 1). Unlike a narrow invocation, the default pass is not restricted to Phase 1-3 — Phase 4 still runs on its own session-boundary trigger (or via `--state-only`).
 
@@ -137,7 +137,7 @@ Reason quotes frontmatter `reason:` verbatim.
 
 ### Phase 4 — State
 
-**Before proceeding, read [`lib/state-contract.md`](../lib/state-contract.md).** This phase's cross-cutting rules (compression shape, same-day guard, invariant-under-merge, hex constraint, Next up formatting, hard cap, anti-duplication, history-sacred, cadence, etc.) live there. The text below covers only what is specific to `experiment-doc-agent`.
+**Before proceeding, read [`lib/state-contract.md`](../lib/state-contract.md).** This phase's cross-cutting rules (compression shape, same-day guard, invariant-under-merge, hex constraint, Next up formatting, History window, anti-duplication, history-sacred, cadence, etc.) live there. The text below covers only what is specific to `experiment-doc-agent`.
 
 `docs/STATE.md` for a research repo captures *where the research is right now*, complementing per-experiment REPORT.md (what each experiment found) and domain indexes (what has been done).
 
@@ -204,7 +204,7 @@ Read project's `CLAUDE.md` for `state_owner`:
 2. **Demote current to history (compressed)** — per [`lib/state-contract.md`](../lib/state-contract.md) "Compressed History shape" and "Same-day guard". For research, bullets reference `experiments/<domain>/<slug>/REPORT.md`, `findings/<slug>.md`, `status: <state>`, `BACKLOG #N` in addition to the engineering-shared `(see ADR-NNNN)`, `(PR #N)`, `(plan docs/plans/<slug>.md §X)`.
 3. **Write fresh Current** from actual project state, applying the field sources above and the invariant-under-merge rule from [`lib/state-contract.md`](../lib/state-contract.md). Active experiment / Recently completed / Recently abandoned are derived from REPORT.md frontmatter (file facts), not from in-flight commits.
 4. **Update Notes** — drop obsolete, keep relevant, promote grown notes to `docs/findings/<slug>.md`.
-5. **Evaluate hard cap** — per [`lib/state-contract.md`](../lib/state-contract.md) "Hard cap on size". Research-only / absent → archive to `docs/STATE-ARCHIVE.md`. Split mode → archive to `docs/RESEARCH-STATE-ARCHIVE.md` (the engineering half archives to `docs/STATE-ARCHIVE.md`, owned by `document-agent`).
+5. **Apply the History window** — per [`lib/state-contract.md`](../lib/state-contract.md) "History window": after prepending, drop the entries beyond the window. The contract owns the window size; do not restate it here.
 6. **Update timestamp** — set `_Last updated: YYYY-MM-DD HH:MM_` to current local time.
 
 #### Phase 4 specifics

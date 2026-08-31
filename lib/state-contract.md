@@ -1,6 +1,8 @@
 # STATE.md contract
 
-Specification for the format of `docs/STATE.md` and its split-mode counterparts (`docs/RESEARCH-STATE.md`, `docs/STATE-ARCHIVE.md`, `docs/RESEARCH-STATE-ARCHIVE.md`).
+Specification for the format of `docs/STATE.md` and its split-mode counterpart `docs/RESEARCH-STATE.md`.
+
+Archive files (`docs/STATE-ARCHIVE.md`, `docs/RESEARCH-STATE-ARCHIVE.md`) are no longer part of this contract — History is bounded by a window instead. Ones a project already has stay in place and are never appended to again.
 
 Two agents author STATE files and reference this contract for shared rules:
 - `document-agent` Phase 3 — engineering trajectory in `docs/STATE.md`
@@ -12,7 +14,7 @@ Each agent's own definition keeps the agent-specific parts: ownership matrix ent
 
 ## File structure
 
-A STATE file is a single living document with two sections: `## Current` (overwritten on each update) and `## History` (append-only, newest entries on top).
+A STATE file is a single living document with two sections: `## Current` (overwritten on each update) and `## History` — a window of the last N entries, newest on top: entries are never edited, only prepended and, once past N, dropped.
 
 Standard header:
 
@@ -25,7 +27,7 @@ _Last updated: YYYY-MM-DD HH:MM_
 Sections that follow:
 - `## Current` — present-state snapshot. The field list is agent-specific
 - `### Notes` (subsection of Current) — free-form short observations
-- `## History` — compressed entries, newest on top
+- `## History` — compressed entries, newest on top, kept to the last N (see "History window")
 
 ## Compressed History shape
 
@@ -38,6 +40,12 @@ A History entry contains:
 **Dropped during demotion** (do not carry into History): full Notes block, Read-order TOCs, paraphrase of plan-file content, per-experiment narrative recaps, Recently-shipped DDL pastes, full narrative explanations. The original detail remains reachable via the inline references above.
 
 Prepend the compressed entry to `## History` (newest on top). Do not edit existing History entries — they were produced by past compression and are immutable.
+
+### History window
+
+`## History` keeps only the **last N entries**, N = **10** by default. A project may declare a different N in its own `CLAUDE.md`; this file is the SSOT for the default — agents reference it, they do not restate the number.
+
+After prepending a demoted entry, delete every entry beyond the newest N. Deletion is whole-entry — never a trim or rewrite of an entry's body, so `## History is sacred` still holds for everything the window keeps. A dropped entry is not lost: the file's git history is the archive, reachable with `git log -p` / `git show` on the STATE file.
 
 **Pre-existing History entries** may include a `**Last shipped:** <PR ...>` line — that line reflects an earlier version of this contract. Per `## History is sacred`, leave such entries intact: do not rewrite, do not flag as drift, do not strip the line. New entries written under this contract omit the line.
 
@@ -93,24 +101,9 @@ Exceptions worth keeping inline are snapshot operational facts not recorded else
 
 Do not write a "Read order for cold-start" list in Current or in any History entry. If a project genuinely needs a stable onboarding pointer list, it lives in `docs/ONBOARDING.md`, not inside STATE.md.
 
-## Hard cap on size
+## File size
 
-After the file has settled into its final shape this run (whether the Demote step compressed history or the same-day guard overwrote Current in place), count lines:
-
-- If `## History` exceeds **400 lines** OR the managed STATE file exceeds **600 lines** — move the oldest History entries to the archive file until back under both caps. Moving an entry is **not editing** — the entry body is preserved verbatim; only its location changes
-- Insert moved entries **immediately after the archive's title line**, before any existing first archived entry (newest archived first; the title stays at line 1)
-- If the archive does not exist, create it with a single-line title `# STATE archive — <project>` (or `# RESEARCH STATE archive — <project>` for the research-side archive in split mode) above the entries
-- Existing `STATE-HISTORY-<year>.md` files from a prior age-based rule coexist — new writes go to the new archive target
-- Cap trigger is **size**, not age — young projects with fast rhythm hit it before "6 months old" would
-
-**Archive target by `state_owner`:**
-
-| `state_owner` | Main file | Archive file |
-|---|---|---|
-| `document-agent` (or absent on engineering project) | `docs/STATE.md` | `docs/STATE-ARCHIVE.md` |
-| `experiment-doc-agent` (or absent on research-only project) | `docs/STATE.md` | `docs/STATE-ARCHIVE.md` |
-| `split` — engineering half | `docs/STATE.md` | `docs/STATE-ARCHIVE.md` |
-| `split` — research half | `docs/RESEARCH-STATE.md` | `docs/RESEARCH-STATE-ARCHIVE.md` |
+History is bounded by the History window, Current by the hard limit below — there is no whole-file cap and no archive target.
 
 ## Hard limit on Current size
 
