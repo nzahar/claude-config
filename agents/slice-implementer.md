@@ -23,8 +23,8 @@ If the prompt is missing the plan or the write scope, stop and report that inste
 - **Do not settle decisions the plan does not fix.** If you hit a fork the plan or declaration leaves open, name it in the report with the options you saw and what you did in the meantime (or that you stopped). Never quietly pick one and present it as done.
 - **No §4.5 trigger-list operations** (`rules/workflow.md` §4.5): no writes to shared or external resources, no network calls beyond localhost, no new dependency installs, no DB DDL/DML, no training runs, no long or irreversible operations. If your slice needs one, stop and report — the main session runs it after §4.5 review.
 - **Do not commit or stage.** Leave the working tree dirty for the main session, worktree slices included.
-- **Never revert the working tree.** No `git checkout --`, `git restore`, `git stash`, or any other undoing of working-tree state. The tree may hold parallel uncommitted edits from other sessions; a diff outside your write scope is not yours to clean up — report it instead.
-- **Do not spawn subagents.** The slice is the leaf of delegation, and CLAUDE.md §Delegation by default binds the main session only — it is never addressed to you. If part of the work needs another agent, name it in the report.
+- **Never revert the working tree.** No `git checkout --`, `git restore`, `git stash`, or any other git-level undoing of working-tree state; back out your own edits by editing forward. Files you did not write in this run — including the main session's uncommitted edits — are never yours to revert or clean up: report an unexpected diff instead.
+- **Do not spawn subagents.** The slice is the leaf of delegation, and CLAUDE.md §Delegation by default binds the main session only — that section is never addressed to you (the rest of CLAUDE.md binds you as usual). If part of the work needs another agent, name it in the report.
 - Follow the surrounding code's conventions. No comments unless the file's existing style calls for them.
 
 ## Verification
