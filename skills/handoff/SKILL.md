@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: "Write a session handoff file so a fresh session can cold-start the current work, and have it reviewed by handoff-reviewer. Invoke when the user types /handoff [fast] [optional focus], or asks to prepare a handoff for a new session (context nearly full, wrapping up with continuation expected). The next session reads it explicitly with /pickup-handoff; nothing injects it automatically. NOT a commit/push command — it never touches git state."
+description: "Write a session handoff file so a fresh session can cold-start the current work, and have it reviewed by handoff-reviewer. Invoke when the user types /handoff [fast] [optional focus], or asks to prepare a handoff for a new session (context nearly full, wrapping up with continuation expected). The next session reads it explicitly with /pickup-handoff; nothing injects it automatically. Commits only its own docs/handoffs file and pushes the current branch — it touches no other working-tree change."
 argument-hint: "[fast] [focus]"
 ---
 
@@ -17,37 +17,29 @@ You are wrapping the current session's state into a file a fresh session can act
 
 ## 2. Resolve the target path
 
-One file per project. Ask the script — it prints the full path and nothing else:
+The handoff goes inside the project: `<repo>/docs/handoffs/<YYYY-MM-DD-HHMM>.md`. One file per run — existing handoffs are never overwritten (the sole exception: a rerun in the same minute deliberately replaces that minute's file) and never archived from here (`/pickup-handoff` archives what it consumed).
+
+Resolve the repo root by anchoring git at the session's working directory:
 
 ```
-"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/handoff-path.sh" "<session's working directory>"
+git -C "<session's working directory>" rev-parse --show-toplevel
 ```
 
-Write to exactly the path it printed. **Never construct that path yourself** — not the directory, not the filename. `/pickup-handoff` calls this same script; a path that differs by one character means the next session looks where nothing was written and reports "no handoff", and the whole feature no-ops.
+Pass the session's working directory — the one named in your environment context — as a literal absolute path. Do **not** substitute `$(pwd)`: it evaluates in the Bash tool's cwd, which persists across calls and may have been moved into another repository. `/pickup-handoff` resolves the root with the same `-C`-anchored command from the next session's real cwd; a different anchor here means the next session looks where nothing was written and reports "no handoff", and the whole feature no-ops.
 
-Pass the session's working directory — the one named in your environment context — as a literal absolute path. Do **not** substitute `$(pwd)` or `$(git rev-parse --show-toplevel)`: those evaluate in the Bash tool's cwd, which persists across calls and may have been moved into another repository. `/pickup-handoff` resolves the path from the next session's real cwd, so if the tool's cwd has drifted, a `pwd`-derived path is one nobody will ever look at.
+If the command fails — not a git repository — **stop and tell the user the handoff path cannot be resolved.** Do not guess a path — a guessed path is a file nothing will ever read.
 
-If the script prints nothing or fails, **stop and tell the user the handoff path cannot be resolved.** Do not guess a path — a guessed path is a file nothing will ever read.
-
-The file lives outside the project on purpose — it never reaches the project's git. One live file per project; history lives in `handoffs/_archive/` and is managed here, at write time — reading (`/pickup-handoff`) never moves or deletes anything.
-
-Retention runs on every `/handoff`, as soon as the path is resolved — this is the only place that sweeps, so it must not depend on whether there is something to archive:
+Then create the directory and take the timestamp (local time):
 
 ```
-ARCHIVE="$(dirname "<path>")/_archive"; mkdir -p "$ARCHIVE"
-find "$ARCHIVE" -maxdepth 1 -name '*.md' -mtime +7 -delete
+mkdir -p "<repo>/docs/handoffs" && date +%Y-%m-%d-%H%M
 ```
 
-**If the path already exists**, read it first: carry forward still-valid content, especially What did NOT work. Then one test, answered from your own context: **did you write this file in this session?** Yes → update it in place. No → it is a previous session's handoff; archive it before writing the new one:
+Two runs inside the same minute produce the same name — that overwrite is deliberate: the later handoff supersedes the other.
 
-```
-archived="$(dirname "<path>")/_archive/$(basename "<path>" .md)-$(date -u +%Y-%m-%dT%H-%M-%SZ).md"
-mv "<path>" "$archived" && touch "$archived"
-```
+The file lives in the repo on purpose: committed in § 4a, it reaches the other machines and the co-authors who work on this project — a handoff parked on one disk does not.
 
-Each block above is one Bash call and self-contained on purpose — shell variables do not survive between tool calls, so never read `$ARCHIVE` from the earlier block.
-
-If `mv` fails, stop and tell the user — do not write over the live file. The `touch` makes retention count from archiving, not from when the old handoff was authored — `mv` preserves mtime, and without it a week-old handoff would be swept the moment it was archived.
+If `docs/handoffs/` already holds an unarchived handoff — a previous session's, not yet picked up — read it first and carry forward still-valid content, especially What did NOT work.
 
 ## 3. Collect the git snapshot mechanically
 
@@ -71,9 +63,9 @@ Use the template below. Constraints (the reviewer mechanically checks these, exc
 - **Absolute paths** for every file mentioned — on you, the reviewer checks existence, not absoluteness.
 - **Error messages verbatim**, never paraphrased.
 - **Self-contained**: no "as discussed", no references to the conversation, no unresolved pronouns. Every referent resolves within the file.
-- **Pointers, not duplicates**: link STATE.md, codemaps, plan files, ADRs — do not restate their content.
+- **Pointers, not duplicates**: link ROADMAP.md, codemaps, plan files, ADRs — do not restate their content.
 - **Claims carry evidence**: anything asserted as done/passing names the command and its outcome in § Verification status. What you did not verify this session, mark unverified — honesty beats optimism; the next session re-checks before trusting.
-- If `git status --porcelain` is non-empty, § Current state must say what the uncommitted changes are — they are invisible to the next session's `git log`. Remind the user (outside the file) that uncommitted work is at risk; **never commit yourself**.
+- If `git status --porcelain` is non-empty, § Current state must say what the uncommitted changes are — they are invisible to the next session's `git log`. Remind the user (outside the file) that uncommitted work is at risk; the handoff file is the **only** thing you commit (§ 4a), never their work.
 
 ## Handoff template
 
@@ -121,18 +113,40 @@ anywhere else.>
 <Ordered list of files the next session must read before acting, with one-line "why" each.>
 ```
 
+## 4a. Commit and push the handoff
+
+Run this the moment the file is written, before the review — a session that dies in between still ships the handoff. First the guard:
+
+```
+git -C "<repo>" check-ignore -q "docs/handoffs/<file>"; echo "check-ignore exit: $?"
+```
+
+Exit 0 → this repo ignores the path: skip both the commit and the push, and say so in § 6. Exit 1 → trackable, proceed below. Any other exit → git itself failed: skip the commit and the push and report that instead of guessing.
+
+```
+git -C "<repo>" add "docs/handoffs/<file>"
+git -C "<repo>" commit -m "docs: session handoff <YYYY-MM-DD-HHMM>" -- "docs/handoffs/<file>"
+git -C "<repo>" push -u origin HEAD
+```
+
+The pathspec bounds the commit to the handoff file, so a dirty tree is never swept in; the push carries whatever else already sits on the current branch — "only its own file" scopes the commit, not the push. `-u origin HEAD` gives a never-pushed branch its upstream instead of aborting. The branch is whatever is checked out, `main` included: the handoff is a technical file, so the `CLAUDE.md` § Git & Workflow PR/merge gate does not reach it and you do not stop to ask.
+
+If the push fails, keep the local commit, skip the push, and report the failure — do not retry in a loop, do not force.
+
+In `fast` mode this is the only commit: no review runs, so nothing edits the file afterwards.
+
 ## 5. Review
 
 Unless the user passed `fast`, dispatch `handoff-reviewer` with the **explicit file path** in the prompt (it refuses to guess). It is read-only and fast (git + filesystem checks only).
 
-Dispatch it in the background per `CLAUDE.md` §"Delegation by default" and end the turn; the completion notification re-invokes you to act on the report. This flow spans a turn boundary — the file is written before the review returns, so if the session ends between dispatch and re-invocation the handoff is left unreviewed (pass `fast` to skip review deliberately).
+Dispatch it in the background per `CLAUDE.md` §"Delegation by default" and end the turn; the completion notification re-invokes you to act on the report. This flow spans a turn boundary — the file is written and committed before the review returns, so if the session ends between dispatch and re-invocation the handoff is left unreviewed but not lost (pass `fast` to skip review deliberately).
 
-One run, no loop: fix every blocker and warning it returns, then stop. Surface its `needs-verification` list to the user — those are the claims the next session must re-check before trusting.
+One run, no loop: fix every blocker and warning it returns, then stop. If the fixes changed the file, run the § 4a commit-and-push block again for the same path — the first commit shipped the unreviewed text. Surface its `needs-verification` list to the user — those are the claims the next session must re-check before trusting.
 
 ## 6. Report to the user
 
-Final message (in the user's language): the handoff path, the reviewer verdict (or that review was skipped in `fast` mode), and the uncommitted-work reminder when the tree is dirty.
+Final message (in the user's language): the handoff path, the reviewer verdict (or that review was skipped in `fast` mode), the commit outcome — committed and pushed, or skipped with the guard's reason (path ignored, push failed and the commit is local only) — and the uncommitted-work reminder when the rest of the tree is dirty.
 
-**Do not hand the user a prompt for the new session** — tell them to open the next session in the same project and run `/pickup-handoff`. Nothing injects the file automatically, and it is not consumed on read: the user can pick it up twice, or in a session that was accidentally closed and reopened.
+**Do not hand the user a prompt for the new session** — tell them to open the next session in the same project and run `/pickup-handoff`. Nothing injects the file automatically.
 
 Do not start the new session's work yourself; the handoff is the deliverable.

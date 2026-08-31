@@ -4,7 +4,7 @@
 
 - Reply in Russian if I write in Russian, English if English
 - Code, commits, PRs, code comments — always English
-- Documentation — always English: codemaps (`docs/CODEMAPS/*.md`), ADR (`docs/ADR/*.md`), `STATE.md`, REPORT.md, plans after approval. **Exception**: during the approval stage (workflow step 2–3), `docs/plans/<branch-slug>.md` is written in Russian for reading speed. Immediately after your approval — one translation pass to English; from that point plan-reviewer and the entire downstream work with the English version as canonical. Light-track tasks do not use this exception — there is no plan and no approval stage.
+- Documentation — always English: codemaps (`docs/CODEMAPS/*.md`), ADR (`docs/ADR/*.md`), `docs/ROADMAP.md`, REPORT.md, plans after approval. **Exception**: during the approval stage (workflow step 2–3), `docs/plans/<branch-slug>.md` is written in Russian for reading speed. Immediately after your approval — one translation pass to English; from that point plan-reviewer and the entire downstream work with the English version as canonical. Light-track tasks do not use this exception — there is no plan and no approval stage.
 - Be terse. Default to the shortest response that fully answers. This bullet and the four below govern **replies to me in the session**, not the shape of artifacts — commit messages, PR bodies, plans, docs and sub-agent report formats keep their own required formats.
 - No preamble ("Отлично!", "Хороший вопрос", "Давай разберёмся"), no recap of edits you just made when they are visible in the diff, no restating my request back to me. This never overrides §Verification Before Claims — evidence backing a completion claim still goes in the message.
 - No unsolicited alternatives, caveats, or "можно также" tails. If a caveat matters, one clause — not a section.
@@ -15,26 +15,36 @@
 
 - **Comment discipline.** Do not write code comments by default. Before adding any comment, ask: "would removing this confuse a future reader?" If no, cut it. Multi-line comment blocks on a single declaration are nearly always wrong.
 
-## Project State Awareness
+## Roadmap
 
-**At the start of every session in a project, read `docs/STATE.md` if it exists.** This file is maintained by the project's documentation agent (`document-agent` for engineering projects, `experiment-doc-agent` for research projects; project-level `CLAUDE.md` may declare `state_owner` explicitly). It contains the current trajectory of work: what's blocked, what's planned next, and a history of resolved decisions and cleared blockers — described in terms invariant under merge (PR titles, file-derived statuses), not in terms of branch / working-tree state. "What was just merged" lives in `git log main --merges -1`, not in STATE.md.
+**At the start of every session in a project, read `docs/ROADMAP.md` if it exists.** One per project, owned by the main session and edited by hand — no agent writes it, no reviewer checks it, there is no cadence. It holds the trajectory of work: what is being done now, what comes next, what is parked.
+
+Format — three sections:
+
+- `## Now` — 1–2 items, what is actually in flight.
+- `## Next` — an ordered queue.
+- `## Later` — an unordered pool; it absorbs the role a `BACKLOG.md` used to play.
+
+An item is one line, plus a pointer to `docs/plans/<slug>.md` once a plan for it exists; a blocked item carries a `(blocked: …)` annotation. Write items so they stay true after a merge — no branch names, no commit hashes — and point at documents instead of copying their content in.
 
 Rules:
 
 - **Read it before answering the user's first message.** Not lazily on demand — at session start, alongside (or right after) any other project files you check.
-- **Read the `## Current` section.** The `## History` section is for deep context on past trajectory; consult it only if the user asks about prior decisions or you need to understand how the project got here.
+- **Read the `## Now` section.** `## Next` and `## Later` are for when the user asks what is queued or where a new idea should go.
 - **If the file does not exist, do nothing.** Do not ask the user to create it, do not offer to create it. Some projects don't have one yet, that's fine.
-- **STATE.md can be stale.** If the user's first message contradicts what STATE.md treats as currently active or planned (e.g. user opens with "let's work on Y" while STATE.md's `Next up:` says Z) — trust the user. STATE.md describes the project's snapshot at the last documentation pass; it does not bind the user's plans for this session. Note the discrepancy briefly if relevant, do not argue.
-- **Never edit STATE.md from the main session.** It is owned by the project's documentation agent (per `state_owner`; default `document-agent` Phase 3 engineering / `experiment-doc-agent` Phase 4 research). Editing it from the main session causes conflicts. If you think STATE.md should be updated, suggest invoking the appropriate documentation agent with `--state-only`.
-- **Do not surface STATE.md content unprompted.** Use it for your own orientation. The user does not need a recap of their own project unless they ask for one.
+- **ROADMAP.md can be stale.** If the user's first message contradicts it (e.g. user opens with "let's work on Y" while `## Now` says Z) — trust the user. Note the discrepancy briefly if relevant, do not argue.
+- **"Add it to the plan" routing.** Within the current branch's scope → the branch's plan file at `docs/plans/<branch-slug>.md`. Anything else → ROADMAP.md, `## Later` by default.
+- **Do not surface ROADMAP.md content unprompted.** Use it for your own orientation. The user does not need a recap of their own project unless they ask for one.
 
 Similarly — when working outside workflow.md (debugging sessions, ad-hoc questions, refactoring without a formal plan), read `docs/CODEMAPS/<area>.md` and relevant ADRs from `docs/ADR/` if the work touches architectural decisions or recorded invariants. For trivial edits (typo, formatting, local bugfix) this is not needed.
 
 ## Session Handoff
 
-When I ask for a handoff ("сделай handoff", `/handoff`), invoke the `handoff` skill. It writes one file per project, outside the project so it never reaches its git. Nothing injects that file automatically: in the next session I run `/pickup-handoff` (the `pickup-handoff` skill) myself, and it reads the file without moving or consuming it — I always know whether a handoff exists, and reading it twice is harmless. Do not pick a handoff up unasked, and do not hand me a prompt to paste into the new session. Never construct the handoff path yourself — both skills take it from `"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/handoff-path.sh"`; build it by hand and the two sides look in different places. History (`handoffs/_archive/`, 7-day retention) is managed by `/handoff` at write time only.
+When I ask for a handoff ("сделай handoff", `/handoff`), invoke the `handoff` skill. It writes `docs/handoffs/<YYYY-MM-DD-HHMM>.md` inside the project — a new file each time, never overwriting an earlier one (two runs in the same minute deliberately collapse into the newer) — then commits that one file and pushes the current branch. Without the commit the handoff never travels between machines or reaches a co-author. The commit is pathspec'd to the handoff file alone, so a dirty tree is not swept in; the push goes to whatever branch is checked out, `main` included — the file is technical and the §Git & Workflow PR/merge gate does not extend to it, so a session on `main` does not stop to ask.
 
-Handoff is not STATE.md and does not replace it. STATE.md is durable, merge-invariant, lives in the repo, and is owned by the documentation agent. A handoff is ephemeral and describes exactly what STATE.md must not: the working tree right now — uncommitted changes, dead ends hit this session, the next concrete step. Point to STATE.md from a handoff; never copy it in. When a picked-up handoff contradicts STATE.md or the branch plan, the handoff wins on working-tree facts (what is uncommitted, what just broke) and STATE.md wins on trajectory (what is blocked, what is planned next) — and I outrank both.
+Nothing injects that file automatically: in the next session I run `/pickup-handoff` (the `pickup-handoff` skill) myself. It reads the newest handoff and moves what it read into `docs/handoffs/archive/` — pickup consumes, so each file is picked up once. The archive has no retention (git remembers everything) and is read only when I ask for it explicitly. Do not pick a handoff up unasked, and do not hand me a prompt to paste into the new session.
+
+A handoff is ephemeral and describes exactly what `docs/ROADMAP.md` and the branch plan must not: the working tree right now — uncommitted changes, dead ends hit this session, the next concrete step. Point to them from a handoff; never copy them in. When a picked-up handoff contradicts them, the handoff wins on working-tree facts (what is uncommitted, what just broke) and ROADMAP.md / the plan win on trajectory (what is blocked, what is planned next) — and I outrank both.
 
 ## Verification Before Claims
 
@@ -72,7 +82,7 @@ This governs choosing among design / methodology **options**. It does **not** to
 
 Before asking, run this gate. If any branch resolves it, **do not ask** — act:
 
-- **Answer is already written** — plan (`docs/plans/*`), spec, STATE.md, codemap, ADR, or this conversation already fixes it → read it and proceed. Asking what the plan already requires is pure noise.
+- **Answer is already written** — plan (`docs/plans/*`), spec, ROADMAP.md, codemap, ADR, or this conversation already fixes it → read it and proceed. Asking what the plan already requires is pure noise.
 - **One option is defensibly best** — pick it, state the choice in one line, proceed. Do not stage a multiple-choice for a decision you can justify.
 - **Resolvable by investigation** — missing a fact → web-search (known-issues rule) or context7; unsure which approach wins → spawn `Explore` / `general-purpose` / a swarm; can't explain a failure → `debugger`; can't predict an outcome → run the experiment and measure.
 
@@ -135,10 +145,6 @@ Sub-agents run in isolated fresh contexts. The unit of review is the **branch** 
 
 `plan-reviewer` and `code-reviewer` take `mode: engineering | research` in the invocation prompt. Selection: project's `default_agent_mode` (if declared) → structural inference (active `notebooks/<...>/*.ipynb` without `src/` → research; else engineering) → per-branch override (pass explicitly). If a project declares `default_agent_mode: research` and the call lacks `mode:` with no engineering override, the agent errors out — no silent fallback. Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`, `handoff-reviewer`, `slice-implementer`) have no modes; `experiment-doc-agent` is research-only.
 
-### Project-level `state_owner`
-
-Project's `CLAUDE.md` may declare `state_owner: document-agent | experiment-doc-agent | split`, and optionally `state_history_window: <N>` (STATE `## History` window; default and semantics in `lib/state-contract.md` §History window). Default: `document-agent` for engineering (`src/` present, no `notebooks/`), `experiment-doc-agent` for research-only. `split` is for hybrid projects and uses two files: `docs/STATE.md` (engineering, owned by `document-agent`) + `docs/RESEARCH-STATE.md` (research, owned by `experiment-doc-agent`). Never two owners on one file.
-
 ### Plan review (`plan-reviewer`)
 
 Trigger — step 4 of `workflow.md`, after the user approves the plan, before any code is written. Mandatory for full-track tasks with a plan file at `docs/plans/<branch-slug>.md`. **No loop with the agent** — one report per round; the user decides what to fix among I blockers and warnings. Every blocker carries a class (`Surfaces at: … → class R|I`; unclassified → the main session applies the class test, warning only if no irreversible cost can be named). Only class I blockers gate implementation — fix them and run another round within the cap; class R the main session fixes into the plan inline, no re-review. A round ≥ 2 prompt names the previous report and lists each R blocker with its fix or its declined status. Cap exits: no I open → implement; I open and strictly decreasing → extension round; I open and not decreasing → scrap. SSOT is `workflow.md` step 4. **Exception** for framework / governance changes (`rules/`, `CLAUDE.md`, `agents/`, ADRs auto-load every session; `skills/*` on contract changes only): iterate review→revise until clean (nits OK). See `rules/workflow.md` "Exception to \"no loop\"". The agent finds the plan automatically from the branch — pass an explicit path only if it lives elsewhere. Do not invoke for light-track declarations, mid-implementation, or replanning.
@@ -151,19 +157,15 @@ Trigger — step 4 of `workflow.md`, after the user approves the plan, before an
 
 Run all agents in **parallel** in one message — disjoint write targets, no conflicts.
 
-**The doc agent runs as one full pass.** One `document-agent` invocation (engineering) or one `experiment-doc-agent` invocation (research), with no scope in the prompt and **no parallel `--state-only`** — a `--state-only` alongside a full pass is a second Phase 3 writer on the same STATE file, and the last writer silently wins. The full pass runs its state phase only when the dispatch prompt declares a session boundary (SSOT: `lib/state-contract.md` §Cadence) — a triad dispatch declares none, so the pass skips it; when state still needs a refresh, §End-of-session `--state-only` is the path, separately. In `state_owner: split` mode, one full pass of each agent in the same message — their write targets are disjoint by construction (`docs/CODEMAPS/*` + `docs/STATE.md` vs `experiments/*/*/REPORT.md` + `docs/RESEARCH-STATE.md`). If `git diff main...HEAD` is empty, or holds no changes the doc agent documents, no doc pass is launched — the gate reads committed changes only, so commit working-tree changes that belong to the branch before deciding.
+**The doc agent runs as one full pass.** One `document-agent` invocation (engineering: `src/` present, no `notebooks/`) or one `experiment-doc-agent` invocation (research-only), with no scope in the prompt; a hybrid repo (both present) gets one full pass of each in the same message — their write targets are disjoint by construction (`docs/CODEMAPS/*` vs `experiments/*/*/REPORT.md` + domain READMEs). If `git diff main...HEAD` is empty, or holds no changes the doc agent documents, no doc pass is launched — the gate reads committed changes only, so commit working-tree changes that belong to the branch before deciding.
 
-Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files unstaged, doc/ADR/STATE.md updates unstaged. The user decides how to commit.
+Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files unstaged, doc/ADR updates unstaged. The user decides how to commit.
 
 ### Post-merge documentation agent
 
 Fallback if the triad was skipped and the branch introduced structural changes (routes, schema, models, dependencies, architectural decisions for engineering; new/refreshed experiments for research). Prefer the triad path.
 
-Same shape as in the triad: one full pass of the project's doc agent, no scope in the prompt and no parallel `--state-only`. After a squash merge HEAD is already on main, so the merge-commit diff is `git diff HEAD~1 HEAD --name-only` — use it to decide whether a pass is warranted at all, not to scope one. In `state_owner: split` mode, one full pass of each agent in the same message.
-
-### End-of-session `--state-only`
-
-If a session ends without merge but produced state worth recording (decisions pending, branch active, blockers identified), and the user signals end ("я заканчиваю на сегодня", "stopping for the day", "wrapping up"), invoke the project's documentation agent (`document-agent` or `experiment-doc-agent` per `state_owner`) with `--state-only`. Skip if purely exploratory.
+Same shape as in the triad: one full pass of the project's doc agent, no scope in the prompt. After a squash merge HEAD is already on main, so the merge-commit diff is `git diff HEAD~1 HEAD --name-only` — use it to decide whether a pass is warranted at all, not to scope one.
 
 ### `debugger` — situational
 
@@ -177,9 +179,7 @@ Allowed when the user asks, or before a large internal refactor that benefits fr
 
 ### Atomicity of action skills
 
-Action skills (`/commit-push`, `/merge-pr`, `/ship`) are atomic — they do exactly what their name says, no more. They do NOT invoke review/test/documentation agents and do NOT edit documentation files (no STATE.md markers, no codemap fixups, no log entries). All quality gates and doc refresh are explicit steps the user or main session runs before/after.
-
-Routine merges do not require state refresh — `## Current` is a snapshot (what's blocked / open / next), not in-progress git state or the last merge (which lives in `git log`).
+Action skills (`/commit-push`, `/merge-pr`, `/ship`) are atomic — they do exactly what their name says, no more. They do NOT invoke review/test/documentation agents and do NOT edit documentation files (no codemap fixups, no log entries). All quality gates and doc refresh are explicit steps the user or main session runs before/after.
 
 ## Git & Workflow
 
@@ -187,7 +187,7 @@ Routine merges do not require state refresh — `## Current` is a snapshot (what
 - One branch per feature: `feature/short-name` or `fix/short-name`
 - Squash merge to main via PR
 - Do not push secrets. Use `.env` + `.env.example`
-- **`git commit`, `git push` (to a feature branch), and `docker push` do NOT require an explicit user request** — they are part of the normal implementation flow. The gate is **opening a pull request and merging to `main`**: **NEVER create a PR or merge without an explicit user request** — this covers `/ship`, `/merge-pr`, `gh pr create`, `gh pr merge`, and the MCP analogs `mcp__github__create_pull_request`, `mcp__github__merge_pull_request`. Opening a PR publishes outward and merge changes shared history — both **stop and wait for an explicit command**. `/commit-push` (commit + push, no PR) is on the free side. Trigger words authorizing the PR / merge phase: «/ship» / «шипай», «/merge-pr <N>», «merge», «мерж(и)», «открой PR» / «open PR», «создай PR» / «create PR». Ambiguity ("сделай", "имплементируй", "продолжай", "do", "implement", "continue") still does not by itself authorize opening a PR or merging — commit and push are fine, PR and merge wait.
+- **`git commit`, `git push` (to a feature branch; the `/handoff` file is the one named exception, committed and pushed on any branch — see §Session Handoff), and `docker push` do NOT require an explicit user request** — they are part of the normal implementation flow. The gate is **opening a pull request and merging to `main`**: **NEVER create a PR or merge without an explicit user request** — this covers `/ship`, `/merge-pr`, `gh pr create`, `gh pr merge`, and the MCP analogs `mcp__github__create_pull_request`, `mcp__github__merge_pull_request`. Opening a PR publishes outward and merge changes shared history — both **stop and wait for an explicit command**. `/commit-push` (commit + push, no PR) is on the free side. Trigger words authorizing the PR / merge phase: «/ship» / «шипай», «/merge-pr <N>», «merge», «мерж(и)», «открой PR» / «open PR», «создай PR» / «create PR». Ambiguity ("сделай", "имплементируй", "продолжай", "do", "implement", "continue") still does not by itself authorize opening a PR or merging — commit and push are fine, PR and merge wait.
 
 ## Stack Preferences
 
