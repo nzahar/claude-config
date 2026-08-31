@@ -117,7 +117,7 @@ Any self-contained chunk of work — research, exploration, a plan draft, an imp
 
 **The only exception**: I explicitly ask for a synchronous run.
 
-Independent agents — one message, multiple `Agent` calls, all in background. The pre-merge triad (`code-reviewer` + `test-writer` + `document-agent` / `experiment-doc-agent`) is the canonical case; a decomposed doc pass routinely launches more.
+Independent agents — one message, multiple `Agent` calls, all in background. The pre-merge triad (`code-reviewer` + `test-writer` + `document-agent` / `experiment-doc-agent`) is the canonical case.
 
 ## Kimi Code
 
@@ -133,11 +133,11 @@ Sub-agents run in isolated fresh contexts. The unit of review is the **branch** 
 
 ### Agent modes
 
-`plan-reviewer` and `code-reviewer` take `mode: engineering | research` in the invocation prompt. Selection: project's `default_agent_mode` (if declared) → structural inference (active `notebooks/<...>/*.ipynb` without `src/` → research; else engineering) → per-branch override (pass explicitly). If a project declares `default_agent_mode: research` and the call lacks `mode:` with no engineering override, the agent errors out — no silent fallback. Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`, `handoff-reviewer`) have no modes; `experiment-doc-agent` is research-only.
+`plan-reviewer` and `code-reviewer` take `mode: engineering | research` in the invocation prompt. Selection: project's `default_agent_mode` (if declared) → structural inference (active `notebooks/<...>/*.ipynb` without `src/` → research; else engineering) → per-branch override (pass explicitly). If a project declares `default_agent_mode: research` and the call lacks `mode:` with no engineering override, the agent errors out — no silent fallback. Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`, `handoff-reviewer`, `slice-implementer`) have no modes; `experiment-doc-agent` is research-only.
 
 ### Project-level `state_owner`
 
-Project's `CLAUDE.md` may declare `state_owner: document-agent | experiment-doc-agent | split`. Default: `document-agent` for engineering (`src/` present, no `notebooks/`), `experiment-doc-agent` for research-only. `split` is for hybrid projects and uses two files: `docs/STATE.md` (engineering, owned by `document-agent`) + `docs/RESEARCH-STATE.md` (research, owned by `experiment-doc-agent`). Never two owners on one file.
+Project's `CLAUDE.md` may declare `state_owner: document-agent | experiment-doc-agent | split`, and optionally `state_history_window: <N>` (STATE `## History` window; default and semantics in `lib/state-contract.md` §History window). Default: `document-agent` for engineering (`src/` present, no `notebooks/`), `experiment-doc-agent` for research-only. `split` is for hybrid projects and uses two files: `docs/STATE.md` (engineering, owned by `document-agent`) + `docs/RESEARCH-STATE.md` (research, owned by `experiment-doc-agent`). Never two owners on one file.
 
 ### Plan review (`plan-reviewer`)
 
@@ -151,44 +151,7 @@ Trigger — step 4 of `workflow.md`, after the user approves the plan, before an
 
 Run all agents in **parallel** in one message — disjoint write targets, no conflicts.
 
-For `document-agent` (engineering or split mode), main-session first decomposes work by codemap:
-
-**Pre-decomposition constraint.** Decomposition runs on committed changes (`git diff main...HEAD`). If there are uncommitted modifications or untracked files relevant to the work — commit them first, otherwise they will not be in scope.
-
-1. `git diff main...HEAD --name-only` — list of changed files in the branch.
-2. If `docs/CODEMAPS/` does not exist or is empty — skip decomposition: launch one `document-agent` invocation without scope (full pass) + `--state-only`.
-3. For each file: `grep -lF "$file" docs/CODEMAPS/*.md` — which codemaps mention this path. Group `{codemap → [files]}`. Files without a match accumulate into the unmapped-batch.
-3.5. **Pre-decompose siblings and pre-declared.** For each file in unmapped-batch:
-   - **Sibling proximity:** there is a mapped file in the same directory (exact dirname, not recursive) → move into that codemap's scope.
-   - **Pre-declared marker:** mentioned in a codemap as `(planned …)` / `(implementation branch)` / `(future)` / `(deferred)` → move into that codemap's scope.
-   - Priority sibling > pre-declared. Ties within the same tier — stays in unmapped-batch.
-4. In one message launch in parallel:
-   - **N narrow `document-agent` invocations** — one per matched codemap. **Grouping invariant: one codemap appears in exactly one invocation per message.** Each gets an explicit prompt: "Run on `docs/CODEMAPS/<area>.md` with these source files: [list]. Do not touch other codemaps".
-   - **+1 unmapped fallback** (if unmapped-batch is non-empty) — one `document-agent` invocation: "these N files are not mentioned in any codemap; decide where to add them or create a new one".
-   - **+1 `document-agent --state-only`** — Phase 3, always, in parallel with the others.
-   - `code-reviewer` and `test-writer` — as before, in the same message.
-
-If `git diff` is empty or there are no changes in source files — `document-agent` invocations are not launched (only `--state-only` if a session-boundary trigger requires it).
-
-**Reverse-grep false positives — accepted bloat.** `grep -lF "$file"` matches any substring occurrence of a filename in any codemap, including "see also", ADR pointers, prose mentioning neighbouring paths. An extra match → an extra agent call reading that file. Not destructive: the agent sees that the file does not fit its area and makes no edits (or minor ones — a pointer).
-
-For `experiment-doc-agent` (research or split mode), main-session decomposes by experiment:
-
-1. `git diff main...HEAD --name-only` — list of changed files in the branch.
-2. Filter paths under `notebooks/<domain>/<file>.ipynb`. If the diff contains only notebook changes — decomposition applies. If there are changes in env-lock / data-manifest / any other non-notebook paths (which trigger drift via mtime in Phase 1) — skip decomposition: one full-pass `experiment-doc-agent` invocation + `--state-only`.
-3. For each changed notebook: `grep -lF "<notebook-path>" experiments/*/*/REPORT.md` — find the REPORT.md whose `notebook:` frontmatter points to this path. Group `{experiment → [notebooks]}`. Notebooks without a match are new, without a REPORT.md yet; accumulate them in the unmapped-batch.
-3.5. **Pre-decompose siblings and pre-declared.** For each notebook in unmapped-batch:
-   - **Sibling proximity:** there is a mapped notebook in the same `notebooks/<domain>/` subfolder → move into that experiment's scope.
-   - **Pre-declared marker:** the notebook is mentioned in a REPORT.md as future / planned / related-experiment → move into that experiment's scope.
-   - Priority sibling > pre-declared. Ties within the same tier — stays in unmapped-batch.
-4. In one message launch in parallel:
-   - **N narrow `experiment-doc-agent` invocations** — one per affected experiment. **Grouping invariant**: one experiment appears in exactly one invocation per message. Each gets an explicit prompt: "Run on `experiments/<domain>/<NN_slug>/`. Source notebook: <path>. Do not touch other experiments".
-   - **+1 unmapped fallback** (if unmapped-batch is non-empty) — one `experiment-doc-agent` invocation: "these N notebooks have no REPORT.md; create them per the template, place them under `experiments/<domain>/<NN_slug>/`".
-   - **+1 `experiment-doc-agent --state-only`** — Phase 4, always, in parallel with the others.
-
-If `git diff` is empty or there are no notebook changes — `experiment-doc-agent` invocations are not launched (only `--state-only` if a session-boundary trigger requires it).
-
-**Split mode safety.** In `state_owner: split` mode, decomposition for document-agent and experiment-doc-agent can run in parallel in one message — write targets disjoint by construction (`docs/CODEMAPS/<area>.md` vs `experiments/<domain>/<NN_slug>/REPORT.md`). STATE.md and RESEARCH-STATE.md are disjoint too.
+**The doc agent runs as one full pass.** One `document-agent` invocation (engineering) or one `experiment-doc-agent` invocation (research), with no scope in the prompt and **no parallel `--state-only`** — a `--state-only` alongside a full pass is a second Phase 3 writer on the same STATE file, and the last writer silently wins. The full pass runs its state phase only when the dispatch prompt declares a session boundary (SSOT: `lib/state-contract.md` §Cadence) — a triad dispatch declares none, so the pass skips it; when state still needs a refresh, §End-of-session `--state-only` is the path, separately. In `state_owner: split` mode, one full pass of each agent in the same message — their write targets are disjoint by construction (`docs/CODEMAPS/*` + `docs/STATE.md` vs `experiments/*/*/REPORT.md` + `docs/RESEARCH-STATE.md`). If `git diff main...HEAD` is empty, or holds no changes the doc agent documents, no doc pass is launched — the gate reads committed changes only, so commit working-tree changes that belong to the branch before deciding.
 
 Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files unstaged, doc/ADR/STATE.md updates unstaged. The user decides how to commit.
 
@@ -196,11 +159,7 @@ Expected output: `code-reviewer` verdict (APPROVED / BLOCKED), new test files un
 
 Fallback if the triad was skipped and the branch introduced structural changes (routes, schema, models, dependencies, architectural decisions for engineering; new/refreshed experiments for research). Prefer the triad path.
 
-Apply the same scope-decomposition as in the triad. After a squash merge HEAD is already on main, so the diff for the merge-commit changes is `git diff HEAD~1 HEAD --name-only`. Then:
-- for `document-agent` — reverse-grep over `docs/CODEMAPS/*.md`;
-- for `experiment-doc-agent` — reverse-grep over `experiments/*/*/REPORT.md`.
-
-N narrow invocations + 1 unmapped fallback (if needed) + 1 `--state-only`, all in parallel in one message. If the corresponding directory (`docs/CODEMAPS/` or `experiments/`) does not exist — one full-pass invocation + `--state-only`.
+Same shape as in the triad: one full pass of the project's doc agent, no scope in the prompt and no parallel `--state-only`. After a squash merge HEAD is already on main, so the merge-commit diff is `git diff HEAD~1 HEAD --name-only` — use it to decide whether a pass is warranted at all, not to scope one. In `state_owner: split` mode, one full pass of each agent in the same message.
 
 ### End-of-session `--state-only`
 

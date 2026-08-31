@@ -26,7 +26,7 @@ If the invocation prompt names a specific subset of codemaps and source files (e
 
 - **Phase 1**: read, inventory, and reconcile only the named codemap. Do not inventory or update other codemaps; do not change their `Last Updated` date or `Structure Hash`.
 - **Phase 2**: read only the listed source files. Write meaning-layer only inside the named codemap.
-- **Phase 3**: do not run. A narrow invocation is code-triggered, and the state phase is session-boundary-triggered (see Invocation triggers below) — STATE.md is owned exclusively by the `--state-only` invocation. This holds for **every** narrow invocation, not just triad-spawned ones; in the pre-merge triad it is what keeps the N narrow invocations from racing the one `--state-only` invocation on STATE.md.
+- **Phase 3**: do not run. A narrow invocation is code-triggered, and the state phase is session-boundary-triggered (see Invocation triggers below).
 
 Default — no subset named: run full repo pass over every `docs/CODEMAPS/*.md` (current behaviour). Unlike a narrow invocation, the default pass is not restricted to Phase 1-2 — Phase 3 still runs on its own session-boundary trigger (or via `--state-only`).
 
@@ -197,7 +197,7 @@ When creating ADRs in Phase 2, apply the subset of D1–D9 that fits the artifac
 
 # PHASE 3: State Update
 
-**Before proceeding, read [`lib/state-contract.md`](../lib/state-contract.md).** This phase's cross-cutting rules (compression shape, same-day guard, invariant-under-merge, hex constraint, Next up formatting, hard cap, anti-duplication, history-sacred, cadence, etc.) live there. The text below covers only what is specific to `document-agent`.
+**Before proceeding, read [`lib/state-contract.md`](../lib/state-contract.md).** This phase's cross-cutting rules (compression shape, same-day guard, invariant-under-merge, hex constraint, Next up formatting, History window, anti-duplication, history-sacred, cadence, etc.) live there. The text below covers only what is specific to `document-agent`.
 
 `docs/STATE.md` captures the project's *trajectory in time*, complementing the *code structure* described by codemaps and ADRs. Any future Claude session can read the top of STATE.md and know exactly where the work stands.
 
@@ -249,7 +249,7 @@ not yet promoted to ADRs. If a note grows past a few lines or stabilizes, promot
 2. **Demote current to history (compressed)** — per [`lib/state-contract.md`](../lib/state-contract.md) "Compressed History shape" and "Same-day guard".
 3. **Write fresh Current** from actual state of the work (not from prior STATE.md). Apply field sources above and the invariant-under-merge rule from [`lib/state-contract.md`](../lib/state-contract.md).
 4. **Update Notes** — re-read existing, drop obsolete, keep relevant, promote grown notes to a proper ADR (Phase 2 territory) and remove from Notes.
-5. **Evaluate hard cap** — per [`lib/state-contract.md`](../lib/state-contract.md) "Hard cap on size". Engineering archive target is `docs/STATE-ARCHIVE.md` (same target in `state_owner: split` mode for the engineering half).
+5. **Apply the History window** — per [`lib/state-contract.md`](../lib/state-contract.md) "History window": after prepending, drop the entries beyond the window. The contract owns the window size; do not restate it here.
 6. **Update timestamp** — set `_Last updated: YYYY-MM-DD HH:MM_` at the top of the file to current local time.
 
 ## Phase 3 specifics
