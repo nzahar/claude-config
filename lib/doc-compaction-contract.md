@@ -1,6 +1,6 @@
 # Doc compaction contract
 
-Cross-cutting rules for keeping `document-agent`-owned codemaps (`docs/CODEMAPS/<area>.md`) and `experiment-doc-agent`-owned `REPORT.md` files from growing without bound, and for keeping a single maintenance pass cheap. Sibling of [`state-contract.md`](state-contract.md), which does the same for `STATE.md`.
+Cross-cutting rules for keeping `document-agent`-owned codemaps (`docs/CODEMAPS/<area>.md`) and `experiment-doc-agent`-owned `REPORT.md` files from growing without bound, and for keeping a single maintenance pass cheap.
 
 This file is the **single source of truth** for the shared size-cap mechanism: the trigger, soft/hard bands and soft-cap WARNING, delimit-first bootstrap, protected blocks and delete-eligible sections, compaction procedure, structure-hash command, move-not-edit invariant, and pass-cost discipline. `rules/workflow.md` § Documentation economy D8 is a pointer here.
 
@@ -41,9 +41,9 @@ Run cheapest-first.
 2. **Trim over-budget cells incrementally — never en masse.** A structural table cell over the ≤200-char budget (D7) is trimmed to a terse role + key exports. Its surplus is split by content type: genuine cross-cutting *why* / gotcha / invariant prose is **moved verbatim** (cut-and-pasted, never paraphrased; after the move, assert the text reappears in the destination) into the destination layer — codemap → meaning layer; REPORT.md → `## Caveats / open questions` (a non-protected section), **never** the protected `## Result` / `## Metrics`. Prose that merely **restates what the code/exports already say is cut**, not relocated (Phase 1: structural cells describe *what*, the meaning layer says *why* — duplicating the exports back as prose is not content to preserve). **Do this per cell as its section is genuinely rewritten — do NOT bulk-relocate every over-budget cell in one size-triggered pass.** Remaining over-budget cells are surfaced by the soft-band WARNING and the `code-reviewer` D7 tripwire for incremental attention, not forced in bulk here.
 3. **Never touch the protected block.** The meaning layer / results blocks are never deleted or reworded. If the protected block alone approaches the cap, the prescribed escape is to **split** the doc into sub-area files, not to trim it.
 
-**Move-not-edit invariant** (inherited from `state-contract.md`): relocating content is not editing it — the body is preserved verbatim; only its location changes.
+**Move-not-edit invariant**: relocating content is not editing it — the body is preserved verbatim; only its location changes.
 
-**Idempotent re-fire** (like the `state-contract.md` trim — *not* a separate hysteresis band): after compaction the structural portion is below the cap by construction, so the trigger does not re-fire until new code grows it back over the cap.
+**Idempotent re-fire** (*not* a separate hysteresis band): after compaction the structural portion is below the cap by construction, so the trigger does not re-fire until new code grows it back over the cap.
 
 **Commit shape.** A size-triggered compaction is left as a named, isolated change so a human can commit it on its own: `docs(codemap): compact <area> [size-triggered]` (or `docs(report): …`), with a summary line listing what was dropped and confirming the protected block was preserved. Rollback = the git diff. No backup file, no archive, no approval gate.
 

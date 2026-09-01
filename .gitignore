@@ -19,8 +19,8 @@ policy-limits.json
 file-history/
 ide/
 plans/
-docs/
-handoffs/
+docs/*
+!docs/handoffs/
 plugins/
 downloads/
 uploads/

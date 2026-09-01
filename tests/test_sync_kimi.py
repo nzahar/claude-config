@@ -76,8 +76,8 @@ def test_sync_generates_agents_md_rules_agents_and_lib(sandbox):
 
     lib = sandbox["kimi"] / "lib"
     assert lib.is_symlink()
-    assert (lib / "state-contract.md").read_text(encoding="utf-8") == (
-        sandbox["claude"] / "lib" / "state-contract.md"
+    assert (lib / "doc-compaction-contract.md").read_text(encoding="utf-8") == (
+        sandbox["claude"] / "lib" / "doc-compaction-contract.md"
     ).read_text(encoding="utf-8")
 
 
