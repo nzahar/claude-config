@@ -243,6 +243,10 @@ Warnings: <count>
 - [WARNING] <dimension>: <one-sentence issue>
   Fix hint: <suggested direction>
 
+<if the budget truncated anything:>
+### Below budget
+- [BLOCKER → class R | WARNING] <dimension>: <one-sentence issue>
+
 <if applicable:>
 ### Additional observations
 <things that didn't fit a dimension but are worth mentioning briefly>
