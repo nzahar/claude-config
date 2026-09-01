@@ -40,10 +40,12 @@ Silenced in `mode: research`: the React/JS/TS-specific block (unless the diff ac
 - Secrets in committed files (.env, private keys)
 
 #### Universal — HIGH
+- Missing error handling (bare except, ignored errors)
+
+#### Universal — MEDIUM (size/style metrics — no concrete failure mode, never block)
 - Functions > 50 lines
 - Files > 800 lines
 - Nesting depth > 4 levels
-- Missing error handling (bare except, ignored errors)
 - TODO/FIXME comments without a ticket reference
 
 #### Semantic issues — HIGH (mechanical checklists miss these)
