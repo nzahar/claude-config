@@ -17,7 +17,7 @@
 
 ## Roadmap
 
-**At the start of every session in a project, read `docs/ROADMAP.md` if it exists.** One per project, owned by the main session and edited by hand — no agent writes it, no reviewer checks it, there is no cadence. It holds the trajectory of work: what is being done now, what comes next, what is parked.
+**At the start of every session in a project, read `docs/ROADMAP.md` if it exists.** One per project, owned by the main session and edited by hand — no agent writes it, no reviewer checks it, there is no cadence; the only prescribed edits are the two event-triggered rules below (item cleared at merge-readiness, routing of additions). It holds the trajectory of work: what is being done now, what comes next, what is parked.
 
 Format — three sections:
 
@@ -30,11 +30,13 @@ An item is one line, plus a pointer to `docs/plans/<slug>.md` once a plan for it
 Rules:
 
 - **Read it before answering the user's first message.** Not lazily on demand — at session start, alongside (or right after) any other project files you check.
-- **Read the `## Now` section.** `## Next` and `## Later` are for when the user asks what is queued or where a new idea should go.
+- **Read the `## Now` section.** `## Next` and `## Later` are for when the user asks what is queued or where a new idea should go — and for the empty-`## Now` ask below.
 - **If the file does not exist, do nothing.** Do not ask the user to create it, do not offer to create it. Some projects don't have one yet, that's fine.
 - **ROADMAP.md can be stale.** If the user's first message contradicts it (e.g. user opens with "let's work on Y" while `## Now` says Z) — trust the user. Note the discrepancy briefly if relevant, do not argue.
+- **Completing a `## Now` item clears it.** When the branch that completes a `## Now` item is being readied for merge, the main session removes the item from `## Now` and commits that edit to the branch — it rides in with the PR, so nothing is written to `main` directly. Stop there: do **not** promote anything from `## Next` — picking the next item is the user's call. Action skills (`/ship`, `/merge-pr`) never make this edit — it happens before they are invoked; a removal that was missed rides the next branch.
+- **Empty `## Now` at session start → ask.** If the file exists, `## Now` is empty, `## Next` is non-empty, and the user's first message does not itself set what to work on (roadmap-listed or not) — ask which `## Next` item to take, offering `## Later` only on request. Any substantive opener — a task, a question, a debugging ask — suppresses this; whether it lands in `## Now` is the user's edit to make. This ask is a genuine priority call reserved to the user: the §Question Discipline gate as a whole does not apply to it — `## Next` order is a queue, not a commitment.
 - **"Add it to the plan" routing.** Within the current branch's scope → the branch's plan file at `docs/plans/<branch-slug>.md`. Anything else → ROADMAP.md, `## Later` by default.
-- **Do not surface ROADMAP.md content unprompted.** Use it for your own orientation. The user does not need a recap of their own project unless they ask for one.
+- **Do not surface ROADMAP.md content unprompted.** Use it for your own orientation. The user does not need a recap of their own project unless they ask for one. Sole exception: the empty-`## Now` ask above, which names `## Next` items.
 
 Similarly — when working outside workflow.md (debugging sessions, ad-hoc questions, refactoring without a formal plan), read `docs/CODEMAPS/<area>.md` and relevant ADRs from `docs/ADR/` if the work touches architectural decisions or recorded invariants. For trivial edits (typo, formatting, local bugfix) this is not needed.
 
@@ -82,7 +84,7 @@ This governs choosing among design / methodology **options**. It does **not** to
 
 Before asking, run this gate. If any branch resolves it, **do not ask** — act:
 
-- **Answer is already written** — plan (`docs/plans/*`), spec, ROADMAP.md, codemap, ADR, or this conversation already fixes it → read it and proceed. Asking what the plan already requires is pure noise.
+- **Answer is already written** — plan (`docs/plans/*`), spec, ROADMAP.md (`## Now` only — `## Next` is an ordered queue, not a fixed answer; see §Roadmap), codemap, ADR, or this conversation already fixes it → read it and proceed. Asking what the plan already requires is pure noise.
 - **One option is defensibly best** — pick it, state the choice in one line, proceed. Do not stage a multiple-choice for a decision you can justify.
 - **Resolvable by investigation** — missing a fact → web-search (known-issues rule) or context7; unsure which approach wins → spawn `Explore` / `general-purpose` / a swarm; can't explain a failure → `debugger`; can't predict an outcome → run the experiment and measure.
 
@@ -179,7 +181,7 @@ Allowed when the user asks, or before a large internal refactor that benefits fr
 
 ### Atomicity of action skills
 
-Action skills (`/commit-push`, `/merge-pr`, `/ship`) are atomic — they do exactly what their name says, no more. They do NOT invoke review/test/documentation agents and do NOT edit documentation files (no codemap fixups, no log entries). All quality gates and doc refresh are explicit steps the user or main session runs before/after.
+Action skills (`/commit-push`, `/merge-pr`, `/ship`) are atomic — they do exactly what their name says, no more. They do NOT invoke review/test/documentation agents and do NOT edit documentation files (no codemap fixups, no log entries, no ROADMAP.md `## Now` edits — those precede them, per §Roadmap). All quality gates and doc refresh are explicit steps the user or main session runs before/after.
 
 ## Git & Workflow
 
