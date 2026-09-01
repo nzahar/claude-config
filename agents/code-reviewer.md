@@ -30,7 +30,7 @@ Focus the review on **what changed**, not on the full content of touched files. 
 
 The base checks below apply in both modes. If invocation prompt includes `mode: research`, additionally apply the **Research checks** block at the end of this section. Universal CRITICAL (credentials, SQL injection, path traversal) applies unconditionally — research code is still code.
 
-Silenced in `mode: research`: the React/JS/TS-specific block (unless the diff actually touches a frontend). All other Universal CRITICAL/HIGH, Semantic, Python-specific, Go-specific, ADR compliance, Best Practices, and Documentation economy (when diff touches doc paths) apply in both modes.
+Silenced in `mode: research`: the React/JS/TS-specific block (unless the diff actually touches a frontend). All other Universal CRITICAL/HIGH, Universal MEDIUM (size/style metrics), Semantic, Python-specific, Go-specific, ADR compliance, Best Practices, and Documentation economy (when diff touches doc paths) apply in both modes.
 
 #### Universal (any language) — CRITICAL
 - Hardcoded credentials, API keys, tokens, passwords
@@ -40,10 +40,12 @@ Silenced in `mode: research`: the React/JS/TS-specific block (unless the diff ac
 - Secrets in committed files (.env, private keys)
 
 #### Universal — HIGH
+- Missing error handling (bare except, ignored errors)
+
+#### Universal — MEDIUM (size/style metrics — no concrete failure mode, never block)
 - Functions > 50 lines
 - Files > 800 lines
 - Nesting depth > 4 levels
-- Missing error handling (bare except, ignored errors)
 - TODO/FIXME comments without a ticket reference
 
 #### Semantic issues — HIGH (mechanical checklists miss these)
