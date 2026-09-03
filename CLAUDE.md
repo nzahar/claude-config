@@ -125,6 +125,8 @@ Rule of thumb: if a specialised tool exists, use it. Bash is the last resort.
 
 **The only exception**: I explicitly ask for a synchronous run.
 
+The spawn directives in §Question Discipline and §Guessing Discipline are addressed to the main session; a dispatched agent never re-delegates its assignment.
+
 Independent agents — one message, multiple `Agent` calls, all in background. The pre-merge triad (`code-reviewer` + `test-writer` + `document-agent` / `experiment-doc-agent`) is the canonical case.
 
 ## Kimi Code
