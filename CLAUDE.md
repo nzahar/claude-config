@@ -115,11 +115,7 @@ Leave Bash for what `Read`/`Edit`/`Write` cannot do:
 
 Rule of thumb: if a specialised tool exists, use it. Bash is the last resort.
 
-## Delegation by default
-
-The main session is an orchestrator: dialogue with the user, task statements, integration of results, commits. The work itself happens in background agents.
-
-Any self-contained chunk of work — research, exploration, a plan draft, an implementation slice, a doc pass — is dispatched to a background agent by default. This section binds the main session only: a dispatched agent never re-delegates its assignment, and the spawn directives elsewhere in this file (§Question Discipline, §Guessing Discipline) are likewise addressed to the main session; the rest of this file binds subagents as before. A task statement in the dispatch prompt is sufficient; written artifacts (plan, codemaps, ADRs) are pointers to include when they exist, not a prerequisite — this waives no gate: a full-track implementation slice still runs under the approved plan (`rules/workflow.md` steps 4→5). Stays in the main session: conversation with the user, integration of agent results, commits, small edits (~≤2 files) with context already loaded.
+## Sub-agents — background by default
 
 **The harness already defaults to background** (Claude Code 2.1.198+): the `Agent` tool's `run_in_background` is true unless explicitly set to false. A blocked session is therefore always self-inflicted — never a property of the agent.
 
@@ -128,6 +124,8 @@ Any self-contained chunk of work — research, exploration, a plan draft, an imp
 **Dispatch mode and gate semantics are separate axes.** "The result gates the next step" is a valid reason to *wait*; it is never a reason to run *foreground*. Where a rule gates an action on a report — [`rules/workflow.md`](rules/workflow.md) §4.5 pre-execution review, step 4→5 plan review, the pre-merge triad — dispatch in the background and end the turn; the notification re-invokes the session. **"Keep working" means other work, never the gated action.**
 
 **The only exception**: I explicitly ask for a synchronous run.
+
+The spawn directives in §Question Discipline and §Guessing Discipline are addressed to the main session; a dispatched agent never re-delegates its assignment.
 
 Independent agents — one message, multiple `Agent` calls, all in background. The pre-merge triad (`code-reviewer` + `test-writer` + `document-agent` / `experiment-doc-agent`) is the canonical case.
 
@@ -141,11 +139,11 @@ See [rules/workflow.md](rules/workflow.md).
 
 ## Sub-agent Invocation Policy
 
-Sub-agents run in isolated fresh contexts. The unit of review is the **branch** (PR), not the individual commit. Use them fully; full agent contracts live in `agents/*.md`. Implementation-slice delegation — see `rules/workflow.md` step 5 / Slice delegation.
+Sub-agents run in isolated fresh contexts. The unit of review is the **branch** (PR), not the individual commit. Use them fully; full agent contracts live in `agents/*.md`.
 
 ### Agent modes
 
-`plan-reviewer` and `code-reviewer` take `mode: engineering | research` in the invocation prompt. Selection: project's `default_agent_mode` (if declared) → structural inference (active `notebooks/<...>/*.ipynb` without `src/` → research; else engineering) → per-branch override (pass explicitly). If a project declares `default_agent_mode: research` and the call lacks `mode:` with no engineering override, the agent errors out — no silent fallback. Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`, `handoff-reviewer`, `slice-implementer`) have no modes; `experiment-doc-agent` is research-only.
+`plan-reviewer` and `code-reviewer` take `mode: engineering | research` in the invocation prompt. Selection: project's `default_agent_mode` (if declared) → structural inference (active `notebooks/<...>/*.ipynb` without `src/` → research; else engineering) → per-branch override (pass explicitly). If a project declares `default_agent_mode: research` and the call lacks `mode:` with no engineering override, the agent errors out — no silent fallback. Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`, `handoff-reviewer`) have no modes; `experiment-doc-agent` is research-only.
 
 ### Plan review (`plan-reviewer`)
 
