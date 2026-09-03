@@ -139,7 +139,7 @@ In `fast` mode this is the only commit: no review runs, so nothing edits the fil
 
 Unless the user passed `fast`, dispatch `handoff-reviewer` with the **explicit file path** in the prompt (it refuses to guess). It is read-only and fast (git + filesystem checks only).
 
-Dispatch it in the background per `CLAUDE.md` §"Delegation by default" and end the turn; the completion notification re-invokes you to act on the report. This flow spans a turn boundary — the file is written and committed before the review returns, so if the session ends between dispatch and re-invocation the handoff is left unreviewed but not lost (pass `fast` to skip review deliberately).
+Dispatch it in the background per `CLAUDE.md` §"Work in the main session" and end the turn; the completion notification re-invokes you to act on the report. This flow spans a turn boundary — the file is written and committed before the review returns, so if the session ends between dispatch and re-invocation the handoff is left unreviewed but not lost (pass `fast` to skip review deliberately).
 
 One run, no loop: fix every blocker and warning it returns, then stop. If the fixes changed the file, run the § 4a commit-and-push block again for the same path — the first commit shipped the unreviewed text. Surface its `needs-verification` list to the user — those are the claims the next session must re-check before trusting.
 

@@ -86,7 +86,7 @@ Before asking, run this gate. If any branch resolves it, **do not ask** — act:
 
 - **Answer is already written** — plan (`docs/plans/*`), spec, ROADMAP.md (`## Now` only — `## Next` is an ordered queue, not a fixed answer; see §Roadmap), codemap, ADR, or this conversation already fixes it → read it and proceed. Asking what the plan already requires is pure noise.
 - **One option is defensibly best** — pick it, state the choice in one line, proceed. Do not stage a multiple-choice for a decision you can justify.
-- **Resolvable by investigation** — missing a fact → web-search (known-issues rule) or context7; unsure which approach wins → spawn `Explore` / `general-purpose` / a swarm; can't explain a failure → `debugger`; can't predict an outcome → run the experiment and measure.
+- **Resolvable by investigation** — missing a fact → web-search (known-issues rule) or context7; unsure which approach wins → read the code and reason it out; can't explain a failure → `debugger`; can't predict an outcome → run the experiment and measure.
 
 **Making the user guess is the same degradation as guessing yourself.** A methodological default — which profile to test, which config, which metric when the metric is just a measurement choice — is *your* job to reason out or settle empirically. In research work especially, a question offered in place of a measurement is not diligence, it is a path to stopping work. The exception is when the choice encodes a genuine user priority trade-off (e.g. precision vs recall against the user's cost model) — that stays on the askable side above.
 
@@ -94,7 +94,7 @@ Before asking, run this gate. If any branch resolves it, **do not ask** — act:
 
 The mirror of the above. When a fact you don't have determines what you do next, do not silently pick the likely-looking branch and proceed as if you knew. Resolve it, or name it.
 
-- **Resolvable → resolve it.** In the repo → `grep` / `Read`; in a library's behaviour → context7 or web-search; in runtime behaviour → run it and observe; in a failure you can't explain → `debugger`; in a design trade-off → spawn `Explore` / `general-purpose` / a swarm. Cheap investigation beats a confident guess every time.
+- **Resolvable → resolve it.** In the repo → `grep` / `Read`; in a library's behaviour → context7 or web-search; in runtime behaviour → run it and observe; in a failure you can't explain → `debugger`; in a design trade-off → read the code and reason it out. Cheap investigation beats a confident guess every time.
 - **Genuinely unresolvable → name the assumption.** If the fact cannot be settled in reasonable time and you must proceed, state the assumption inline — "assuming X because Y; if wrong, Z breaks" — never bury a guess in prose as if it were established.
 
 "Probably" / "maybe" / "по идее" reasoning that decides a branch is a guess, not a basis for action — the tokens the Verification and `debugger` rules forbid for claims and root causes also gate silent decisions here. This is **not** a licence to escalate every unknown to the user — that is the offloading the section above forbids. Resolve first; surface only what genuinely needs the user.
@@ -115,15 +115,13 @@ Leave Bash for what `Read`/`Edit`/`Write` cannot do:
 
 Rule of thumb: if a specialised tool exists, use it. Bash is the last resort.
 
-## Delegation by default
+## Work in the main session
 
-The main session is an orchestrator: dialogue with the user, task statements, integration of results, commits. The work itself happens in background agents.
+Implementation, research, exploration and plan drafts are done in the main session. Do not dispatch `general-purpose`, `Explore` or any other worker agent for them unless I ask for it explicitly. Measured 2026-08-08→09-03: delegation-by-default raised daily spend 57M→85M weighted tokens while the main session kept the same number of steps — every worker re-reads the project to get started, then the main session spends steps on the task statement, the report and re-checking, and less work got done.
 
-Any self-contained chunk of work — research, exploration, a plan draft, an implementation slice, a doc pass — is dispatched to a background agent by default. This section binds the main session only: a dispatched agent never re-delegates its assignment, and the spawn directives elsewhere in this file (§Question Discipline, §Guessing Discipline) are likewise addressed to the main session; the rest of this file binds subagents as before. A task statement in the dispatch prompt is sufficient; written artifacts (plan, codemaps, ADRs) are pointers to include when they exist, not a prerequisite — this waives no gate: a full-track implementation slice still runs under the approved plan (`rules/workflow.md` steps 4→5). Stays in the main session: conversation with the user, integration of agent results, commits, small edits (~≤2 files) with context already loaded.
+Agents are for the gates and the situational roles only: `plan-reviewer` (workflow step 4), `code-reviewer` (§4.5 pre-execution review and the pre-merge triad), `test-writer` and the doc agents (triad), `debugger` and `handoff-reviewer` when their triggers fire. A dispatched agent never re-delegates its assignment. Never resume a finished agent via `SendMessage` to give it more work — a resume re-prefills its whole context and every later step re-reads it; a new dispatch is cheaper.
 
-**The harness already defaults to background** (Claude Code 2.1.198+): the `Agent` tool's `run_in_background` is true unless explicitly set to false. A blocked session is therefore always self-inflicted — never a property of the agent.
-
-**Do not pass `run_in_background: false`.** Dispatch every agent in the background and keep working; the completion notification returns the result. This holds for short agents too — a "quick" `Explore` or a targeted `general-purpose` grep does not earn a blocked session.
+**Do not pass `run_in_background: false`.** The harness defaults to background (Claude Code 2.1.198+): dispatch, keep working on other things, and act on the completion notification.
 
 **Dispatch mode and gate semantics are separate axes.** "The result gates the next step" is a valid reason to *wait*; it is never a reason to run *foreground*. Where a rule gates an action on a report — [`rules/workflow.md`](rules/workflow.md) §4.5 pre-execution review, step 4→5 plan review, the pre-merge triad — dispatch in the background and end the turn; the notification re-invokes the session. **"Keep working" means other work, never the gated action.**
 
@@ -141,11 +139,11 @@ See [rules/workflow.md](rules/workflow.md).
 
 ## Sub-agent Invocation Policy
 
-Sub-agents run in isolated fresh contexts. The unit of review is the **branch** (PR), not the individual commit. Use them fully; full agent contracts live in `agents/*.md`. Implementation-slice delegation — see `rules/workflow.md` step 5 / Slice delegation.
+Sub-agents run in isolated fresh contexts. The unit of review is the **branch** (PR), not the individual commit. Full agent contracts live in `agents/*.md`; which agents exist for what is fixed in §Work in the main session.
 
 ### Agent modes
 
-`plan-reviewer` and `code-reviewer` take `mode: engineering | research` in the invocation prompt. Selection: project's `default_agent_mode` (if declared) → structural inference (active `notebooks/<...>/*.ipynb` without `src/` → research; else engineering) → per-branch override (pass explicitly). If a project declares `default_agent_mode: research` and the call lacks `mode:` with no engineering override, the agent errors out — no silent fallback. Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`, `handoff-reviewer`, `slice-implementer`) have no modes; `experiment-doc-agent` is research-only.
+`plan-reviewer` and `code-reviewer` take `mode: engineering | research` in the invocation prompt. Selection: project's `default_agent_mode` (if declared) → structural inference (active `notebooks/<...>/*.ipynb` without `src/` → research; else engineering) → per-branch override (pass explicitly). If a project declares `default_agent_mode: research` and the call lacks `mode:` with no engineering override, the agent errors out — no silent fallback. Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`, `handoff-reviewer`) have no modes; `experiment-doc-agent` is research-only.
 
 ### Plan review (`plan-reviewer`)
 
