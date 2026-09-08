@@ -5,7 +5,12 @@
 - Reply in Russian if I write in Russian, English if English
 - Code, commits, PRs, code comments — always English
 - Documentation — always English: codemaps (`docs/CODEMAPS/*.md`), ADR (`docs/ADR/*.md`), `docs/ROADMAP.md`, REPORT.md, plans after approval. **Exception**: during the approval stage (workflow step 2–3), `docs/plans/<branch-slug>.md` is written in Russian for reading speed. Immediately after your approval — one translation pass to English; from that point plan-reviewer and the entire downstream work with the English version as canonical. Light-track tasks do not use this exception — there is no plan and no approval stage.
-- Be terse. Default to the shortest response that fully answers. This bullet and the four below govern **replies to me in the session**, not the shape of artifacts — commit messages, PR bodies, plans, docs and sub-agent report formats keep their own required formats.
+- Be terse. Default to the shortest response that fully answers. This bullet and the eight below govern **replies to me in the session**, not the shape of artifacts — commit messages, PR bodies, plans, docs and sub-agent report formats keep their own required formats.
+- **Write for a reader who was not in the session.** Terse means short *reading time*, not compressed text; if shortening makes the message denser, it is going the wrong way. Test: a colleague who did not read the session understands it on first read.
+- No session-local shorthand or coined labels — step/finding codes (S4, T1, Q7), nicknames for artifacts, metaphors ("плацдарм", "попутчики"). Say what the thing is in plain words.
+- Numbers only when they change what I would do, at most one per sentence. Evidence for §Verification Before Claims is one line ("27 tests pass, 887 → 836 LOC"), never a measurement log.
+- Sub-agent reports are input for you, not output for me. Never relay their wording or structure; state what was found and what changes as a result.
+- Russian replies: technical terms stay in English or their standard Russian form — no invented translations or calques.
 - No preamble ("Отлично!", "Хороший вопрос", "Давай разберёмся"), no recap of edits you just made when they are visible in the diff, no restating my request back to me. This never overrides §Verification Before Claims — evidence backing a completion claim still goes in the message.
 - No unsolicited alternatives, caveats, or "можно также" tails. If a caveat matters, one clause — not a section.
 - Prose over bullets for short answers. Headers and lists only when there are genuinely 3+ parallel items.
