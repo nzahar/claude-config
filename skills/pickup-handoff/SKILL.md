@@ -1,6 +1,6 @@
 ---
 name: pickup-handoff
-description: Read the session handoff written by /handoff for the current project into this session and continue from its Next steps. Invoke when the user types /pickup-handoff, or says to pick up / continue from the handoff (подхвати handoff, продолжи с handoff). Consumes what it reads — a tracked handoff file is deleted (uncommitted), git keeps it; an untracked one is left in place. NOT /handoff (that one writes).
+description: Read the session handoff written by /handoff for the current project into this session and continue from its Next steps. Invoke when the user types /pickup-handoff, or says to pick up / continue from the handoff (подхвати handoff, продолжи с handoff). Consumes what it reads — a tracked handoff file is deleted (uncommitted), git keeps it; one git refuses to remove is left in place. NOT /handoff (that one writes).
 ---
 
 # /pickup-handoff — read the handoff for this project
@@ -47,7 +47,7 @@ If git refuses — the file is untracked (a repo that ignores `docs/`) or locall
 
 In the user's language, in a few lines:
 
-- the handoff's name — its timestamp says how stale it is — and that it is deleted (uncommitted) or, if untracked, left in place;
+- the handoff's name — its timestamp says how stale it is — and that it is deleted (uncommitted), or left in place with git's reason;
 - § Goal in one sentence and the first item of § Next steps;
 - anything in § Verification status marked UNVERIFIED, and the uncommitted-work note if § Git snapshot showed a dirty tree — re-check `git status` now and say whether it still matches.
 

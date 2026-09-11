@@ -129,7 +129,7 @@ If the push fails, keep the local commit, skip the push, and report the failure 
 Then check the file against the repo with cheap commands only (git, `ls`, grep — never tests, builds or network) and fix what fails; if that changed the file, run the commit-and-push block again for the same path:
 
 - every path the file mentions exists (`ls`), unless marked deleted or planned;
-- § Git snapshot matches `git branch --show-current` and `git status --porcelain` right now, except for the handoff's own commit and its path leaving the dirty list — that drift is expected;
+- § Git snapshot matches `git branch --show-current` and `git status --porcelain` right now, except for the handoff's own commit and its own path appearing in or leaving the dirty list — that drift is expected;
 - no "as discussed" / "as mentioned" / "как договорились" and no pronoun without an antecedent in the file;
 - the first item of § Next steps names a file or a command.
 
