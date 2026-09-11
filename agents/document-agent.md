@@ -12,7 +12,7 @@ You maintain three documentation layers in a single pass: structural facts, mean
 ## The Three Layers
 
 - **Structural layer** (`docs/CODEMAPS/`, structural tables) — file paths, exports, imports, routes, DB models, dependency lists, freshness hashes. Generated mechanically from code.
-- **Meaning layer** (`docs/CODEMAPS/`, inside `<!-- MEANING LAYER -->` blocks) — purpose, data flow, gotchas. Describes *current state of code*. Rewritten when code changes.
+- **Meaning layer** (`docs/CODEMAPS/`, inside `<!-- MEANING LAYER -->` blocks) — purpose, data flow, gotchas. Describes *current state of code*, nothing dated: no run outcomes, no "what happened on branch X". Those live in `REPORT.md` / the experiment registry or in the PR body. Rewritten when code changes.
 - **ADR layer** (`docs/ADR/`, one file per decision) — frozen once accepted. Captures *why* a non-obvious choice was made, what was rejected, trade-offs.
 
 All three describe **what the code is**. Where the work stands in time is not yours — that lives in `docs/ROADMAP.md`, owned by the main session.
@@ -30,6 +30,14 @@ Default — no subset named: run full repo pass over every `docs/CODEMAPS/*.md` 
 
 There is no required `scope:` field; if the prompt is ambiguous or silent, default to full pass — never halt without tool calls.
 
+## Pass cost
+
+A dense codemap is a large read; keep the pass cheap:
+
+- Read the target codemap once and each in-scope source once; do not re-read a file to find an edit site.
+- Once the in-scope file set is known, issue all those Reads in one batched message, not one per round-trip.
+- Rewrite an affected section in one Edit, not several single-line edits.
+
 ---
 
 ## Invocation triggers
@@ -44,14 +52,10 @@ Extract facts from the codebase, compare them against existing codemaps, and rec
 
 ## Workflow
 
-### 0. Size cap (unconditional, before the hash short-circuit)
-Read each in-scope codemap and run the size-cap check per [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md). That contract owns everything shared — trigger, bands, soft-cap WARNING, delimit-first bootstrap, the codemap protected block (`<!-- MEANING LAYER -->`) and delete-eligible sections, and the full compaction procedure (including that the duplicate `Module exports` table is folded by source-aware reconcile, never blind-deleted). **Do not restate any of that here.** `document-agent`'s only workflow-specific wiring: this check runs **before** the step-4 hash short-circuit and is independent of file churn; and if it finds the codemap over the hard cap, **steps 1–3 (source-aware reconcile) must run for that area even when the hash is unchanged** (step 4 carve-out) — otherwise the duplicate `Module exports` table never gets folded on a hash-stable pass.
-
 ### 1. Inventory the code
 - Identify packages, entry points, routes, DB models
 - For each area: list files, exported symbols, imports between modules, routes, background jobs
 - Record stack-specific facts: API routes with HTTP methods, DB tables with columns, queue names, env vars
-- Once the file set is enumerated, read those files in one batched message (`read-parallel` in [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md) § Pass-cost process discipline), not one Read per round-trip
 
 ### 2. Load existing codemaps
 Read every file in `docs/CODEMAPS/`. For each, identify:
@@ -75,14 +79,14 @@ At the top of each codemap, maintain:
 ```
 The hash is over **sorted file paths only**, not exported symbol signatures. Per-language symbol extraction (Python AST, Go `go list`, TS compiler API) is too brittle; a path-only hash is cheap, deterministic, and catches add/remove/rename. Symbol-level changes get caught by Phase 2's read-source pass, not the hash.
 
-Compute it transiently with the pinned cross-platform command defined in [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md) (§ Structure hash), annotated with the file count `(<N> files)` as an add/remove tripwire. **Do not store a literal sorted file-path list section in the codemap** — reconstructable from that command.
+Compute it transiently each pass from the live tree: `git ls-files <area-paths> | LC_ALL=C sort | git hash-object --stdin`, where `<area-paths>` is the directory set the Files table enumerates. `git hash-object` rather than `md5`/`md5sum` because those differ by platform and would falsely trip the tripwire across machines. Annotate with the file count `(<N> files)` as an add/remove tripwire. **Do not store a literal sorted file-path list section in the codemap** — reconstructable from that command.
 
-If hash unchanged → update date only, skip the rest for this area — **except the two step-0 carve-outs: (a) the size-cap check runs unconditionally, and (b) an over-cap file triggers steps 1–3 (source-aware reconcile) for this area despite the unchanged hash.**
+If hash unchanged → update date only, skip the rest for this area — unless the codemap still holds a legacy section (Codemap structure rule below), which is cleaned on this pass regardless.
 
 ### Phase 1 rules
 - Do **not** write descriptions of what a module *does* or *why* it exists. That is Phase 2.
 - Do **not** edit content inside `<!-- MEANING LAYER -->` blocks. Only flag drift.
-- Do **not** delete entries outright when code is removed — use strikethrough.
+- Do **not** delete structural-table entries outright when code is removed — use strikethrough. Legacy sections and dated narrative outside `<!-- MEANING LAYER -->` (Codemap structure rule below) are the exception: deleted, not struck.
 - Do **not** touch anything under `docs/ADR/` (read-only for verification of references).
 - Do **not** chase completeness for trivial files: re-exports, barrel files, test fixtures, generated code.
 
@@ -92,7 +96,7 @@ Per `rules/workflow.md` § Documentation economy, codemaps maintain **only one c
 
 Other tables that are *different projections* of the same area remain valid and are encouraged when relevant: `HTTP routes` (method × path × handler), `DB schema` (table × column × constraint), `DI graph`, `Lifecycle`. These are not duplicates of Files; they are orthogonal views.
 
-**Legacy behavior — superseded by [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md).** Existing codemaps may carry a `Module exports` table and a literal sorted-path-list section from before this rule. The former "≥ 50% of Files-table rows churned in one pass" migration gate is **removed**; removal now happens via the size-triggered compaction in the contract (sorted-path-list deleted as regenerable; `Module exports` folded into Files by the source-aware reconcile, never blind-deleted). Fresh codemaps are written without either section from the start.
+**Legacy sections.** Existing codemaps may carry a `Module exports` table, a literal sorted-path-list section, or dated narrative (run outcomes, per-branch chronicles) from before these rules. When you pass over such an area, delete them — the Files table is reconciled from source on the same pass, the path list is regenerable from the hash command, and git keeps the narrative. Relocate nothing. Dated narrative inside a `<!-- MEANING LAYER -->` block is Phase 2's to delete (its Current-state rule); Phase 1 deletes only what sits outside the block.
 
 ---
 
@@ -111,7 +115,7 @@ Now that the structural tables are current, write the "why" around them. You als
 
 ### 1. Read before writing
 For the scope:
-- Read every source file listed in structural tables (actual implementations, not just headers) — reuse any file already held from Phase 1 rather than re-reading; batch any remaining Reads per `read-parallel` ([`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md) § Pass-cost process discipline)
+- Read every source file listed in structural tables (actual implementations, not just headers) — reuse any file already held from Phase 1 rather than re-reading
 - Note what is still accurate and what is stale in existing meaning-layer blocks
 
 ### 2. Write the three meaning-layer sections
@@ -164,22 +168,14 @@ Wrap in `<!-- MEANING LAYER -->` ... `<!-- /MEANING LAYER -->`. Add footer: `_Me
 
 ## Phase 2 rules
 - **Do not invent facts.** But DO create ADRs proactively when you see decisions with alternatives.
+- **Current state only.** No dates, no run results, no branch history in the meaning-layer body; a dated passage you meet is deleted, not moved. The review footer of step 5 is not narrative and stays.
 - **Do not paraphrase structural tables.** Say *why*, not *what*.
 - **Do not restate ADR content in the codemap.** Link to it.
 - **Do not write filler.** "Well-structured and follows best practices" is filler. Cut it.
 - **Do not edit structural tables.** Leave a `<!-- STRUCTURE-DOUBT: ... -->` comment if something looks wrong.
 - **Quote, do not summarize** when copying intent from code comments/JSDoc.
 
-### ADR economy (per `rules/workflow.md` § Documentation economy)
-
-When creating ADRs in Phase 2, apply the subset of D1–D9 that fits the artifact:
-
-- **D3 applies.** One ADR = one thematically coherent cluster of decisions. If revisit-triggers for sub-decisions are independent, split into multiple ADRs at creation time rather than writing one omnibus ADR.
-- **D4 applies.** "Alternatives considered" lists only alternatives genuinely weighed. Do not pad with strawman options to look thorough.
-- **D6 applies.** Scope, threshold, and detection (cap value, exclusions, table-row carve-out) are SSOT'd in `rules/workflow.md` D6. Anchoring inside compact `## Decisions` / `## Scope` tables is exempt by that scope rule's table-row carve-out — flagged here only because ADR tables are a common location for ADR-to-ADR pointers.
-- **D7 applies.** Markdown tables inside an ADR (Scope, Decisions matrix, D-debt closures) follow the ≤ 3 statements per cell rule.
-- **D8, D9 — N/A.** D8 caps codemap / REPORT.md size, D9 is plans-only.
-- **D1, D2, D5 — N/A.** These rules are plan-specific (inline implementation, ADR-outline duplication inside a plan, open questions inside a plan's `## Decisions`).
+ADRs follow `rules/workflow.md` § Documentation economy: one decision per ADR, only alternatives genuinely weighed, three statements per table cell.
 
 ---
 

@@ -52,8 +52,6 @@ This is a runtime interpretation of the prompt, not a parameter. There is no req
 
 ### Phase 1 — Inventory and drift detection
 
-**Size cap.** For each in-scope `REPORT.md`, run the size-cap check per [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md). That contract owns everything shared — trigger, bands, soft-cap WARNING, delimit-first bootstrap, the REPORT.md protected block (the quoted metrics under `## Result` / `## Metrics`) and the compaction procedure. **Do not restate it here.** `experiment-doc-agent`'s only workflow-specific wiring: this check runs **before the no-drift short-circuit (step 6 below)**; and REPORT.md has **no delete-eligible duplicate section** (no `Module exports` / path-list analog), so for it compaction is cell-trim only — no fold, no source-aware-reconcile override is needed.
-
 For each `experiments/<domain>/<NN_slug>/REPORT.md`:
 
 1. Read frontmatter: `notebook`, `notebook_sha256`, `kind`, `env_lock_path`, `data_manifest_path`, `last_executed_at`, `random_seeds`, `status`.
@@ -82,7 +80,7 @@ Used to judge whether a notebook change triggers the pre-execution review gate (
 
 ### Phase 2 — Fill the template
 
-The set of reports needing refresh is fully known from Phase 1's drift pass. When more than one is in scope, read their notebooks in one batched message (`read-parallel` in [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md) § Pass-cost process discipline).
+The set of reports needing refresh is fully known from Phase 1's drift pass. When more than one is in scope, read their notebooks in one batched message.
 
 For each report needing refresh:
 
@@ -152,18 +150,4 @@ Collect every "TODO: verify" entry, every TODO flagged during Phases 1-2 (missin
 
 Be terse. Every section should pay its way. If a section has nothing non-obvious to say, say so in one line ("Same caveats as `01`") rather than padding.
 
-## Anti-bloat rules (symmetric with `rules/workflow.md` § Documentation economy)
-
-Per `rules/workflow.md` § Documentation economy, only the subset of D1–D9 that mechanically applies to REPORT.md / domain README is in scope. The rest are N/A by artifact shape, not by exception:
-
-- **D1 (inline implementation > 5 lines): N/A.** REPORT.md contract is "never extract code" (Hard rules above). The artifact does not contain implementation code blocks; rule cannot fire.
-- **D2 (plan ↔ ADR-outline duplication): N/A.** REPORT.md has no ADR-outline section.
-- **D3 (multi-decision ADR): N/A.** REPORT.md is not an ADR.
-- **D4 (strawman alternatives): N/A.** REPORT.md template has no "Alternatives considered" section.
-- **D5 (open questions in approved plan): N/A.** REPORT.md has `## Caveats / open questions` as a first-class section by template — these are feature, not bug. Phase 4 deliberately aggregates them.
-- **D6 (cross-ref ratio): N/A.** REPORT.md cross-refs to notebooks, sibling REPORT.md, and BACKLOG entries are primary anchoring, not bloat. Symmetric with codemap scope exclusion in workflow.md D6.
-- **D7 (table cell length): applies.** Markdown tables in REPORT.md (e.g. metrics matrices, config snapshots) and in `experiments/<domain>/README.md` (Active/Abandoned tables) follow the ≤ 3 statements per cell rule, plus the ≤ 200-char primary cell budget (D7 in workflow.md). Cells that need more belong in the prose of `## Result` / `## Caveats`, not in the table.
-- **D8 (doc size hard-cap): applies.** REPORT.md is subject to the size-triggered compaction in [`lib/doc-compaction-contract.md`](../lib/doc-compaction-contract.md); the Phase 1 size step above carries the REPORT.md workflow wiring. Compaction never deletes a REPORT.md section.
-- **D9 (risk plausibility): N/A.** Plans only (`docs/plans/*.md`).
-
-The existing **Output budget** section above is the prose-level rule; the points above are the table-level rule. Both stay in effect.
+Tables in REPORT.md and in `experiments/<domain>/README.md` hold at most three statements per cell (`rules/workflow.md` § Documentation economy); anything longer is prose under `## Result` / `## Caveats`, not a wider cell.

@@ -3,8 +3,7 @@
 #
 # Generated (and fully owned by this script): $KIMI_HOME/AGENTS.md (CLAUDE.md +
 # rules/*.md, via rulesync), $KIMI_HOME/agents/*.md (agents/*.md, via rulesync,
-# stale files removed), and two symlinks: $KIMI_HOME/lib -> ~/.claude/lib so the
-# agents' ../lib/ links resolve, and $KIMI_HOME/skills -> ~/.claude/skills (Kimi
+# stale files removed), and the symlink $KIMI_HOME/skills -> ~/.claude/skills (Kimi
 # Code 0.37 scans only $KIMI_CODE_HOME/skills and ~/.agents/skills for user skills;
 # ~/.claude/skills is not auto-discovered). config.toml is never touched. Sync is manual: the user runs /sync-kimi
 # (skills/sync-kimi/SKILL.md) from either CLI, which calls this script.
@@ -101,21 +100,17 @@ if [[ $check -eq 1 ]]; then
   status=0
   diff -u "$KIMI_HOME/AGENTS.md" "$tmp/AGENTS.md" 2>&1 || status=1
   diff -ru "$KIMI_HOME/agents" "$tmp/agents" 2>&1 || status=1
-  for link in lib skills; do
-    [[ "$(readlink "$KIMI_HOME/$link" 2>/dev/null || true)" == "$claude_dir/$link" ]] || { echo "$link symlink missing or wrong"; status=1; }
-  done
+  [[ "$(readlink "$KIMI_HOME/skills" 2>/dev/null || true)" == "$claude_dir/skills" ]] || { echo "skills symlink missing or wrong"; status=1; }
   exit $status
 fi
 
 mkdir -p "$KIMI_HOME"
-for link in lib skills; do
-  [[ -e "$KIMI_HOME/$link" && ! -L "$KIMI_HOME/$link" ]] && bail "$KIMI_HOME/$link exists and is not a symlink — not replacing it"
-done
+[[ -e "$KIMI_HOME/skills" && ! -L "$KIMI_HOME/skills" ]] && bail "$KIMI_HOME/skills exists and is not a symlink — not replacing it"
 rm -rf "$KIMI_HOME/agents"
 cp -R "$tmp/agents" "$KIMI_HOME/agents"
 cp "$tmp/AGENTS.md" "$KIMI_HOME/AGENTS.md"
-ln -sfn "$claude_dir/lib" "$KIMI_HOME/lib"
 # skills points at the framework source tree: never add "skills" to the rulesync
 # --features lists above, or generate would write into ~/.claude/skills.
 ln -sfn "$claude_dir/skills" "$KIMI_HOME/skills"
-[[ $quiet -eq 1 ]] || echo "sync-kimi: wrote $KIMI_HOME/AGENTS.md, $KIMI_HOME/agents/ ($expected_agents agents), $KIMI_HOME/{lib,skills} -> $claude_dir/{lib,skills}"
+[[ -L "$KIMI_HOME/lib" ]] && rm -f "$KIMI_HOME/lib"
+[[ $quiet -eq 1 ]] || echo "sync-kimi: wrote $KIMI_HOME/AGENTS.md, $KIMI_HOME/agents/ ($expected_agents agents), $KIMI_HOME/skills -> $claude_dir/skills"
