@@ -41,7 +41,7 @@ Only the file you read — earlier handoffs stay for a later pickup:
 git -C "<repo>" rm -q "docs/handoffs/<file>"
 ```
 
-If that fails, the file is untracked (a repo that ignores `docs/`): git holds no copy, so leave the file where it is and say so in § 4 — the user deletes it by hand when the session has consumed it. Never `rm` an untracked handoff. **Do not commit the deletion** — it rides along with this session's next regular commit.
+If git refuses — the file is untracked (a repo that ignores `docs/`) or locally modified — leave it where it is and report git's message in § 4; the user deletes it by hand. Never `rm` a handoff yourself. In such a repo the newest file may be one an earlier session already consumed — say so when its § Git snapshot is older than the live log. **Do not commit the deletion** — it rides along with this session's next regular commit.
 
 ## 4. Report and continue
 

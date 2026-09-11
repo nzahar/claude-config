@@ -56,7 +56,6 @@ Extract facts from the codebase, compare them against existing codemaps, and rec
 - Identify packages, entry points, routes, DB models
 - For each area: list files, exported symbols, imports between modules, routes, background jobs
 - Record stack-specific facts: API routes with HTTP methods, DB tables with columns, queue names, env vars
-- Once the file set is enumerated, read those files in one batched message
 
 ### 2. Load existing codemaps
 Read every file in `docs/CODEMAPS/`. For each, identify:
@@ -97,7 +96,7 @@ Per `rules/workflow.md` § Documentation economy, codemaps maintain **only one c
 
 Other tables that are *different projections* of the same area remain valid and are encouraged when relevant: `HTTP routes` (method × path × handler), `DB schema` (table × column × constraint), `DI graph`, `Lifecycle`. These are not duplicates of Files; they are orthogonal views.
 
-**Legacy sections.** Existing codemaps may carry a `Module exports` table, a literal sorted-path-list section, or dated narrative (run outcomes, per-branch chronicles) from before these rules. When you pass over such an area, delete them — the Files table is reconciled from source on the same pass, the path list is regenerable from the hash command, and git keeps the narrative. Relocate nothing.
+**Legacy sections.** Existing codemaps may carry a `Module exports` table, a literal sorted-path-list section, or dated narrative (run outcomes, per-branch chronicles) from before these rules. When you pass over such an area, delete them — the Files table is reconciled from source on the same pass, the path list is regenerable from the hash command, and git keeps the narrative. Relocate nothing. Dated narrative inside a `<!-- MEANING LAYER -->` block is Phase 2's to delete (its Current-state rule); Phase 1 deletes only what sits outside the block.
 
 ---
 
@@ -116,7 +115,7 @@ Now that the structural tables are current, write the "why" around them. You als
 
 ### 1. Read before writing
 For the scope:
-- Read every source file listed in structural tables (actual implementations, not just headers) — reuse any file already held from Phase 1 rather than re-reading; batch any remaining Reads in one message
+- Read every source file listed in structural tables (actual implementations, not just headers) — reuse any file already held from Phase 1 rather than re-reading
 - Note what is still accurate and what is stale in existing meaning-layer blocks
 
 ### 2. Write the three meaning-layer sections

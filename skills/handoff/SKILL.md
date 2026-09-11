@@ -34,7 +34,7 @@ mkdir -p "<repo>/docs/handoffs" && date +%Y-%m-%d-%H%M
 
 The file lives in the repo on purpose: committed in § 4a, it reaches the other machines and the co-authors who work on this project — a handoff parked on one disk does not.
 
-If `docs/handoffs/` already holds handoffs — a previous session's, not yet picked up — read the newest first and carry forward still-valid content, especially What did NOT work.
+If `docs/handoffs/` already holds handoffs — a previous session's, not yet picked up, or already consumed in a repo that ignores `docs/` — read the newest first and carry forward still-valid content, especially What did NOT work.
 
 ## 3. Collect the git snapshot mechanically
 
@@ -129,7 +129,7 @@ If the push fails, keep the local commit, skip the push, and report the failure 
 Then check the file against the repo with cheap commands only (git, `ls`, grep — never tests, builds or network) and fix what fails; if that changed the file, run the commit-and-push block again for the same path:
 
 - every path the file mentions exists (`ls`), unless marked deleted or planned;
-- § Git snapshot matches `git branch --show-current` and `git status --porcelain` right now;
+- § Git snapshot matches `git branch --show-current` and `git status --porcelain` right now, except for the handoff's own commit and its path leaving the dirty list — that drift is expected;
 - no "as discussed" / "as mentioned" / "как договорились" and no pronoun without an antecedent in the file;
 - the first item of § Next steps names a file or a command.
 

@@ -48,9 +48,9 @@ Similarly — when working outside workflow.md (debugging sessions, ad-hoc quest
 
 Each artifact holds one thing and has a lifetime. Nothing is written twice.
 
-- **Codemap** (`docs/CODEMAPS/`) — the code as it is now: structure, data flow, invariants. No dates, no run outcomes, no branch history. Written by `document-agent` only; the main session does not edit codemaps during a branch.
+- **Codemap** (`docs/CODEMAPS/`) — the code as it is now: structure, data flow, invariants. No dated narrative: no run outcomes, no branch history (the freshness header and review footer are not narrative). Written by `document-agent` only; the main session does not edit codemaps during a branch.
 - **ADR** (`docs/ADR/`) — one decision and why. Immutable once accepted; a changed decision is a new ADR that supersedes the old one.
-- **Plan** (`docs/plans/<slug>.md`) — the branch's working document. The main session deletes it when the branch is readied for merge, whether or not a ROADMAP item is cleared with it; where plans are tracked, git keeps it, and in a repo that ignores `docs/plans/` the deletion is final by design.
+- **Plan** (`docs/plans/<slug>.md`) — the branch's working document. The main session deletes it when the branch is readied for merge, whether or not a ROADMAP item is cleared with it; where plans are tracked, git keeps it; in a repo that ignores `docs/plans/` the deletion is final by design, and the session says so when it deletes.
 - **Handoff** (`docs/handoffs/`) — the working tree right now. Deleted at pickup when git has a copy (§Session Handoff).
 - **Run outcomes** — `REPORT.md` / the experiment registry in research projects, the PR body in engineering ones. Never a codemap.
 
