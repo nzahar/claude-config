@@ -37,18 +37,28 @@ Rules:
 - **Read the `## Now` section.** `## Next` and `## Later` are for when the user asks what is queued or where a new idea should go — and for the empty-`## Now` ask below.
 - **If the file does not exist, do nothing.** Do not ask the user to create it, do not offer to create it. Some projects don't have one yet, that's fine.
 - **ROADMAP.md can be stale.** If the user's first message contradicts it (e.g. user opens with "let's work on Y" while `## Now` says Z) — trust the user. Note the discrepancy briefly if relevant, do not argue.
-- **Completing a `## Now` item clears it.** When the branch that completes a `## Now` item is being readied for merge, the main session removes the item from `## Now` and commits that edit to the branch — it rides in with the PR, so nothing is written to `main` directly. Stop there: do **not** promote anything from `## Next` — picking the next item is the user's call. Action skills (`/ship`, `/merge-pr`) never make this edit — it happens before they are invoked; a removal that was missed rides the next branch.
+- **Completing a `## Now` item clears it.** When the branch that completes a `## Now` item is being readied for merge, the main session removes the item from `## Now`, deletes the branch's `docs/plans/<slug>.md` (git keeps it), and commits both in one edit to the branch — it rides in with the PR, so nothing is written to `main` directly. Stop there: do **not** promote anything from `## Next` — picking the next item is the user's call. Action skills (`/ship`, `/merge-pr`) never make this edit — it happens before they are invoked; a removal that was missed rides the next branch.
 - **Empty `## Now` at session start → ask.** If the file exists, `## Now` is empty, `## Next` is non-empty, and the user's first message does not itself set what to work on (roadmap-listed or not) — ask which `## Next` item to take, offering `## Later` only on request. Any substantive opener — a task, a question, a debugging ask — suppresses this; whether it lands in `## Now` is the user's edit to make. This ask is a genuine priority call reserved to the user: the §Question Discipline gate as a whole does not apply to it — `## Next` order is a queue, not a commitment.
 - **"Add it to the plan" routing.** Within the current branch's scope → the branch's plan file at `docs/plans/<branch-slug>.md`. Anything else → ROADMAP.md, `## Later` by default.
 - **Do not surface ROADMAP.md content unprompted.** Use it for your own orientation. The user does not need a recap of their own project unless they ask for one. Sole exception: the empty-`## Now` ask above, which names `## Next` items.
 
 Similarly — when working outside workflow.md (debugging sessions, ad-hoc questions, refactoring without a formal plan), read `docs/CODEMAPS/<area>.md` and relevant ADRs from `docs/ADR/` if the work touches architectural decisions or recorded invariants. For trivial edits (typo, formatting, local bugfix) this is not needed.
 
+## Documentation ownership
+
+Each artifact holds one thing and has a lifetime. Nothing is written twice.
+
+- **Codemap** (`docs/CODEMAPS/`) — the code as it is now: structure, data flow, invariants. No dates, no run outcomes, no branch history. Written by `document-agent` only; the main session does not edit codemaps during a branch.
+- **ADR** (`docs/ADR/`) — one decision and why. Immutable once accepted; a changed decision is a new ADR that supersedes the old one.
+- **Plan** (`docs/plans/<slug>.md`) — the branch's working document. Deleted when the branch is readied for merge (§Roadmap); git keeps it.
+- **Handoff** (`docs/handoffs/`) — the working tree right now. Deleted at pickup (§Session Handoff).
+- **Run outcomes** — `REPORT.md` / the experiment registry in research projects, the PR body in engineering ones. Never a codemap.
+
 ## Session Handoff
 
 When I ask for a handoff ("сделай handoff", `/handoff`), invoke the `handoff` skill. It writes `docs/handoffs/<YYYY-MM-DD-HHMM>.md` inside the project — a new file each time, never overwriting an earlier one (two runs in the same minute deliberately collapse into the newer) — then commits that one file and pushes the current branch. Without the commit the handoff never travels between machines or reaches a co-author. The commit is pathspec'd to the handoff file alone, so a dirty tree is not swept in; the push goes to whatever branch is checked out, `main` included — the file is technical and the §Git & Workflow PR/merge gate does not extend to it, so a session on `main` does not stop to ask.
 
-Nothing injects that file automatically: in the next session I run `/pickup-handoff` (the `pickup-handoff` skill) myself. It reads the newest handoff and moves what it read into `docs/handoffs/archive/` — pickup consumes, so each file is picked up once. The archive has no retention (git remembers everything) and is read only when I ask for it explicitly. Do not pick a handoff up unasked, and do not hand me a prompt to paste into the new session.
+Nothing injects that file automatically: in the next session I run `/pickup-handoff` (the `pickup-handoff` skill) myself. It reads the newest handoff and deletes the file it read — pickup consumes, git remembers. Do not pick a handoff up unasked, and do not hand me a prompt to paste into the new session.
 
 A handoff is ephemeral and describes exactly what `docs/ROADMAP.md` and the branch plan must not: the working tree right now — uncommitted changes, dead ends hit this session, the next concrete step. Point to them from a handoff; never copy them in. When a picked-up handoff contradicts them, the handoff wins on working-tree facts (what is uncommitted, what just broke) and ROADMAP.md / the plan win on trajectory (what is blocked, what is planned next) — and I outrank both.
 
@@ -117,7 +127,7 @@ Leave Bash for what `Read`/`Edit`/`Write` cannot do:
 - Tree-wide search (`grep -rn`, `find`) — but not for reading found files, only for searching
 - Listing directories (`ls`) when the structure is unknown
 
-Rule of thumb: if a specialised tool exists, use it. Bash is the last resort.
+Rule of thumb: if a specialised tool exists, use it. Bash is the last resort. Do not poll a background run with `pgrep -f <pattern>` — it matches the shell running that very command.
 
 ## Sub-agents — background by default
 
@@ -129,7 +139,7 @@ Rule of thumb: if a specialised tool exists, use it. Bash is the last resort.
 
 **The only exception**: I explicitly ask for a synchronous run.
 
-The spawn directives in §Question Discipline and §Guessing Discipline are addressed to the main session; a dispatched agent never re-delegates its assignment.
+The spawn directives in §Question Discipline and §Guessing Discipline are addressed to the main session; a dispatched agent never re-delegates its assignment. While an agent runs, do not edit the files it writes — wait for its notification.
 
 Independent agents — one message, multiple `Agent` calls, all in background. The pre-merge triad (`code-reviewer` + `test-writer` + `document-agent` / `experiment-doc-agent`) is the canonical case.
 
@@ -147,11 +157,11 @@ Sub-agents run in isolated fresh contexts. The unit of review is the **branch** 
 
 ### Agent modes
 
-`plan-reviewer` and `code-reviewer` take `mode: engineering | research` in the invocation prompt. Selection: project's `default_agent_mode` (if declared) → structural inference (active `notebooks/<...>/*.ipynb` without `src/` → research; else engineering) → per-branch override (pass explicitly). If a project declares `default_agent_mode: research` and the call lacks `mode:` with no engineering override, the agent errors out — no silent fallback. Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`, `handoff-reviewer`) have no modes; `experiment-doc-agent` is research-only.
+`plan-reviewer` and `code-reviewer` take `mode: engineering | research` in the invocation prompt. Selection: project's `default_agent_mode` (if declared) → structural inference (active `notebooks/<...>/*.ipynb` without `src/` → research; else engineering) → per-branch override (pass explicitly). If a project declares `default_agent_mode: research` and the call lacks `mode:` with no engineering override, the agent errors out — no silent fallback. Other agents (`document-agent`, `experiment-doc-agent`, `test-writer`, `debugger`) have no modes; `experiment-doc-agent` is research-only.
 
 ### Plan review (`plan-reviewer`)
 
-Trigger — step 4 of `workflow.md`, after the user approves the plan, before any code is written. Mandatory for full-track tasks with a plan file at `docs/plans/<branch-slug>.md`. **One round, no loop** — the agent returns one report; every blocker carries a class (`Surfaces at: … → class R|I`; unclassified → the main session applies the class test, warning only if no irreversible cost can be named). I blockers are fixed into the plan before implementation starts; R blockers the main session fixes inline per the fix hint or declines, stating why; warnings are the user's call. Then implement. A re-review runs only on the user's explicit request — no automatic rounds, no cap machinery; framework / governance plans follow the same rule. SSOT is `workflow.md` step 4. The agent finds the plan automatically from the branch — pass an explicit path only if it lives elsewhere. Do not invoke for light-track declarations, mid-implementation, or replanning.
+Trigger — step 4 of `workflow.md`, after the user approves the plan, before any code is written. Mandatory for full-track tasks with a plan file at `docs/plans/<branch-slug>.md`. **One round, no loop** — the agent returns one report. A blocker names an irreversible cost and the moment it lands; anything else is a warning. Blockers are fixed into the plan before implementation starts; warnings the main session fixes inline where it agrees and states what it declined. Then implement. A re-review runs only on the user's explicit request; framework / governance plans follow the same rule. SSOT is `workflow.md` step 4. The agent finds the plan automatically from the branch — pass an explicit path only if it lives elsewhere. Do not invoke for light-track declarations, mid-implementation, or replanning.
 
 ### Pre-merge triad (`test-writer` + `code-reviewer` + `document-agent` or `experiment-doc-agent`)
 

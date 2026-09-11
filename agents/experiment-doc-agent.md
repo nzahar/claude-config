@@ -150,17 +150,4 @@ Collect every "TODO: verify" entry, every TODO flagged during Phases 1-2 (missin
 
 Be terse. Every section should pay its way. If a section has nothing non-obvious to say, say so in one line ("Same caveats as `01`") rather than padding.
 
-## Anti-bloat rules (symmetric with `rules/workflow.md` § Documentation economy)
-
-Per `rules/workflow.md` § Documentation economy, only the subset of D1–D8 that mechanically applies to REPORT.md / domain README is in scope. The rest are N/A by artifact shape, not by exception:
-
-- **D1 (inline implementation > 5 lines): N/A.** REPORT.md contract is "never extract code" (Hard rules above). The artifact does not contain implementation code blocks; rule cannot fire.
-- **D2 (plan ↔ ADR-outline duplication): N/A.** REPORT.md has no ADR-outline section.
-- **D3 (multi-decision ADR): N/A.** REPORT.md is not an ADR.
-- **D4 (strawman alternatives): N/A.** REPORT.md template has no "Alternatives considered" section.
-- **D5 (open questions in approved plan): N/A.** REPORT.md has `## Caveats / open questions` as a first-class section by template — these are feature, not bug. Phase 4 deliberately aggregates them.
-- **D6 (cross-ref ratio): N/A.** REPORT.md cross-refs to notebooks, sibling REPORT.md, and BACKLOG entries are primary anchoring, not bloat. Symmetric with codemap scope exclusion in workflow.md D6.
-- **D7 (table cell length): applies.** Markdown tables in REPORT.md (e.g. metrics matrices, config snapshots) and in `experiments/<domain>/README.md` (Active/Abandoned tables) follow the ≤ 3 statements per cell rule, plus the ≤ 200-char primary cell budget (D7 in workflow.md). Cells that need more belong in the prose of `## Result` / `## Caveats`, not in the table.
-- **D8 (risk plausibility): N/A.** Plans only (`docs/plans/*.md`).
-
-The existing **Output budget** section above is the prose-level rule; the points above are the table-level rule. Both stay in effect.
+Tables in REPORT.md and in `experiments/<domain>/README.md` hold at most three statements per cell (`rules/workflow.md` § Documentation economy); anything longer is prose under `## Result` / `## Caveats`, not a wider cell.

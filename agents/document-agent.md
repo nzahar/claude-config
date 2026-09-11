@@ -12,7 +12,7 @@ You maintain three documentation layers in a single pass: structural facts, mean
 ## The Three Layers
 
 - **Structural layer** (`docs/CODEMAPS/`, structural tables) — file paths, exports, imports, routes, DB models, dependency lists, freshness hashes. Generated mechanically from code.
-- **Meaning layer** (`docs/CODEMAPS/`, inside `<!-- MEANING LAYER -->` blocks) — purpose, data flow, gotchas. Describes *current state of code*. Rewritten when code changes.
+- **Meaning layer** (`docs/CODEMAPS/`, inside `<!-- MEANING LAYER -->` blocks) — purpose, data flow, gotchas. Describes *current state of code*, nothing dated: no run outcomes, no "what happened on branch X". Those live in `REPORT.md` / the experiment registry or in the PR body. Rewritten when code changes.
 - **ADR layer** (`docs/ADR/`, one file per decision) — frozen once accepted. Captures *why* a non-obvious choice was made, what was rejected, trade-offs.
 
 All three describe **what the code is**. Where the work stands in time is not yours — that lives in `docs/ROADMAP.md`, owned by the main session.
@@ -97,7 +97,7 @@ Per `rules/workflow.md` § Documentation economy, codemaps maintain **only one c
 
 Other tables that are *different projections* of the same area remain valid and are encouraged when relevant: `HTTP routes` (method × path × handler), `DB schema` (table × column × constraint), `DI graph`, `Lifecycle`. These are not duplicates of Files; they are orthogonal views.
 
-**Legacy sections.** Existing codemaps may carry a `Module exports` table and a literal sorted-path-list section from before this rule. When reconciling such an area, delete the path list (regenerable from the hash command) and fold `Module exports` into the Files table from source — it can name symbols a Files cell omits, so never drop it unread. Fresh codemaps are written without either section from the start.
+**Legacy sections.** Existing codemaps may carry a `Module exports` table, a literal sorted-path-list section, or dated narrative (run outcomes, per-branch chronicles) from before these rules. When you pass over such an area, delete them — the Files table is reconciled from source on the same pass, the path list is regenerable from the hash command, and git keeps the narrative. Relocate nothing.
 
 ---
 
@@ -169,22 +169,14 @@ Wrap in `<!-- MEANING LAYER -->` ... `<!-- /MEANING LAYER -->`. Add footer: `_Me
 
 ## Phase 2 rules
 - **Do not invent facts.** But DO create ADRs proactively when you see decisions with alternatives.
+- **Current state only.** No dates, no run results, no branch history in the meaning layer; a dated passage you meet is deleted, not moved.
 - **Do not paraphrase structural tables.** Say *why*, not *what*.
 - **Do not restate ADR content in the codemap.** Link to it.
 - **Do not write filler.** "Well-structured and follows best practices" is filler. Cut it.
 - **Do not edit structural tables.** Leave a `<!-- STRUCTURE-DOUBT: ... -->` comment if something looks wrong.
 - **Quote, do not summarize** when copying intent from code comments/JSDoc.
 
-### ADR economy (per `rules/workflow.md` § Documentation economy)
-
-When creating ADRs in Phase 2, apply the subset of D1–D8 that fits the artifact:
-
-- **D3 applies.** One ADR = one thematically coherent cluster of decisions. If revisit-triggers for sub-decisions are independent, split into multiple ADRs at creation time rather than writing one omnibus ADR.
-- **D4 applies.** "Alternatives considered" lists only alternatives genuinely weighed. Do not pad with strawman options to look thorough.
-- **D6 applies.** Scope, threshold, and detection (cap value, exclusions, table-row carve-out) are SSOT'd in `rules/workflow.md` D6. Anchoring inside compact `## Decisions` / `## Scope` tables is exempt by that scope rule's table-row carve-out — flagged here only because ADR tables are a common location for ADR-to-ADR pointers.
-- **D7 applies.** Markdown tables inside an ADR (Scope, Decisions matrix, D-debt closures) follow the ≤ 3 statements per cell rule.
-- **D8 — N/A.** Plans-only.
-- **D1, D2, D5 — N/A.** These rules are plan-specific (inline implementation, ADR-outline duplication inside a plan, open questions inside a plan's `## Decisions`).
+ADRs follow `rules/workflow.md` § Documentation economy: one decision per ADR, only alternatives genuinely weighed, three statements per table cell.
 
 ---
 
