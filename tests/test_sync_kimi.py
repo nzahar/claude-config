@@ -28,7 +28,7 @@ def sandbox(tmp_path: Path) -> dict[str, Path]:
     claude = home / ".claude"
     claude.mkdir(parents=True)
     shutil.copy(ROOT / "CLAUDE.md", claude / "CLAUDE.md")
-    for d in ("rules", "agents", "lib", "skills"):
+    for d in ("rules", "agents", "skills"):
         shutil.copytree(ROOT / d, claude / d)
     kimi = tmp_path / "kimi"
     kimi.mkdir()
@@ -52,7 +52,7 @@ def _run(sb: dict[str, Path], *args: str) -> subprocess.CompletedProcess[str]:
 
 
 @requires_npx
-def test_sync_generates_agents_md_rules_agents_and_lib(sandbox):
+def test_sync_generates_agents_md_rules_agents_and_skills(sandbox):
     result = _run(sandbox, "--quiet")
     assert result.returncode == 0, result.stderr
     assert result.stderr == "", result.stderr
@@ -73,12 +73,7 @@ def test_sync_generates_agents_md_rules_agents_and_lib(sandbox):
     skills = sandbox["kimi"] / "skills"
     assert skills.is_symlink()
     assert (skills / "sync-kimi" / "SKILL.md").exists()
-
-    lib = sandbox["kimi"] / "lib"
-    assert lib.is_symlink()
-    assert (lib / "doc-compaction-contract.md").read_text(encoding="utf-8") == (
-        sandbox["claude"] / "lib" / "doc-compaction-contract.md"
-    ).read_text(encoding="utf-8")
+    assert not (sandbox["kimi"] / "lib").exists()
 
 
 @requires_npx

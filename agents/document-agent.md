@@ -87,7 +87,7 @@ If hash unchanged → update date only, skip the rest for this area.
 ### Phase 1 rules
 - Do **not** write descriptions of what a module *does* or *why* it exists. That is Phase 2.
 - Do **not** edit content inside `<!-- MEANING LAYER -->` blocks. Only flag drift.
-- Do **not** delete entries outright when code is removed — use strikethrough.
+- Do **not** delete structural-table entries outright when code is removed — use strikethrough. Legacy sections and dated narrative (Codemap structure rule below) are the exception: deleted, not struck.
 - Do **not** touch anything under `docs/ADR/` (read-only for verification of references).
 - Do **not** chase completeness for trivial files: re-exports, barrel files, test fixtures, generated code.
 
