@@ -134,14 +134,14 @@ Do not require formal test plans for small changes. A one-line verification comm
 
 ## Dimension 7: Documentation economy
 
-**Note on naming.** Dimension 7 is the documentation-economy dimension. It applies the **full D1–D9 rule set** from `rules/workflow.md` § Documentation economy (D8 is N/A — it caps codemap / REPORT.md size, not plans), not just rule D7 (table cell length). The numeral collision is unfortunate but intentional — workflow.md is the single source of truth for what D1–D9 mean.
+**Note on naming.** Dimension 7 is the documentation-economy dimension. It applies the **full D1–D8 rule set** from `rules/workflow.md` § Documentation economy, not just rule D7 (table cell length). The numeral collision is unfortunate but intentional — workflow.md is the single source of truth for what D1–D8 mean.
 
 **Question:** Does the plan itself, and any ADR/doc it produces, stay within the bloat budget set by `rules/workflow.md` § Documentation economy?
 
-**Check.** Apply detection procedures for D1–D9 from `rules/workflow.md` § Documentation economy to the plan file. Severity (this agent's native `blocker`/`warning` vocabulary):
+**Check.** Apply detection procedures for D1–D8 from `rules/workflow.md` § Documentation economy to the plan file. Severity (this agent's native `blocker`/`warning` vocabulary):
 
 - **D3, D5 → `blocker`.** Structural issues that compound: a multi-ADR shipped as one is hard to split later; an unresolved Decision means the plan does not actually decide. Scope per workflow.md D3 / D5.
-- **D1, D2, D4, D6, D7, D9 → `warning`.** Smell-level — taste fixes, not structural breakage. Scope per workflow.md for each rule; D9 is a heuristic (mitigation without adjacent evidence) and is never promoted.
+- **D1, D2, D4, D6, D7, D8 → `warning`.** Smell-level — taste fixes, not structural breakage. Scope per workflow.md for each rule; D8 is a heuristic (mitigation without adjacent evidence) and is never promoted.
 
 **Mode applicability.** This dimension applies in both `engineering` and `research` modes — the detection procedures in `rules/workflow.md` are artifact-shape agnostic (plan, ADR), not project-type specific.
 
