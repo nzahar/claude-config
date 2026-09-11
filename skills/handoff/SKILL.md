@@ -34,7 +34,7 @@ mkdir -p "<repo>/docs/handoffs" && date +%Y-%m-%d-%H%M
 
 The file lives in the repo on purpose: committed in § 4a, it reaches the other machines and the co-authors who work on this project — a handoff parked on one disk does not.
 
-If `docs/handoffs/` already holds a handoff — a previous session's, not yet picked up — read it first and carry forward still-valid content, especially What did NOT work.
+If `docs/handoffs/` already holds handoffs — a previous session's, not yet picked up — read the newest first and carry forward still-valid content, especially What did NOT work.
 
 ## 3. Collect the git snapshot mechanically
 
@@ -106,16 +106,9 @@ anywhere else.>
 <Ordered list of files the next session must read before acting, with one-line "why" each.>
 ```
 
-## 4a. Self-check, then commit and push
+## 4a. Commit and push, then self-check
 
-Before committing, check the file against the repo with cheap commands only (git, `ls`, grep — never tests, builds or network) and fix what fails:
-
-- every path the file mentions exists (`ls`), unless marked deleted or planned;
-- § Git snapshot matches `git branch --show-current` and `git status --porcelain` right now;
-- no "as discussed" / "as mentioned" / "как договорились" and no pronoun without an antecedent in the file;
-- the first item of § Next steps names a file or a command.
-
-Then the guard:
+Run the commit the moment the file is written — a session that dies during the self-check still ships the handoff. First the guard:
 
 ```
 git -C "<repo>" check-ignore -q "docs/handoffs/<file>"; echo "check-ignore exit: $?"
@@ -132,6 +125,13 @@ git -C "<repo>" push -u origin HEAD
 The pathspec bounds the commit to the handoff file, so a dirty tree is never swept in; the push carries whatever else already sits on the current branch — "only its own file" scopes the commit, not the push. `-u origin HEAD` gives a never-pushed branch its upstream instead of aborting. The branch is whatever is checked out, `main` included: the handoff is a technical file, so the `CLAUDE.md` § Git & Workflow PR/merge gate does not reach it and you do not stop to ask.
 
 If the push fails, keep the local commit, skip the push, and report the failure — do not retry in a loop, do not force.
+
+Then check the file against the repo with cheap commands only (git, `ls`, grep — never tests, builds or network) and fix what fails; if that changed the file, run the commit-and-push block again for the same path:
+
+- every path the file mentions exists (`ls`), unless marked deleted or planned;
+- § Git snapshot matches `git branch --show-current` and `git status --porcelain` right now;
+- no "as discussed" / "as mentioned" / "как договорились" and no pronoun without an antecedent in the file;
+- the first item of § Next steps names a file or a command.
 
 ## 5. Report to the user
 

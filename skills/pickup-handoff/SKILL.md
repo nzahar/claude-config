@@ -1,6 +1,6 @@
 ---
 name: pickup-handoff
-description: Read the session handoff written by /handoff for the current project into this session and continue from its Next steps. Invoke when the user types /pickup-handoff, or says to pick up / continue from the handoff (подхвати handoff, продолжи с handoff). Consumes what it reads — the handoff file is deleted (uncommitted); git keeps it. NOT /handoff (that one writes).
+description: Read the session handoff written by /handoff for the current project into this session and continue from its Next steps. Invoke when the user types /pickup-handoff, or says to pick up / continue from the handoff (подхвати handoff, продолжи с handoff). Consumes what it reads — a tracked handoff file is deleted (uncommitted), git keeps it; an untracked one is left in place. NOT /handoff (that one writes).
 ---
 
 # /pickup-handoff — read the handoff for this project
@@ -33,21 +33,21 @@ Read the newest file with the Read tool.
 
 If `docs/handoffs/` holds no `.md` file, say so in one line: **there is no handoff for this project**, name the directory you checked, and stop. Do not offer to write one, do not search other projects' handoffs — the user asked a yes/no question and got the answer.
 
-## 3. Delete what you read
+## 3. Delete what you read — if git has a copy
 
 Only the file you read — earlier handoffs stay for a later pickup:
 
 ```
-git -C "<repo>" rm -q "docs/handoffs/<file>" || rm "<repo>/docs/handoffs/<file>"
+git -C "<repo>" rm -q "docs/handoffs/<file>"
 ```
 
-The plain-`rm` fallback is load-bearing: `git rm` refuses an untracked file, and an untracked handoff is the normal case in a repo that ignores `docs/`. **Do not commit the deletion** — it rides along with this session's next regular commit.
+If that fails, the file is untracked (a repo that ignores `docs/`): git holds no copy, so leave the file where it is and say so in § 4 — the user deletes it by hand when the session has consumed it. Never `rm` an untracked handoff. **Do not commit the deletion** — it rides along with this session's next regular commit.
 
 ## 4. Report and continue
 
 In the user's language, in a few lines:
 
-- the handoff's name — its timestamp says how stale it is — and that it is deleted, uncommitted;
+- the handoff's name — its timestamp says how stale it is — and that it is deleted (uncommitted) or, if untracked, left in place;
 - § Goal in one sentence and the first item of § Next steps;
 - anything in § Verification status marked UNVERIFIED, and the uncommitted-work note if § Git snapshot showed a dirty tree — re-check `git status` now and say whether it still matches.
 
@@ -55,5 +55,5 @@ Treat § Verification status as claims, not facts — re-run the commands listed
 
 ## Never
 
-- Read an older handoff on your own initiative — only when the user explicitly asks; `git log -- docs/handoffs` finds deleted ones.
+- Read an older handoff on your own initiative — only when the user explicitly asks; `git log -- docs/handoffs` finds deleted tracked ones.
 - Rewrite a handoff. Deleting the one you read is the only change you make.

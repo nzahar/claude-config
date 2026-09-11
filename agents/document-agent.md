@@ -82,7 +82,7 @@ The hash is over **sorted file paths only**, not exported symbol signatures. Per
 
 Compute it transiently each pass from the live tree: `git ls-files <area-paths> | LC_ALL=C sort | git hash-object --stdin`, where `<area-paths>` is the directory set the Files table enumerates. `git hash-object` rather than `md5`/`md5sum` because those differ by platform and would falsely trip the tripwire across machines. Annotate with the file count `(<N> files)` as an add/remove tripwire. **Do not store a literal sorted file-path list section in the codemap** — reconstructable from that command.
 
-If hash unchanged → update date only, skip the rest for this area.
+If hash unchanged → update date only, skip the rest for this area — unless the codemap still holds a legacy section (Codemap structure rule below), which is cleaned on this pass regardless.
 
 ### Phase 1 rules
 - Do **not** write descriptions of what a module *does* or *why* it exists. That is Phase 2.
@@ -169,7 +169,7 @@ Wrap in `<!-- MEANING LAYER -->` ... `<!-- /MEANING LAYER -->`. Add footer: `_Me
 
 ## Phase 2 rules
 - **Do not invent facts.** But DO create ADRs proactively when you see decisions with alternatives.
-- **Current state only.** No dates, no run results, no branch history in the meaning layer; a dated passage you meet is deleted, not moved.
+- **Current state only.** No dates, no run results, no branch history in the meaning-layer body; a dated passage you meet is deleted, not moved. The review footer of step 5 is not narrative and stays.
 - **Do not paraphrase structural tables.** Say *why*, not *what*.
 - **Do not restate ADR content in the codemap.** Link to it.
 - **Do not write filler.** "Well-structured and follows best practices" is filler. Cut it.

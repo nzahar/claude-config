@@ -53,6 +53,7 @@ def _run(sb: dict[str, Path], *args: str) -> subprocess.CompletedProcess[str]:
 
 @requires_npx
 def test_sync_generates_agents_md_rules_agents_and_skills(sandbox):
+    (sandbox["kimi"] / "lib").symlink_to(sandbox["claude"] / "skills")
     result = _run(sandbox, "--quiet")
     assert result.returncode == 0, result.stderr
     assert result.stderr == "", result.stderr
