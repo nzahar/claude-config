@@ -11,8 +11,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "sync-kimi.sh"
 
 requires_npx = pytest.mark.skipif(
-    shutil.which("npx") is None or shutil.which("timeout") is None or shutil.which("flock") is None,
-    reason="without npx/timeout the script correctly refuses to sync; nothing to assert on",
+    shutil.which("npx") is None
+    or not any(shutil.which(t) for t in ("timeout", "gtimeout", "perl")),
+    reason="without npx or any timeout primitive the script correctly refuses to sync; nothing to assert on",
 )
 
 

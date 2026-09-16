@@ -50,8 +50,18 @@ if [[ -n "${CLAUDE_CONFIG_DIR:-}" ]]; then
 fi
 [[ -d "$claude_dir" ]] || bail "$claude_dir does not exist — nothing to sync"
 command -v npx >/dev/null 2>&1 || bail "npx not found — not syncing"
-command -v timeout >/dev/null 2>&1 || bail "timeout not found — not syncing"
-command -v flock >/dev/null 2>&1 || bail "flock not found — not syncing"
+
+# GNU coreutils on Linux, Homebrew's gtimeout, or perl's alarm (preserved across
+# exec, and perl ships with both macOS and a Debian/Ubuntu base system).
+if command -v timeout >/dev/null 2>&1; then
+  timeout_cmd=(timeout)
+elif command -v gtimeout >/dev/null 2>&1; then
+  timeout_cmd=(gtimeout)
+elif command -v perl >/dev/null 2>&1; then
+  timeout_cmd=(perl -e 'alarm shift; exec @ARGV or exit 127')
+else
+  bail "none of timeout, gtimeout or perl found — not syncing"
+fi
 
 KIMI_HOME="${KIMI_CODE_HOME:-$HOME/.kimi-code}"
 [[ "$KIMI_HOME" == /* && "$KIMI_HOME" != / ]] || bail "KIMI_CODE_HOME must be an absolute path other than / (got '$KIMI_HOME') — not syncing"
@@ -59,14 +69,14 @@ KIMI_HOME="${KIMI_CODE_HOME:-$HOME/.kimi-code}"
 
 rulesync() {
   local out
-  if ! out="$(timeout "$PER_CALL_TIMEOUT" npx -y "$RULESYNC_PKG" "$@" 2>&1)"; then
+  if ! out="$("${timeout_cmd[@]}" "$PER_CALL_TIMEOUT" npx -y "$RULESYNC_PKG" "$@" 2>&1)"; then
     echo "$out" >&2
     bail "rulesync $1 failed or timed out after ${PER_CALL_TIMEOUT}s — not syncing"
   fi
   [[ $quiet -eq 1 || -z "$out" ]] || echo "$out"
 }
 
-count_agents() { local n=0; [[ -d "$1" ]] && n=$(find "$1" -maxdepth 1 -name '*.md' | wc -l); echo "$n"; }
+count_agents() { local n=0; [[ -d "$1" ]] && n=$(find "$1" -maxdepth 1 -name '*.md' | wc -l); echo "$((n))"; }
 expected_agents=$(count_agents "$claude_dir/agents")
 [[ "$expected_agents" -gt 0 ]] || bail "no agents found in $claude_dir/agents — not syncing"
 
@@ -74,8 +84,33 @@ expected_agents=$(count_agents "$claude_dir/agents")
 # cwd for subagents; cd'ing to HOME collapses both into one intermediate tree.
 cd "$HOME"
 mkdir -p "$HOME/.rulesync"
-exec 9>"$HOME/.rulesync/.sync-kimi.lock"
-flock -w 30 9 || bail "another sync-kimi run holds the lock — not syncing"
+
+# mkdir is the lock primitive available on both sides: the BSD userland ships no
+# flock(1). The scratch profile is cleaned up by the same trap.
+lock_dir="$HOME/.rulesync/.sync-kimi.lock.d"
+tmp=""
+lock_held=0
+cleanup() {
+  [[ -n "$tmp" ]] && rm -rf "$tmp"
+  [[ $lock_held -eq 1 ]] && rm -rf "$lock_dir"
+  return 0
+}
+trap cleanup EXIT
+
+waited=0
+until mkdir "$lock_dir" 2>/dev/null; do
+  holder="$(cat "$lock_dir/pid" 2>/dev/null || true)"
+  if [[ -n "$holder" ]] && ! kill -0 "$holder" 2>/dev/null; then
+    rm -rf "$lock_dir"
+    continue
+  fi
+  [[ $waited -lt 30 ]] || bail "another sync-kimi run holds the lock — not syncing"
+  sleep 1
+  waited=$((waited + 1))
+done
+lock_held=1
+echo $$ >"$lock_dir/pid"
+
 rm -rf "$HOME/.rulesync/rules" "$HOME/.rulesync/subagents"
 rulesync import --global --targets claudecode --features rules,subagents --silent
 
@@ -93,7 +128,6 @@ generate_into() {
 # Always render into a scratch profile first, so a partial or empty rulesync result
 # is caught above before anything under $KIMI_HOME is replaced.
 tmp="$(mktemp -d)"
-trap 'rm -rf "$tmp"' EXIT
 generate_into "$tmp"
 
 if [[ $check -eq 1 ]]; then
