@@ -58,7 +58,7 @@ if command -v timeout >/dev/null 2>&1; then
 elif command -v gtimeout >/dev/null 2>&1; then
   timeout_cmd=(gtimeout)
 elif command -v perl >/dev/null 2>&1; then
-  timeout_cmd=(perl -e 'alarm shift; exec @ARGV or exit 127')
+  timeout_cmd=(perl -e '$SIG{ALRM} = "DEFAULT"; alarm shift; exec @ARGV or exit 127')
 else
   bail "none of timeout, gtimeout or perl found — not syncing"
 fi
@@ -97,19 +97,17 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# A lock left behind by SIGKILL or a power loss is not reclaimed automatically:
+# every reclaim protocol on top of mkdir is racy, and this script is run by hand,
+# so the bail message names the path and the user removes it.
 waited=0
 until mkdir "$lock_dir" 2>/dev/null; do
-  holder="$(cat "$lock_dir/pid" 2>/dev/null || true)"
-  if [[ -n "$holder" ]] && ! kill -0 "$holder" 2>/dev/null; then
-    rm -rf "$lock_dir"
-    continue
-  fi
-  [[ $waited -lt 30 ]] || bail "another sync-kimi run holds the lock — not syncing"
+  [[ $waited -lt 30 ]] || bail "another sync-kimi run holds $lock_dir (pid $(cat "$lock_dir/pid" 2>/dev/null || echo unknown)) — not syncing; if no such process exists, remove that directory and re-run"
   sleep 1
   waited=$((waited + 1))
 done
 lock_held=1
-echo $$ >"$lock_dir/pid"
+echo $$ >"$lock_dir/pid" || bail "cannot write $lock_dir/pid — not syncing"
 
 rm -rf "$HOME/.rulesync/rules" "$HOME/.rulesync/subagents"
 rulesync import --global --targets claudecode --features rules,subagents --silent
