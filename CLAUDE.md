@@ -21,7 +21,7 @@
 
 ## Roadmap
 
-**At the start of every session in a project, read `docs/ROADMAP.md` if it exists.** One per project, owned by the main session and edited by hand — no agent writes it, no reviewer checks it, there is no cadence; the only prescribed edits are the two event-triggered rules below (item cleared at merge-readiness, routing of additions). It holds the trajectory of work: what is being done now, what comes next, what is parked.
+**At the start of every session in a project, read `docs/ROADMAP.md` if it exists.** Read the project memory (`MEMORY.md` under the project's directory in `~/.claude/projects/`) at the same moment, if it is not already in your context. One per project, owned by the main session and edited by hand — no agent writes it, no reviewer checks it, there is no cadence; the only prescribed edits are the two event-triggered rules below (item cleared at merge-readiness, routing of additions). It holds the trajectory of work: what is being done now, what comes next, what is parked.
 
 Format — three sections:
 
