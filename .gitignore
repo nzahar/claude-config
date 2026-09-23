@@ -37,3 +37,8 @@ claude-statusbar.json
 .last-update-result.json
 .claude/
 __pycache__/
+artifacts/
+reviews/
+state/
+skills/synced/
+commands/statusbar*.md
